@@ -1,0 +1,154 @@
+---
+title: "Weights of Measures of SD only"
+author: "Amanda Skarlupka"
+date: "4/7/2022"
+output: 
+  bookdown::html_document2: default
+---
+
+
+#Purpose:
+
+The purpose of this code is to quantify the area under the linear regressions and the apply weights. 
+I need to create a table that quantifies the variation of the different methods to see if one is better than the other
+#Prerequisties:
+
+Need to Run:
+
+* ../code/1_cleaning/1_cleaning_code.R
+* ../code/1_cleaning/2_pepitope_calculator.Rmd
+* ../code/1_cleaning/3_acmap_creation.R
+* ../code/1_cleaning/4_acmap_distances.Rmd
+* ../code/5_calculations/3_antigenic_landscapes.Rmd (AUC datafile)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = T, warnings = T)
+
+library(pracma)
+library(flextable)
+library(tidyverse)
+library(plotly)
+library(dplyr)
+
+source(here::here("R/functions/4_weights.R"))
+
+```
+
+
+
+```{r data}
+
+#Import the data:
+subset <- readRDS(file = here::here("data/processed/subset_analysis/auc_data/subset.rds"))
+
+cutoff_list <- vector(mode = "list")  
+
+for (k in unique(subset$subset)) {
+  data <- subset %>%
+    dplyr::filter(subset == k)
+  
+distances <- vector(mode = "list")
+
+for (i in c("Season", "Vaccine", "Strain")) {
+distances[[i]] <- dose_compare(dataframe = data,
+             normalization = i)
+}
+
+cutoff_df <- distances %>%
+  purrr::reduce(full_join)
+
+cutoff_list[[k]] <- cutoff_df %>%
+  dplyr::mutate(subset = k)
+}
+
+cutoff_final_df <- cutoff_list %>%
+  purrr::reduce(full_join)
+# This dataframe is the same for the standard dose, and the high dose standard dose comparisons. 
+
+
+    saveRDS(object = cutoff_final_df,
+            file = here::here("results/tables/subset_analysis/AU_cutoff.rds"))
+
+subset_list <- replicate(1, vector("list", 5), simplify = FALSE)
+for (i in c("Vaccine", "Season", "Strain")) {
+  for (j in c("SD", "SDHD")) {
+    for (k in unique(subset$subset)) {
+    x <- paste(i, j)
+  subset_list[[x]][[k]] <-  subset %>%
+      dplyr::filter(subset == k) %>%
+    auc_calc(dataframe = .,
+             normalization = i,
+             dose_of_interest = j) %>%
+    dplyr::mutate(subset = paste(k))
+    
+    #%>%
+    #  saveRDS(object = ., file = here::here(paste0("tables/subset_analysis/auc_", tolower(j), "_", tolower(i), "_maybe.rds")))
+        
+      }
+  }
+}
+for (i in 1:length(subset_list)) {
+subset_list[[i]] <- data.table::rbindlist(subset_list[[i]])
+}
+
+for (i in c("Vaccine", "Season", "Strain")) {
+  for (j in c("SD", "SDHD")) {
+        x <- paste(i, j)
+
+temp <- titer_increase_cal(dataframe = subset, dose_of_interest = j, normalization = i)
+
+subset_list[[x]] <- subset_list[[x]] %>% full_join(temp)
+}}
+
+
+saveRDS(subset_list[2:7],
+        file = here::here("Results/Tables/Subset_Analysis/auc_subsets.rds"))
+
+
+
+```
+
+
+
+## Standard dose analysis
+
+
+```{r SD-strain}
+
+subsets <- readRDS(file = here::here("results/tables/subset_analysis/auc_subsets.rds")) #Pull the actual dataframes
+  #subsets[[6]] <- readRDS(file = here::here("tables/manuscript/auc_sd_strain.rds"))
+  #names(subsets) <- c(paste0("subset_", 1:5), "overall")
+
+  ## SD Strain
+
+data <- subsets[["Strain SD"]]
+
+data %>% 
+  dplyr::select(-c(auc_anti, auc_linear)) %>%
+  tidyr::pivot_wider(names_from = method,
+             values_from = auc_pred) %>%
+  tidyr::pivot_longer(cols = c(mean_ti:Cartography),
+               names_to = "method",
+               values_to = "auc_value") %>%
+  dplyr::mutate(method = factor(method, 
+                                levels = c("mean_ti", "Year", "P-epitope", "Cartography"), 
+                                labels = c("Mean TI", "Year", "P-epitope", "Cartography"))) %>%
+  dplyr::group_by(strain_type, vac_short, method) %>%
+  dplyr::summarize(mean = mean(auc_value),
+            sd = sd(auc_value),
+            var = var(auc_value),
+            cv = sd/mean,
+            min = min(auc_value),
+            max = max(auc_value)) %>%
+  dplyr::mutate(vac_short = factor(vac_short, 
+                                   levels = levels(data$vac_short), 
+                                   labels = stringr::str_sub(levels(data$vac_short), 
+                                                    start = 6, 
+                                                    end = -1))) %>%
+  saveRDS(here::here("results/tables/subset_analysis/SD_strain_variation.rds"))
+```
+
+
+
+  
+

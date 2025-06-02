@@ -1,0 +1,64 @@
+---
+title: "Dimensional Analysis"
+author: "Amanda Skarlupka"
+date: "8/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r data}
+
+file_location <- "data/cluster/output/w_underconstrained/dimen_analysis_"
+subtypes <- c("h1", "h3")
+timing <- c("_pre", "_post", "_pre_sd", "_post_sd")
+locale <- paste0(rep(paste0(file_location, subtypes), each = 4), timing)
+
+tbl_list <- vector(mode = "list")
+for (i in 1:length(locale)) {
+tbl_list[[i]] <- readRDS(here::here(paste0(locale[i],
+                                   ".rds"))) %>%
+  dplyr::mutate(type = stringr::str_sub(locale[i],
+                        start = base::nchar(file_location) +1))
+}
+
+tbl_w <- data.table::rbindlist(tbl_list) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(subtype = ifelse(stringr::str_detect(type, pattern = "h1") == TRUE, "h1", "h3"),
+         subtype = factor(subtype, 
+                          levels = c("h1", "h3"),
+                          labels = c("H1N1", "H3N2")), 
+         timing = ifelse(stringr::str_detect(type, pattern = "pre") == TRUE, "pre", "post"),
+         timing = factor(timing, 
+                         levels = c("pre", "post"),
+                         labels = c("Pre", "Post")),
+         vaccine = ifelse(stringr::str_detect(type, pattern = "sd") == TRUE, "SD", "All")) %>%
+  dplyr::select(subtype, timing, vaccine, dimensions, mean_rmse_detectable, var_rmse_detectable, mean_rmse_nondetectable, var_rmse_nondetectable, type) %>%
+  dplyr::arrange(subtype, timing, vaccine)
+
+
+plt <- tbl_w %>%
+  ggplot2::ggplot(aes(x = dimensions,
+             y = mean_rmse_detectable)) +
+  ggplot2::geom_point() +
+  ggplot2::geom_line() +
+  ggplot2::facet_grid(rows = vars(subtype),
+             cols = vars(timing, vaccine)) +
+  ggplot2::xlab("Dimension") +
+  ggplot2::ylab("Mean RMSE of Detectable Titers") +
+  ggplot2::theme_bw()
+  
+
+ggplot2::ggsave(plt,
+       filename = here::here("results/figures/TwoDimensionalValidation.png"),
+       width = 12)
+
+saveRDS(tbl_w,
+        file = here::here("results/tables/TwoDimensionalValidation.rds"))
+
+
+```
+

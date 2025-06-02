@@ -1,0 +1,1010 @@
+---
+title: "Partial pooling across seasons"
+author: "Zane"
+date: last-modified
+format: docx
+---
+
+```{r}
+#| label: setup
+#| include: false
+# So renv will do its job correctly
+box::use(
+  markdown,
+  mime,
+  rmarkdown,
+  yaml,
+  rethinking[...],
+  # Rethinking sort of breaks without both of these
+  cmdstanr[...],
+  rstan[...],
+  # Stuff that is just easier
+  ggplot2[...],
+  patchwork[...]
+)
+
+source(here::here("R", "functions", "rethinking-helpers.R"))
+
+# SHould the file results be overwritten?
+OVERWRITE <- TRUE
+```
+
+# Introduction
+
+# Per-strain (across all seasons) analysis
+
+So our original reason for testing the partial pooling models was to determine
+whether we could ameliorate the effect of different strain panels used
+across seasons -- due to budget, time, and supply issues, the most recent
+seasons do not analyze many of the most distant strains so the panel is
+truncated (see @fig-indivLines).
+
+We can see from the test model that the adaptive pooling model is more similar
+to the no-pooling than the complete-pooling model, but across seasons there
+will be more outlying individuals who will be regularized towards the mean.
+
+So we'll test on the A(H1N1) Michigan 2015 strain again, this time using data
+from across all of the seasons. First we need to do a bit of data cleaning.
+I should probably do this in a dedicated script.
+
+```{r}
+clean_data <-
+	readr::read_rds(
+		here::here("data", "processed", "distance_data.rds")
+	)
+
+dat <-
+	clean_data |>
+	dplyr::mutate(
+		vaccine_type = stringr::str_remove(vaccine_type, "_vaccine_fullname$") |>
+			stringr::str_to_upper() |>
+			factor()
+	) |>
+	dplyr::filter(
+		vaccine_type == strain_type,
+		# Get only the Ag distance methods that Amanda used.
+		method %in% c("cart_2d_post", "p_epi", "year")
+	) |>
+	dplyr::mutate(
+		dplyr::across(tidyselect:::where(is.factor), forcats::fct_drop)
+	)
+
+# Pivot the data so we can fit pre/post models at the same time
+dat_models <-
+	dat |>
+	dplyr::select(-pretiter, -postiter) |>
+	tidyr::pivot_longer(
+		cols = c(prevactiter, postvactiter, titerincrease),
+		names_to = "outcome",
+		values_to = "y"
+	) |>
+	# Turn the categorical variables into integer indexes, this is required
+	# for index coding in stan
+	dplyr::mutate(
+		id = uniq_id |>
+			factor() |>
+			forcats::fct_inorder() |>
+			as.integer()
+	) |>
+	# Normalize the antigenic distance measurements within vaccine group
+	dplyr::group_by(vaccine_fullname, method) |>
+	dplyr::mutate(
+		norm_dist = distance / max(distance)
+	) |>
+	dplyr::ungroup()
+
+# We want to fit a model for every unique combination of:
+# vaccine strain; outcome; distance method.
+# (Models will be fitted ACROSS seasons, not per-season.)
+# We'll do this by nesting the data into strata to get a per-stratum
+# data frame and then mapping the model fitting function over the
+# nested data frames.
+dat_nested1 <-
+	dat_models |>
+	# Select only the data we need RIGHT NOW to prevent Stan from throwing a fit,
+	# it will often get angry over unused data that is in the wrong format.
+	dplyr::select(
+		# Variables that should go into the Stan model. These DO need to be
+		# processed to be NUMERIC.
+		id = uniq_id, y, x = norm_dist,
+		# Stratum/nesting variables -- these do NOT need to be processed.
+		vaccine_fullname, method, outcome
+	) |>
+	# Cleaning up the factor variabels that have to become indices
+	# it has to be done in groups to ensure there are no missing levels!
+	dplyr::group_by(dplyr::across(!c(id, x, y))) |>
+	dplyr::mutate(
+		id = id |> factor() |> forcats::fct_inorder() |> as.integer()
+	) |>
+	dplyr::ungroup() |>
+	# This line creates the stratified data frames. Analogous to base R split()
+	# but organized better.
+	tidyr::nest(dat = c(id, x, y))
+
+dat_nested <-
+	dat_nested1 |>
+	# rethinking will convert data to a list so we may as well do it ourselves.
+	# This turns each of the subsample data frames into a list of vectors.
+	# Note that some of the Ag distance methods are missing values so we also
+	# need to omit those missing values.
+	dplyr::mutate(dat = purrr::map(dat, \(x) x |> na.omit() |>as.list()))
+```
+
+# Creating the model objects
+
+Fortunately I think it is basically safe to use the same model(s) across all
+the strata, including all three outcomes. We have a pretty large amount of data
+so ideally the data will dominate the prior. These models can be found in the
+Partial-Pooling-Test.qmd document, I'll fit the complete pooling, no pooling,
+and partial pooling models for each of the outcome/strain/distance measure
+combinations.
+
+```{r}
+models <-
+	list(
+		"complete pooling" =
+			alist(
+				y ~ dnorm(mu, s),
+				mu <- a + b * x,
+				a ~ dnorm(5, 5),
+				b ~ dnorm(0, 5),
+				s ~ dexp(1)
+			),
+		"no pooling" =
+			alist(
+				y ~ dnorm(mu, s),
+				mu <- a[id] + b[id] * x,
+				vector[id]:a ~ dnorm(5, 5),
+				vector[id]:b ~ dnorm(0, 5),
+				s ~ dexp(1)
+			),
+		"partial pooling" =
+			alist(
+				y ~ dnorm(mu, s),
+				mu <- a[id] + b[id] * x,
+				a[id] ~ dnorm(abar, phi),
+				b[id] ~ dnorm(bbar, psi),
+				abar ~ dnorm(5, 5),
+				bbar ~ dnorm(0, 5),
+				phi ~ dexp(1),
+				psi ~ dexp(1),
+				s ~ dexp(1)
+			)
+	)
+
+models <- rev(models)
+```
+
+# Fitting the models
+
+Here's the code I ran to generate the models.
+
+```{r}
+# Fitting details
+set.seed(370)
+N <- 10000
+CTRL <-
+  list(
+    seed = 370,
+    adapt_delta = 0.95
+  )
+
+n_models <- nrow(dat_nested)
+
+fit_a_model <-
+	function(data, data_index, model_index, model_flist, mm = 3) {
+		# Informational message
+		mn <- data_index + n_models * (model_index - 1)
+		paste0("Fitting model ", mn, " of ", n_models * mm, "!\n") |>
+			crayon::white() |>
+			crayon::bgRed() |>
+			cat()
+		
+		# Fit the next model
+		mdl <- rethinking::ulam(
+			# Use the model formula that we're currently on in the
+			# outside loop
+			flist = model_flist,
+			# Use the dataframe that we're currently on in the inside loop
+			data = data,
+			chains = 8,
+			cores = 8,
+			iter = 2000,
+			control = CTRL,
+			cmdstan = TRUE
+		)
+		
+		# Invisibly call the garbage collector even though many people
+		# say this is pointless
+		zlib::quiet(gc())
+		
+		# Return the model
+		return(mdl)
+	}
+
+possibly_fit_a_model <-
+	purrr::possibly(fit_a_model, otherwise = "Uh oh!")
+```
+
+```{r, eval = FALSE}
+# Outside loop: map over models
+start_time <- Sys.time()
+res <-
+	purrr::map2(
+		models, seq_along(models),
+		function(m, ind) {
+			# Informational message
+			paste0("Fitting ", names(models)[ind], " models now!\n") |>
+				crayon::white() |>
+				crayon::bgMagenta() |>
+				cat()
+			
+			# Inside loop: map over strata
+			purrr::map2(
+				dat_nested$dat, seq_along(dat_nested$dat),
+				\(d, idx) possibly_fit_a_model(d, idx, ind, m)
+			)
+		}
+	)
+stop_time <- Sys.time()
+
+readr::write_rds(
+	res,
+	here::here("Results", "_Out", "Per-Strain-Models.Rds"),
+	compress = "gz"
+)
+```
+
+When I ran this, it took about 24 hours total to run all the models, so I
+don't currently plan to run it again. Instead I'll load the results
+from disk just in case and then process the results.
+
+The results file is over 40 gigabytes in size, so while I will temporarily
+save it in case the models need to be re-run, **only the processed model**
+**results will be committed to github**.
+
+```{r load results, eval = FALSE}
+res <- readr::read_rds(here::here("Results", "_Out", "Per-Strain-Models.Rds"))
+```
+
+This part processes the 40gb file into multiple smaller files just in case.
+On a machine with less vRAM it will be impossible to read in the one large
+list.
+
+```{r, eval = FALSE}
+# Breaking it down into smaller files
+purrr::walk(
+	names(res),
+	~dir.create(here::here("Results", "_Out", "Models", .x), showWarnings = FALSE)
+)
+
+for (i in 1:3) {
+	purrr::iwalk(
+		res[[i]],
+		\(x, ix) paste0(
+			here::here("Results", "_Out", "Models", names(res)[[i]]), "/Model",
+			stringr::str_pad(ix, width = 2, side = "left", pad = "0"), ".Rds") |>
+			readr::write_rds(x = x, compress = "gz")
+	)
+}
+```
+
+# Counterfactual simulations
+
+First we need to make the simulated data. Since the ID variable is created
+separately for each model, unfortunately we will need to make a list of
+simulated datasets where the IDs correspond to the correct ones for the
+current model. Then we'll cross these IDs with a vector of *possible* values
+for the antigenic distance, which is how we get the counterfactual predictions
+for the unobserved antigenic distances.
+
+```{r}
+# Make the simulated data
+ag_dist_vals <- seq(0, 1, 0.01)
+
+ids_by_model <-
+	purrr::map_int(
+		dat_nested$dat,
+		\(x) max(x[["id"]])
+	)
+
+# Repeat the data three times (once for each type of model)
+ids_all_models <- rep(ids_by_model, times = 3)
+```
+
+Now that we have the list of simulated data, we have to do a little bit
+of a complicated mapping operation -- we'll have to use a nested map
+like we did when we fit the models, in order to ensure that we repeat
+correctly for each of the models. So the outside map will be for the three
+model types, while the inside `map2` will simultaneously map over the model
+results and the simulated data to get the posterior distributions.
+
+Because of the vRAM limitations of a normal computer, we will have to load
+in each individual model, process the predictions, and then remove the
+model from the environment. First we need to make a list of the
+model files to iterate over.
+
+```{r}
+# Listing all of the model files
+file_names <-
+	purrr::map(
+		paste0(here::here("Results/_Out/Models"), "/",
+					 c("partial pooling", "no pooling", "complete pooling")),
+		\(x) list.files(x, full.names = TRUE)
+	) |>
+	do.call(what = c)
+
+N <- length(file_names)
+```
+
+As a first step, we'll get the diagnostics (conveniently calculated for us
+by `rethinking::precis()`) and the posterior samples, and save those to files.
+This will allow us to avoid the overhead vRAM usage from loading the entire
+`ulam` model object that we don't need.
+
+```{r, eval = FALSE}
+i <- 145
+file_names <- file_names[i:N]
+start_time <- Sys.time()
+
+# Save the posterior samples
+purrr::walk(
+	file_names,
+	function(f) {
+		# Informational message. apparently if I turn this off then
+		# something breaks? so for now it is invisible.
+		paste0("Getting preds for model ", i, " out of ", N, "\n") |>
+			crayon::magenta() |>
+			invisible()
+		
+		# Get the formatted model number
+		num <- stringr::str_pad(i, width = 3, side = "left", pad = "0")
+		
+		# Read in the next model
+		m <- readr::read_rds(f)
+		
+		# Get the posterior samples
+		out <- rethinking::extract.samples(m, n = Inf)
+		
+		# Save the posterior samples to file
+		readr::write_rds(
+			out,
+			paste0(here::here("Results/_Out/samples"), "/Model", num, ".Rds")
+		)
+		
+		# Save the precis to file
+		m |>
+			rethinking::precis(depth = 3, warn = FALSE) |>
+			unclass() |>
+			data.frame() |>
+			readr::write_rds(
+				paste0(here::here("Results/_Out/precis"), "/Model", num, ".Rds")
+			)
+		
+		# Cleanup
+		rm(f, m)
+		invisible(gc())
+		
+		# Increment message counter
+		i <<- i + 1
+		return(out)
+		
+	},
+	.progress = "Getting posterior samples and diagnostics!"
+)
+
+stop_time <- Sys.time()
+rm(i)
+```
+
+Next we need to process the posterior samples and calculate the linear model.
+That is,
+
+$$\hat{\mu} = a + b \cdot \text{Simulated distance}$$
+with all the subscripts that it needs that I'll probably come back and add
+later but I am too lazy and busy right now. Since we're doing Gaussian
+models, $\hat{\mu} = \hat{\eta}$, i.e. $g(\mu) = \mu$. So this is not too
+difficult to do. The `rethinking` package outputs the posterior as a list
+of parameters, where each parameter is represented as a matrix of samples of
+$a$ and $b$ with one row per posterior sample and one column per
+individual id. So we take the column means of $a$ and $b$ to get the
+estimates of the mean for each individual.
+
+So, we will simultaneously map over the posterior samples and the simulated
+data. Then for each of the simulated data frames, we need to map over the
+rows to get the predictions using the linear model formula. Then we'll
+save those predictions to a file and clean up the environment, hopefully
+preventing any vRAM issues by doing it in this painstaking way.
+
+```{r, eval = FALSE}
+x_mat <- matrix(ag_dist_vals, nrow = 1)
+i <- 1
+start_time <- Sys.time()
+sample_filenames <- list.files("Results/_Out/samples", full.names = TRUE)
+
+purrr::walk2(
+	sample_filenames, ids_all_models,
+	\(fn, d) {
+		# Get the formatted model number
+		num <- stringr::str_pad(i, width = 3, side = "left", pad = "0")
+		
+		out_name <- paste0(here::here("Results/_Out/mu"), "/Model", num, ".Rds")
+		
+		# Don't do the steps if this model already has been processed
+		if ((!file.exists(out_name)) | (isTRUE(OVERWRITE))) {
+			# Read in the posterior distribution
+			p <- readr::read_rds(fn)
+			
+			# IF WE ARE ON A COMPLETE POOLING MODEL, we have to transform the
+			# vector of samples to be an array of the correct size so it
+			# can be indexed by ID.
+			if (length(dim(p$a)) == 1) {
+				p$a <- array(p$a, dim = c(length(p$a), d))
+			}
+			
+			if (length(dim(p$b)) == 1) {
+				p$b <- array(p$b, dim = c(length(p$b), d))
+			}
+			
+			out_list <- lapply(
+				1:d,
+				\(id) {
+					array(p$a[, id], dim = c(nrow(p$a), ncol(x_mat))) +
+						p$b[, id] %*% x_mat
+				}
+			)
+			
+			out <- do.call(cbind, out_list)
+			
+			means <- colMeans(out)
+			PIs <- apply(out, 2, rethinking::PI)
+			
+			val <- data.frame(
+				est = means,
+				lwr = PIs[1, ],
+				upr = PIs[2, ],
+				x = rep(ag_dist_vals, times = d),
+				id = rep(1:d, each = length(ag_dist_vals))
+			)
+			
+			# Write this matrix to file
+			readr::write_rds(
+				val,
+				out_name
+			)
+			
+			# Clean up
+			rm(p, out)
+			invisible(gc())
+			
+		}
+		
+		# Increment model number
+		i <<- i + 1
+	},
+	.progress = "Calculating conditional mean samples!"
+)
+stop_time <- Sys.time()
+```
+
+# Marginal predictions
+
+I should have gotten the marginal predictions in the previous loop, but I
+forgot to. So now it seems more prudent to run a second loop to get the
+marginal predictions than to modify the previous loop. Reading in the files
+again adds significant unnecessary overhead, but it's less than the computational
+cost of repeating the calculations I already did.
+
+```{r, eval = FALSE}
+x_mat <- matrix(ag_dist_vals, nrow = 1)
+i <- 1
+
+start_time <- Sys.time()
+sample_filenames <- list.files("Results/_Out/samples", full.names = TRUE)
+
+purrr::walk2(
+	sample_filenames, ids_all_models,
+	\(fn, d) {
+		# Get the formatted model number
+		num <- stringr::str_pad(i, width = 3, side = "left", pad = "0")
+		
+		out_name <- paste0(here::here("Results/_Out/marg"), "/Model", num, ".Rds")
+		
+		# Don't do the steps if this model already has been processed
+		if ((!file.exists(out_name)) | isTRUE(OVERWRITE)) {
+			# Read in the posterior distribution
+			p <- readr::read_rds(fn)
+			
+			# IF WE ARE ON A COMPLETE POOLING MODEL, we have to transform the
+			# vector of samples to be an array of the correct size so it
+			# can be indexed by ID.
+			if (length(dim(p$a)) == 1) {
+				p$a <- array(p$a, dim = c(length(p$a), d))
+			}
+			
+			if (length(dim(p$b)) == 1) {
+				p$b <- array(p$b, dim = c(length(p$b), d))
+			}
+			
+			m1 <- get_marginals(ag_dist_vals, p, type = 1)
+			m3 <- get_marginals(ag_dist_vals, p, type = 3)
+			
+			out <-
+				dplyr::bind_rows(
+					"type 1" = clean_list(m1, ag_dist_vals),
+					"type 3" = clean_list(m3, ag_dist_vals),
+					.id = "ci_type"
+				)
+			
+			# Write this df to file
+			readr::write_rds(
+				out,
+				out_name
+			)
+			
+			# Clean up
+			rm(p, out)
+			invisible(gc())
+			
+		}
+		
+		# Increment model number
+		i <<- i + 1
+	},
+	.progress = "Calculating conditional mean samples!"
+)
+stop_time <- Sys.time()
+```
+
+
+# Housekeeping
+
+OK, now that we have all the means and PIs for each individual, we need to
+get all the data consolidated together. Since `R` can store `data.frame` objects
+of this size quite efficiently, the resulting object is actually less than a
+gigebyte in size.
+
+```{r}
+models_data <-
+	# Make a list of copies of the nested data containing the model identifying
+	# information -- one copy for each of the models.
+	replicate(length(models), list(dat_nested)) |>
+	# Set the list names to the same order as the models list, so that we
+	# are labelling the data correctly.
+	setNames(names(models)) |>
+	# Combine all three of these replicated datasets into one rbind-ed dataset,
+	# which has a column called 'model' where the entries come from the
+	# name of the list element (which we just set to be the model names in the
+	# correct order).
+	dplyr::bind_rows(.id = "model") |>
+	# Now read in all of the predictions dataframes and add this as a
+	# list-column to the tibble. Since we are doing everything in the correct
+	# order we have ensured that the predictions for the correct model are
+	# labelled correctly.
+	tibble::add_column(
+		preds = purrr::map(
+			list.files("Results/_Out/mu", full.names = TRUE),
+			readr::read_rds
+		)
+	)
+
+# Save to disk
+fn <- here::here("Results", "_Out", "combined-preds.Rds")
+if (!file.exists(fn) | isTRUE(OVERWRITE)) {readr::write_rds(models_data, fn)}
+
+# Now I'll repeat the same code for the marginals because I'm too lazy
+# to think of a better way. And it's easier if the marginals are in their
+# own data frame anyways.
+marginals_data <-
+	# Make a list of copies of the nested data containing the model identifying
+	# information -- one copy for each of the models.
+	replicate(length(models), list(dat_nested)) |>
+	# Set the list names to the same order as the models list, so that we
+	# are labelling the data correctly.
+	setNames(names(models)) |>
+	# Combine all three of these replicated datasets into one rbind-ed dataset,
+	# which has a column called 'model' where the entries come from the
+	# name of the list element (which we just set to be the model names in the
+	# correct order).
+	dplyr::bind_rows(.id = "model") |>
+	# Now read in all of the predictions dataframes and add this as a
+	# list-column to the tibble. Since we are doing everything in the correct
+	# order we have ensured that the predictions for the correct model are
+	# labelled correctly.
+	tibble::add_column(
+		preds = purrr::map(
+			list.files("Results/_Out/marg", full.names = TRUE),
+			readr::read_rds
+		)
+	)
+
+# Save to disk
+fn <- here::here("Results", "_Out", "combined-marginals.Rds")
+if (!file.exists(fn)| isTRUE(OVERWRITE)) {readr::write_rds(marginals_data, fn)}
+```
+
+OK so now we have a data frame that has all of our means and PIs and
+whatnot stored together. Since there's really no reason for us to get back
+to the original ID scale, I won't worry about joining back with the original
+data set. If we wanted to look for emerging patterns in covariates (without
+formally stratifying by them) we could do that also, but I am not going to
+do that right now either. Right now I just want to get the plots like Amanda
+has in figure 2 of her manuscript.
+
+All of these plots will be saved in the file `Results/Figures/Per-Strain-Plots`
+in the following subdirectory structure:
+`model-type/distance-measure/VaccineStrain.png`
+or something similar to that.
+
+# Making plots
+
+First I'll set the ggplot theme so I don't have to update it individually for
+every single plot.
+
+```{r}
+ggplot2::theme_set(
+	ggplot2::theme_bw() +
+		ggplot2::theme(
+			plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+			axis.text = ggplot2::element_text(size = 16, color = "black"),
+			axis.title = ggplot2::element_text(size = 18),
+			plot.subtitle = ggplot2::element_text(
+				size = 16, hjust = 0, margin = ggplot2::margin(b = 2)
+			),
+			plot.title = ggplot2::element_text(
+				size = 24, hjust = 0, margin = ggplot2::margin(b = 4)
+			),
+			plot.caption = ggplot2::element_text(size = 14),
+			strip.text = ggplot2::element_text(
+				size = 14, hjust = 0.5, margin = ggplot2::margin(b = 2, t = 2)
+			),
+			panel.spacing = ggplot2::unit(2, "lines"),
+			legend.position = "bottom",
+			legend.text = ggplot2::element_text(size = 14, color = "black"),
+			legend.title = ggplot2::element_text(size = 16, color = "black")
+		)
+)
+```
+
+```{r}
+# Unnest the data so we can plot with it. Although I guess we could
+# technically plot with the nested data this is easier and there are
+# ~10M rows so it is small enough that we can do this.
+plt_data <-
+	models_data |>
+	tidyr::unnest(preds) |>
+	dplyr::select(-dat)
+
+plt_marg <-
+	marginals_data |>
+	tidyr::unnest(preds) |>
+	dplyr::select(-dat)
+```
+
+First I'll grab the first set of model results that I want and mess with those
+until the plot looks how I want it to. Then we can worry about faceting and
+whatnot.
+
+# Poster plots (move this eventually)
+
+```{r}
+plt_test <-
+	plt_marg |>
+	dplyr::filter(
+		vaccine_fullname == "H1N1-California-2009",
+		model == "complete pooling",
+		ci_type == "type 3"
+	) |>
+		dplyr::mutate(
+		o = factor(outcome,
+							 levels = c("prevactiter", "postvactiter", "titerincrease"),
+							 labels = c("log2(Pre-vaccination titer/5)",
+							 					  "log2(Post-vaccination titer/5)",
+							 					  "log2(Titer ratio)")),
+		m = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c(
+				"Year difference",
+				"p-Epitope sequence distance",
+				"Antigenic cartography distance"
+			)
+		)
+	)
+
+plt_test |>
+	ggplot() +
+	aes(x = x, y = est, ymin = lwr, ymax = upr) +
+	geom_ribbon(alpha = 0.5, aes(fill = outcome)) +
+	geom_line(aes(color = outcome)) +
+	facet_wrap(~method) +
+	scale_color_manual(
+		values = c("blue", "orange", "black")
+	) +
+		scale_fill_manual(
+		values = c("blue", "orange", "black")
+	)
+
+p1 <-
+	dat_models |>
+	dplyr::filter(
+		vaccine_fullname == "H1N1-California-2009"
+	) |>
+	dplyr::mutate(
+		o = factor(outcome,
+							 levels = c("prevactiter", "postvactiter", "titerincrease"),
+							 labels = c("log2(Pre-vaccination titer/5)",
+							 					  "log2(Post-vaccination titer/5)",
+							 					  "log2(Titer ratio)")),
+		m = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c(
+				"Year difference",
+				"p-Epitope sequence distance",
+				"Antigenic cartography distance"
+			)
+		)
+	) |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = norm_dist, y = y, color = o) +
+	ggplot2::geom_point(
+		alpha = 0.1,
+		size = 0.5,
+		position = ggplot2::position_jitter(width = 0.01, height = 0.35, seed = 370)
+	) +
+	ggplot2::geom_ribbon(
+		data = plt_test,
+		mapping = ggplot2::aes(
+			x = x, y = est, ymin = est - 0.05, ymax = est + 0.05, group = o
+		),
+		alpha = 0.25,
+		color = "white"
+	) +
+	ggplot2::geom_line(
+		data = plt_test,
+		mapping = ggplot2::aes(
+			x = x, y = est, color = o
+		),
+		linewidth = 1.5,
+		alpha = 0.85
+	) +
+	ggplot2::facet_wrap(ggplot2::vars(m)) +
+	ggplot2::scale_color_manual(values = c("#E69F00", "#56B4E9", "black")) +
+	ggplot2::scale_x_continuous(
+		limits = c(-0.05, 1.05),
+		breaks = seq(0, 1, 0.25),
+		expand = ggplot2::expansion(0, 0)
+	) +
+	ggplot2::scale_y_continuous(
+		limits = c(-6, 10.5),
+		breaks = c(-5, 0, 5, 10),
+		expand = ggplot2::expansion(0, 0)
+	) +
+	ggplot2::labs(
+		x = "",
+		y = NULL,
+		color = "Outcome",
+		title = "H1N1-California-2009 (n = 948)"
+	) +
+	ggplot2::guides(
+		color = ggplot2::guide_legend(override.aes = list(alpha = 1, size = 3))
+	)
+
+p2 <-
+	dat_models |>
+	dplyr::filter(
+		vaccine_fullname == "H3N2-Hong Kong-2014"
+	) |>
+	dplyr::mutate(
+		o = factor(outcome,
+							 levels = c("prevactiter", "postvactiter", "titerincrease"),
+							 labels = c("log2(Pre-vaccination titer/5)",
+							 					  "log2(Post-vaccination titer/5)",
+							 					  "log2(Titer ratio)")),
+		m = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c(
+				"Year difference",
+				"p-Epitope sequence distance",
+				"Antigenic cartography distance"
+			)
+		)
+	) |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = norm_dist, y = y, color = o) +
+	ggplot2::geom_point(
+		alpha = 0.1,
+		size = 0.5,
+		position = ggplot2::position_jitter(width = 0.01, height = 0.35, seed = 370)
+	) +
+	ggplot2::geom_ribbon(
+		data = plt_test,
+		mapping = ggplot2::aes(
+			x = x, y = est, ymin = est - 0.05, ymax = est + 0.05, group = o
+		),
+		alpha = 0.25,
+		color = "white"
+	) +
+	ggplot2::geom_line(
+		data = plt_test,
+		mapping = ggplot2::aes(
+			x = x, y = est, color = o
+		),
+		linewidth = 1.5,
+		alpha = 0.85
+	) +
+	ggplot2::facet_wrap(ggplot2::vars(m)) +
+	ggplot2::scale_color_manual(values = c("#E69F00", "#56B4E9", "black")) +
+	ggplot2::scale_x_continuous(
+		limits = c(-0.05, 1.05),
+		breaks = seq(0, 1, 0.25),
+		expand = ggplot2::expansion(0, 0)
+	) +
+	ggplot2::scale_y_continuous(
+		limits = c(-6, 10.5),
+		breaks = c(-5, 0, 5, 10),
+		expand = ggplot2::expansion(0, 0)
+	) +
+	ggplot2::labs(
+		x = "\nNormalized antigenic distance",
+		y = NULL,
+		color = "Outcome",
+		title = "H3N2-Hong Kong-2014 (n = 676)"
+	) +
+	ggplot2::guides(
+		color = ggplot2::guide_legend(override.aes = list(alpha = 1, size = 3))
+	)
+
+p1 + p2 +
+	patchwork::plot_layout(
+		ncol = 1,
+		guides = "collect"
+	) &
+	ggplot2::theme(
+		legend.position = "bottom"
+	)
+```
+
+```{r}
+ns <-
+	dat_models |>
+	dplyr::mutate(
+		id = gsub("\\d{4}_id", "", uniq_id),
+		season,
+		vaccine_fullname,
+		.keep = "none"
+	) |>
+	dplyr::distinct() |>
+	dplyr::group_by(vaccine_fullname) |>
+	dplyr::count()
+```
+
+# Dose models
+
+This is a quick model that is also stratified by dose.
+
+```{r}
+m_dose <-
+	alist(
+		y ~ dnorm(mu, s),
+		mu <- a[dose] + b[dose] * x,
+		a[dose] ~ dnorm(5, 5),
+		b[dose] ~ dnorm(0, 5),
+		s ~ dexp(1)
+	)
+
+dat_dose <-
+	dat_models |>
+	# Select only the data we need RIGHT NOW to prevent Stan from throwing a fit,
+	# it will often get angry over unused data that is in the wrong format.
+	dplyr::select(
+		# Variables that should go into the Stan model. These DO need to be
+		# processed to be NUMERIC.
+		id = uniq_id, y, x = norm_dist, dose,
+		# Stratum/nesting variables -- these do NOT need to be processed.
+		vaccine_fullname, method, outcome
+	) |>
+	# Clean up the dose factor -- no need to do by groups since the levels
+	# are always the same!
+	dplyr::mutate(
+		dose = dose |> as.integer()
+	) |>
+	# Cleaning up the factor variables that have to become indices
+	# it has to be done in groups to ensure there are no missing levels!
+	dplyr::group_by(dplyr::across(!c(id, x, y, dose))) |>
+	dplyr::mutate(
+		id = id |> factor() |> forcats::fct_inorder() |> as.integer()
+	) |>
+	dplyr::ungroup() |>
+	# This line creates the stratified data frames. Analogous to base R split()
+	# but organized better.
+	tidyr::nest(dat = c(id, x, y, dose)) |>
+	# rethinking will convert data to a list so we may as well do it ourselves.
+	# This turns each of the subsample data frames into a list of vectors.
+	# Note that some of the Ag distance methods are missing values so we also
+	# need to omit those missing values.
+	dplyr::mutate(dat = purrr::map(dat, \(x) x |> na.omit() |>as.list()))
+```
+
+```{r, eval = FALSE}
+# TODO REDO WORKFLOW USING PRE-COMPILED CMDSTAN MODELS
+# THIS WOULD SAVE QUITE A BIT OF TIME! BUT NOT TODAY (2022-02-17)
+dose_model <-
+	cmdstanr::cmdstan_model(
+		stan_file = here::here("Stan", "dose-complete-pooling.Stan"),
+		compile = TRUE
+	)
+
+fit_a_cmdstan_model <-
+	function(data, data_index, model_index, model_flist, mm = 3) {
+		# Informational message
+		mn <- data_index + n_models * (model_index - 1)
+		paste0("Fitting model ", mn, " of ", n_models * mm, "!\n") |>
+			crayon::white() |>
+			crayon::bgRed() |>
+			cat()
+		
+		mdl <-
+			dose_model$sample(
+				data = data, 
+				seed = 370, 
+				chains = 4, 
+				parallel_chains = 4,
+				iter_warmup = N %//% 2,
+				iter_sampling = N %//% 2,
+				adapt_delta = 0.95,
+				refresh = 1000 # print update every 500 iters
+			)
+		
+		# Invisibly call the garbage collector even though many people
+		# say this is pointless
+		zlib::quiet(gc())
+		
+		# Return the model
+		return(mdl)
+	}
+
+possibly_fit_a_cmdstan_model <-
+	purrr::possibly(fit_a_model, otherwise = "Uh oh!")
+```
+
+
+```{r}
+# Fit the dose models
+set.seed(370)
+n_models <- nrow(dat_dose)
+start_time <- Sys.time()
+
+dose_res <-
+	purrr::walk2(
+		dat_dose$dat, seq_along(dat_nested$dat),
+		\(d, idx) {
+			# Create the file path to save to
+			num <- stringr::str_pad(idx, width = 3, side = "left", pad = "0")
+			out_name <- paste0(here::here("Results/_Out/Dose-Models"),
+												 "/Model", num, ".Rds")
+			
+			if (!file.exists(out_name)) {
+				
+				# Fit the model
+				fit <- possibly_fit_a_model(d, idx, 1, m_dose, mm = 1)
+				
+				# Save the file
+				readr::write_rds(fit, out_name, compress = "gz")
+				
+				# Clean up
+				invisible(gc())
+				rm(fit)
+			}
+		}
+	)
+
+stop_time <- Sys.time()
+```
+
+
+# Weight and tables
+
+<!-- END OF FILE -->

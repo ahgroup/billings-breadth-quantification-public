@@ -1,0 +1,268 @@
+---
+title: |
+  A novel approach for robust evaluation of broadly reactive
+  influenza vaccine candidates
+author: " "
+format:
+  docx: 
+    toc: false
+    number-sections: false
+    reference-doc: "../../Assets/word-template.docx"
+bibliography:
+  - "../../Assets/billings-breadth-quantification.bib"
+  - "../../Assets/package-refs.bib"
+csl: "../../Assets/vancouver.csl"
+execute:
+  echo: false
+  message: false
+  warning: false
+---
+
+```{r setup, include=FALSE}
+suppressPackageStartupMessages({
+	library(yaml, include.only = NULL)
+	library(knitr, include.only = NULL)
+	library(quarto, include.only = NULL)
+	library(flextable)
+})
+
+# Set the knitr option that stops it from mangling file paths from here()
+# I got weird errors with targets that couldn't fix unless I did this.
+# In the future need to figure out how to programatically generate the YAML
+# header cause it doesn't make sense that relative paths are required there
+# but mess up everything else?
+options(knitr.graphics.rel_path = FALSE)
+
+# Read the software bibliography to ensure the dependencies are correct
+# This is really a workaround but I can't figure out how to declare it as
+# a dependency and have it evaluate correctly in tar_quarto() extra_files arg
+bib <- targets::tar_read("software_bibliography")
+rm(bib)
+```
+
+**Authors**  
+
+<!-- TODO fix affiliations -->
+* W. Zane Billings$^{1,2,\land}$ (ORCID: 0000-0002-0184-6134);
+* Amanda L. Skarlupka$^{3}$ (0000-0002-3654-9076);
+* Murphy H. John $^{1, 2}$ (0009-0009-9591-1117);
+* Savannah L. Miller$^{1, 2}$ (0000-0003-2231-3510);
+* Hayley Hemme$^{1, 2}$ (0009-0002-6609-1390);
+* Ted M. Ross$^{4, 5}$ (0000-0003-1947-7469);
+* Andreas Handel$^{1, 2, \land}$ (0000-0002-4622-1146)
+
+**Author affiliations**  
+
+1. College of Public Health, The University of Georgia, Athens, GA, USA.
+2. Center for the Ecology of Infectious Diseases, The University of Georgia, Athens, GA, USA.
+3. Vivli, Burlington, MA, USA.
+4. Center for Vaccines and Immunology, The University of Georgia, Athens, GA, USA.
+5. Florida Research \& Innovation Center, Cleveland Clinic, Port St. Lucie, FL, USA.
+
+$\land$ Corresponding author: WZB (wesley.billings@uga.edu). Alternate corresponding author: AH (ahandel@uga.edu)
+
+**Conflicts of interest**: None of the authors declare any conflicts of interest.
+
+**Funding sources**:
+
+- WZB: none declared
+- ALS: none declared
+- MHJ: none declared
+- SLM: none declared
+- HH: none declared
+- TMR: funded by the Georgia Research Alliance as an Eminent Scholar
+- AH: received partial support from NIH grants/contracts U01AI150747, R01AI170116, and 75N93019C00052.
+
+The funders had no role in the study design, data collection and analysis,
+decision to publish, or preparation of the manuscript.
+
+**Author contributions**:
+
+- WZB: conceptualization, methodology, software, formal analysis, data curation, writing - original draft, writing - review and editing, visualization
+- ALS: conceptualization, methodology, software, formal analysis, writing - review and editing
+- MJ: data curation, validation, writing - review and editing
+- SLM: validation, writing - review and editing
+- HH: validation, writing - review and editing
+- TMR: investigation, resources, data curation, writing - review and editing
+- AH: conceptualization, methodology, writing - review and editing supervision, funding acquisition
+
+**Notes for feedback**
+
+- target journal: We want to submit to PNAS or Proc Soc B, or another general science journal with wide readership. So the manuscript needs to have as few specific technical details as possible. (It probably has a lot of technical details right now because I usually write in a boring and technical way, so I appreciate any suggestions.)
+- given the subsampling results, I think we should only talk about AUC in this manuscript. I also think that would make it less confusing. Does anyone object to only talking about the AUC? We can compare it to the seroconversion rate and GMT, and then we don't have to worry about setting up the magnitude/breadth/total strength stuff with no citations.
+- Planned future results: plot how the metrics change over time.
+- Planned future result: compare the CA/09 and MI/15 vaccines in UGA only as a case study for using the metrics.
+- Planned future result: how does the number of strains and similarity of strains we include in our panels affect the ICC? This can tell us about the "minimum antigenic diversity" needed to get robust answers.
+- Right now the ICCs are frequentist with approximate CIs. I didn't change the stuff in the methods because the bayesian ones are running now, but unfortunately they take longer than the actual models.
+- **if you want to be an author on the actual manuscript, please send me your preferred name, affiliation, orcid, and funding information along with your comments.**
+
+{{< pagebreak >}}
+
+# Abstract
+
+**Background:** Developing broadly-reactive vaccines is a clear path towards reducing the burden of influenza pandemics and seasonal epidemics. However, measuring the breadth of response of a vaccine or candidate entails estimating the immunogenicity of the vaccine against many different influenza strains, and then combining these measurements. The most common method is the proportion of strains to which a vaccine induces a clinically noticeable immune response, which is strongly dependent on the panel of strains used for analysis. Estimates of breadth using this method cannot fairly be compared across different labs or even different studies from the same lab using different virus panels. In our study, we develop a novel robust metric for quantifying vaccine breadth across labs and virus panels.
+
+**Methods:**  We used data from a prospective, open annual influenza vaccination cohort across three study sites from Fall 2013/14 through Spring 2017/18. Each individual contributed pre-vaccination and post-vaccination serum samples which were used for a panel of hemagglutination inhibition (HAI) assays against many strains of influenza, including the strains used in each season's vaccine. We computed multiple antigenic distance metrics between each HAI assay strain and the corresponding seasonal vaccine strain
+
+**Results:** First, we calculated antigenic distance metrics using three different methods. We then fit summary antibody landscapes for vaccine response vs. antigenic distance using a simple model. From these summary landscapes, we computed our novel metrics which adjust for antigenic distance and censoring in the reported titers. We also computed standard breadth metrics from the existing literature, along with adjusted metrics which are identical to the standard metrics but also control for censoring in the titers. We subsampled multiple panels of heterologous strains and sets of individuals from our cohort study to create hypothetical studies, and we computed metrics across these subsampled studies. Finally, we calculated the intraclass correlation (ICC) to measure how much each metric varied across labs with different populations and virus panels.
+
+**Conclusions:** Our novel metrics are much more robust to the panel of viruses chosen by a given lab than currently used metrics for assessing vaccine breadth. Implementing our methods is easy and does not require imputing missing strains from vaccine panels or costly logistics for coordinating which strains are used in vaccine breadth panels, although a combination of approaches would be ideal. While a coordinated solution with a multiplex assay is likely a useful next step for vaccine breadth researchers, our metrics allow for fairer comparison of vaccine components until coordinated panels are more feasible.
+
+**Keywords:** influenza, vaccines, heterologous immunity, vaccine breadth, broadly-reactive vaccines, universal influenza vaccine, cohort study, secondary data analysis
+
+\pagebreak
+
+# Introduction
+
+Developing a broadly-reactive (or "universal") influenza vaccine is a key goal for reducing the burden of seasonal influenza and increasing pandemic preparedness [@kim2018; @erbelding2018; @wei2020; @vogel2020]. As a given influenza strain spreads, many hosts develop an immune response to that strain, placing selective pressure on the virus. Mutant lineages can acquire antigenic changes that are not recognized by hosts who have previously received vaccines, allowing for vaccine escape. The rapid evolution and vaccine escape patterns of influenza make developing a universal vaccine difficult [@krammer2018a; @koelle2006; @zinder2013; @oidtman2021]. Many broadly-reactive vaccine candidates are under development [@taaffe2024], but the best method for assessing the breadth of a vaccine candidate (how broadly-reactive a vaccine candidate is) is unclear.
+
+In previous research, the breadth of the response is quantified by measuring vaccine-induced immunogenicity against a panel of historical influenza strains. Among multiple vaccine candidates, the one that induces a clinically meaningful immune response to the highest number of strains is considered the most broadly reactive [@allen2021; @dugan2020; @hinojosa2020; @li2021; @jang2021; @boyoglu-barnum2021]. This method is easy to conduct, but the selection of different virus panels across research groups makes the results from different labs hard to compare. Some methodological work has focused on methods for imputing data across different virus panels [@huang2017; @einav2022], but there is no practical exploration of how well these imputation measures work, and they rely on a low-rank approximation which may be unreliable [@arhami2025]. Requiring many different labs to use exactly the same panel of viral strains (including constant monitoring for adaptations, and ensuring all protocols are the same) is logistically not feasible and would be extremely expensive. Breadth metrics that are robust to the selection of different panels of viral strains would circumvent these logistical issues and allow for fair comparisons of broadly-reactive vaccine candidates across lab groups.
+
+Recent methods have focused on quantitative analysis of individual antibody landscapes, rather than counting the number of seroprotection events across an immune assay panel. HAI is the most common assay used for these panels, but inherent biases of the HAI assay can influence breadth measurements [@hensley2009; @hensley2014; @zacour2016; @waldock2021], so a method for quantifying vaccine breadth should be agnostic to the specific measurement used. Other proposed immunological assays for breadth calculation include stem-binding neutralization assays [@einav2023], binding profiles [@azulay2023], neuraminidase inhibition [@catani2024], and a multiplex neutralization assay [@loes2024]. Regardless of the assay one uses, an antibody landscape is a curve which depicts antibody response on the $y$-axis with respect to some measurement on the $x$-axis which attempts to order the responses by the differences between influenza strains (distance metrics). Just as there is no gold standard for the best immunological assay to use, there is no gold standard for the distance metric, and different metrics can measure different ways for two strains to be different. Previously proposed distance metrics include the year of strain isolation [@yang2020; @auladell2022], genetic differences [@nachbagauer2017; @smith2004; @gupta2006; @anderson2018; @forghani2020], biochemical or biophysical differences [@grantham1974; @dang2010]; and distances derived from antigenic cartography [@fonville2014; @hinojosa2020;
+@fonville2015; @kucharski2018; @hay2019a; @wang2021b]. Previous work suggests notable differences between different antigenic distance metrics [@bedford2014], but how these differences affect breadth quantification is unclear.
+
+In our study, we propose the use of antibody landscapes from influenza vaccine cohort studies as the basis for measuring vaccine breadth. Our metrics are agnostic to the immunological assay and distance metrics used, and are robust to the use of different virus panels, compared to currently-used metrics. We develop methods for creating population-summary antibody landscapes, and metrics derived from the summary antibody landscape which are more robust to differences in virus panels than previously used methods. We also include a case study showing how our methods can be used to assess breadth of response between two different vaccine candidates. Overall, our study contributes to the definition of breadth and the reproducibility of selecting broadly-reactive vaccine candidates by improving the ability to compare results across labs.
+
+# Methods
+
+## Data source
+
+For this study, we performed a secondary data analysis of a subcohort from a prospective, open design ongoing vaccine cohort study. The cohort study has been described previously [@nunez2017; @carlock2024], but in brief, individuals were recruited one of two study sites (Port St. Lucie, FL, or Pittsburgh, PA) during the influenza season, donated a pre-vaccination blood draw, received a Fluzone (Sanofi) seasonal influenza vaccine, and returned at a follow-up visit to donate a post-vaccination blood draw at approximately 28 days after vaccination. Each serum sample was used for a panel of hemagglutination inhibition (HAI) assays to the strains in the vaccine, as well as for a panel of historical strains. We considered only the influenza A(H1N1) responses to the standard dose Fluzone vaccine in our study as a proof of concept, but our methods apply equally to any panel of heterologous assays. We calculated descriptive statistics for our cohort, including counts per season and demographic summaries.
+
+We calculated the antigenic distance between the vaccine strain (the A(H1N1) strain used in the vaccine formulation in a given season) and the assay strain (the actual virus strain added to the serum during the HAI assay) for every HAI assay using three different metrics. We calculated the temporal antigenic distance, which is the difference in isolation year between the vaccine strain and the assay strain; the dominant $p$-epitope distance [@gupta2006], which is the maximum proportion of amino acid differences across the five immunodominant epitope sites on the hemagglutinin head; and the cartographic distance [@smith2004]. Antigenic cartography employs statistical dimension reduction on a matrix of serological titer data before taking Euclidean distances between strains. We created a two-dimensional cartographic map with Racmacs [@racmacs] using pre-immune human sera from all assays in our study sample, and used the lowest stress map from 100 random initializations with 100 L-BFGS optimization rounds each. To fairly compare across the three antigenic distance metrics, which have different units, we min-max normalized all of the antigenic distance values within a given season.
+
+## Vaccine strength estimation framework
+
+Next, we developed a framework for estimating vaccine performance including both the magnitude of the response (response to the homologous vaccine strain) and breadth of response (summary of responses to heterologous strains). Our framework also allows for estimation of the total strength of a vaccine, which combines the magnitude and breadth into a one-number summary of the response induced by vaccination. We developed one metric for each of the magnitude, breadth, and total strength of the response and compared these to the metrics currently used in the literature.
+
+Metrics in the current literature (see Introduction) rely on calculating the geometric mean titer (GMT) or seroconversion rate (SCR) across a panel of historical strains. In this "current" framework, the estimate of the magnitude of the response is the GMT to the homologous strain; the estimate of the breadth of response is the seroconversion rate across all strains in the panel; and the estimate of the total strength of the response is the GMT across all strains. See the Supplement for mathematical details on these quantities.
+
+Our novel robust metrics are derived from a sample summary antibody landscape. That is, rather than consider all of the individual antibody landscapes in our study (there is one per person-year), we fit a model that estimates the summary antibody landscape for our study sample. Any statistical model that can estimate vaccine outcomes as a function of antigenic distance could be used here, but for simplicity we used a linear regression model. In order to fairly weight the contributions of each individual antibody landscape, we modeled the post-vaccination titer as a Gaussian outcome with a global intercept, a fixed effect for antigenic distance, and correlated varying intercepts and antigenic distance effects for each individual. For simplicity, we treated all person-years from the same individual as independent data. The Supplement contains model formulas and details on our regression model implementation.
+
+From the population summary antibody landscape, we can derive estimates of the magnitude, breadth, and total strength of the vaccine response. We estimate the magnitude as the intercept of the linear regression line (or in general, the predicted response at an antigenic distance of zero); the breadth as the antigenic distance value where the summary antibody landscape intercepts the value 1:40 (the HAI titer accepted as a marker for seroconversion and seroprotection); and the total strength as the area under the curve (AUC) of the regression line between antigenic distances of 0 and 1.
+
+## Model implementation and censoring correction
+
+We implemented our summary antibody landscape models in a bayesian framework, which allows us to easily obtain uncertainty estimates for each metric as credible intervals. In order to fairly compare the current metrics with our novel metrics, we also developed models for calculating the current metrics in a bayesian framework to obtain comparable CIs [@mcelreath2020; @gelman2007; @gelman2020]. We estimated the homologous GMT using a Gaussian regression model for the post-vaccination titer with an intercept only, fit only to titers from the homologous strain --- in this model, the estimate of the intercept estimates the post-vaccination GMT. Similarly, we estimated the total strength GMT with a Gaussian regression model for the post-vaccination titer with an intercept only, using data from all assay strains. Finally, we estimated the seroconversion rate using a logistic regression model with an intercept only, where the outcome was seroconversion to a given strain. We defined seroconversion as a post-vaccination titer of at least 1:40 with a 4-fold change or greater between pre- and post-vaccination titers.
+
+Because we estimated all of our metrics using regression models, we can easily apply a correction to the likelihood to adjust for the interval censoring and limit of detection issues inherent to HAI titers [@breen1996]. The assays in our dataset had a lower limit of detection of 1:10 and an upper limit of detection of 1:20480. We estimated all six of the metrics (the current metrics and our novel metrics) using models with censoring correction and without a censoring correction, since censoring is known to artificially deflate the amount of uncertainty. In order to fairly compare metrics across each study, we min-max normalized each of the metrics within each season. Since all of the metrics have different units, normalization allows us to compare the relative spread of each metric fairly.
+
+We estimated these metrics on the entire dataset for each season to determine if vaccine strength varied seasonally after accounting for the breadth of response, and we calculated the metrics with and without a censoring correction to gain a baseline understanding of how much censoring affects the metrics.
+
+## Robustness analysis
+
+Next, in order to show that our novel metrics are more robust to comparisons across different historical strain panels than currently used metrics, we implemented a subsampling analysis. We created 25 subsampled "studies" which are intended to simulate 25 labs analyzing the same vaccine candidate using different virus panels. For each of the subsampled studies, we randomly sampled 9 heterologous strains from the panel of either 15 or 16 for a given season, and added the homologous strain for that season to get a panel of 10 viruses for that study. We also randomly sampled 100 individuals to "participate" in a given study. We calculated all six metrics on each subsampled study, both with and without a censoring correction.
+
+Once we calculated the metrics for each subsampled study, we used the intraclass correlation (ICC) as a measure of consistency across the subsamples for a given metric. The ICC measures the proportion of variance in a statistic that can be attributed to a specific grouping factor, and ranges from 0 to 1. An ICC close to 0 indicates that the differences between studies contribute very little to the variation in estimated metrics, while an ICC close to 1 indicates that the differences between studies are the major source of variation in estimated metrics. We computed the ICC for each of the six metrics, both with and without a censoring correction.
+
+We performed this robustness analysis for each seasonal cohort in our study sample to determine if the ICC for each metric changed seasonally. We calculated each ICC using a bayesian random effects model which contained only a global intercept and a random intercept for each subsampled study. The outcome in each model was the metric of interest, and we used a Gaussian likelihood distribution. See the Supplement for detailed information on all of our models.
+
+## Implementation
+
+We implemented all of our results in a bayesian framework for two main reasons. First, estimating the vaccine response metrics in a bayesian framework allows us to calculate CIs for each metric without resorting to bootstrapping or other solutions for frequentist confidence intervals that can be unreliable. Second, our study is a secondary data analysis, so any frequentist confidence intervals and p-values we calculate would suffer from inflated false positive rates. Thus, we do not report any p-values in our results.
+
+Our analysis was conducted with R version 4.4.2 (2024-10-31) using RStudio version 2024.12.1.563 [@positteam2025]. Our project was developed as a `targets` pipeline [@targets] using `renv` [@renv] and `here` [@here] to enhance reproducibility. We deployed our pipeline using the `crew` package on the University of Georgia's Sapelo2 computing cluster, which uses the Slurm scheduling software [@Slurm1; @Slurm2]. We implemented our bayesian models with the `brms` package [@brms1; @brms2; @brms3] using the `cmdstanr` backend [@cmdstanr] and `cmdstan` version 2.36.0 [@cmdstan] as the interface to the Stan probabilistic programming language [@stan-user-guide; @stan-reference-manual]. We additionally used the `tidyverse` package suite [@tidyverse] and the packages `qs2` [@qs2], `tidybayes` [@tidybayes], and `pracma` [@pracma] for formal analysis. We created our manuscript and supplementary material using Quarto version 1.6.40 [@quarto] with the packages `knitr` [@knitr1; @knitr2; @knitr3] and `softbib` [@softbib]. We made our figures using `ggplot2` [@ggplot2], `patchwork` [@patchwork], and `ggdist` [@ggdist1; @ggdist2] and our tables using `flextable` [@flextable]. The Supplement contains more details on our methodology, including instructions for running our code. We archived our dataset and analysis code on Zenodo (LINK HERE) and GitHub (LINK HERE).
+
+# Results
+
+## Data description and antibody landscape
+
+```{r}
+#| label: unique individual loading
+
+uid <- targets::tar_read("individual_counts") |>
+	qs2::qs_read()
+```
+
+Our study sample consisted of several thousand pairs of HAI assays (@tbl-counts), with at least 1000 in each study season. These assay pairs represent homologous and heterologous HAI assay pairs (one pair includes one pre-vaccination and one post-vaccination titer). Every individual enrolling in a given season contributed the same number of HAI assays, and each study site used the same historical panel in a given season (@tbl-people). Overall, we included $1,156$ person-years of data, representing $17,601$ pairs of HAI assays. While some individuals re-enrolled in the study in successive seasons, at the same study site each time, we treated all person-years as independent for the purpose of our analysis. Thus, $1,156$ is the total number of enrolled person-years, but the total number of enrolled unique individuals was $`r uid[["Overall"]]`$ ($`r uid[["FL"]]`$ from the FL study site, $`r uid[["PA"]]`$ from PA, and $`r uid[["UGA"]]`$ from UGA). Summary plots of the sample titer distributions, along with more information on the heterologous strains used each season, are shown in the Supplement.
+
+```{r}
+#| label: tbl-counts
+#| tbl-cap: "Count of HAI assay pairs included in our study from each study site during each season. Numbers shown are count (cell percentage). The only season in which all three study sites operated was 2016/2017, and a dash indicates that the study site for that row was not operational during the season indicated by the column."
+
+targets::tar_read("assay_counts_table") |>
+	qs2::qs_read()
+```
+
+```{r}
+#| label: tbl-people
+#| tbl-cap: "Count of individuals enrolled in our study from each study site during each season. Numbers shown are count (cell percentage). The last row of the table shows the number of assay pairs contributed by each individual who enrolled in the study and completed both study visits. Each individual who enrolled in a particular season contributed the same amount of HAI titers or was excluded from our analysis."
+
+targets::tar_read("person_counts_table") |>
+	qs2::qs_read()
+```
+
+@fig-landscape shows our summary antibody landscape for the 2016-2017 influenza season, pooling data across the three studies. We show the antibody landscapes for the three different distance metrics, both with and without the censoring correction. Overall, the censoring correction slightly increased the intercept and made the slope more negative (making the line slightly steeper) for all three models, but the choice of antigenic distance metric had a more noticeable impact on the landscapes. The summary landscapes using the cartographic distance were steeper and had a higher intercept than the p-Epitope landscapes, which in turn had steeper slopes and higher intercepts than the temporal distance landscapes.
+
+The differences between the antigenic distance metrics are also noticeable in a qualitatively different ordering and relative placement of certain strains. Using the temporal distance, the CA/09 strain is more similar to the USSR/77 strain than to the SC/18, which is misleading. The CA/09 strain represents the pandemic-like H1N1 lineage which is more genetically and antigenic similar to the SC/18 strain, as reflected in the p-Epitope and cartographic distance orderings respectively. Notably, the p-Epitope distance placed the three distances roughly equidistant while the cartographic distance estimates the CA/09 strain as being more different from either SC/18 or USSR/77 than those strains are to each other, which intuitively reflects the unique deletions that differentiate the CA/09 clade from other H1N1 variants.
+
+The differences between the metrics and the corrected (for censoring) vs. uncorrected landscapes is apparent in the vaccine immunogenicity metrics for this subcohort (@tbl-metrics). After correcting for censoring, all of the metrics increased (the current metric for breadth, seroconversion rate, which is based on a binary outcome and therefore cannot be corrected for censoring, so it did not change). While many of the corrected and uncorrected metrics had overlapping credible intervals, the intercepts in particular (novel metrics for magnitude) showed a notable increase for all three antigenic distance metrics. The difference between censoring methods shows how failing to properly account for censoring can bias vaccine results towards the null, potentially making vaccine candidates look worse than they are. Focusing only on the metrics with censoring corrections going forward, the novel metrics also varied greatly across the three antigenic distance metrics.
+
+In particular, using the temporal method (the most common method for antibody landscape analysis in the literature) underestimated all three of the metrics, because the temporal method is insufficient for capturing antigenic and genetic differences between virus strains. The p-Epitope metric yielded more optimistic results for breadth and total strength than the cartographic method, but a smaller estimate of the magnitude. From these data alone, we cannot tell which metric is more appropriate, but based on the summary landscape (@fig-landscape), the distances covered by our historical panel were different for cartographic and p-Epitope distances. While the cartographic distance had a fairly even coverage of the antigenic distance metric, there was a gap where we had no viruses with a normalized cartographic distance around 0.25. The p-Epitope metric, however, is discrete and lumps many more strains close together. Having more strains with normalized antigenic distances near 1 (which have high leverage in a regression model) may bias the intercept downward, and correspondingly affect the conditional estimate of the slope. In short, we need a panel which evenly covers antigenic space for both cartographic and p-Epitope distances before we can determine which metric produces the "correct" vaccine immunogenicity metrics. 
+
+We also noted several differences between the current set of metrics and our novel metrics. While the temporal metric underestimated immunogenicity for all three metrics relative to the current metric set, the p-Epitope metric produced a smaller estimate of the magnitude and higher estimate of the breadth and total strength. Since the novel magnitude estimate of the cartographic distance was similar to the  magnitude estimate from the current metric, comparisons between current and novel metrics using the cartographic distance may be the most useful for calibrating our understanding. Both the cartographic and p-Epitope metrics produced more optimistic metrics of breadth and total strength than the current metrics or novel metrics using temporal distance, which likely indicates that using a "real" metric of genetic or antigenic distance allows for less biased estimates of vaccine breadth.
+
+While we show only the results for the 2016/17 season here, the other seasons had similar trends and we include summary antibody landscapes and metric calculations for the other seasons in the Supplement.
+
+```{r}
+#| label: fig-landscape
+#| fig-cap: "Raw data and summary antibody landscapes for the 2016 - 2017 influenza season. Each point shows the post-vaccination HAI titer to a specific strain with a specified normalized antigenic distance from the vaccine strain (CA/09 in 2016/17). The dashed line and envelope show the mean and 95% credible interval (CrI) of the posterior summary antibody landscape. The strain labels show the relative positions of three different strains (CA/09, the homologous strain; SC/18, the 1918 pandemic-like strain; and USSR/77, the most different strain from the vaccine strain in the genetic comparison. Each column of plots shows a different antigenic distance metric (left: cartographic distance; center: p-Epitope sequence distance; right: temporal year-based distance). The two rows show landscapes fitted without a censoring correction (top row) where values lower than the LoD were set to 5, and the bottom row shows landscapes with the likelihood-based censoring correction."
+
+targets::tar_read("summary_landscape_figure_files")[[4]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: tbl-metrics
+#| tbl-cap: "Current and novel vaccine immunogenicity metrics for the 2016 - 2017 season data, shown both with and without the censoring correction. The 'Current' metric set uses the homologous GMT for magnitude, the seroconversion rate across the historical panel for breadth, and the GMT across all strains for the total strength. All of the 'Novel' metric sets, each computed using a different metric for antigenic distance, are based on the summary antibody landscape in @fig-landscape. The novel metrics are regression line intercept for magnitude, proportion of the line above a titer of 1:40 for breadth, and area under the curve for total strength. All metrics were derived from bayesian regression models and numbers shown are the posterior mean and 95% CrI."
+
+targets::tar_read("example_metrics_table") |>
+	qs2::qs_read()
+```
+
+## Subsampling study results
+
+To show that our novel metrics are more robust to the choice of virus panel than the current metrics for vaccine breadth, we created 25 subsampled labs from each seasonal subcohort in our study sample. Each lab had a virus panel consisting of the homologous vaccine strain for the season and 9 heterologous strains randomly sampled without replacement from the set of strains used in that season. @fig-subsamples shows the posterior distribution of each metric across the different subsamples from the 2016/17 subcohort, after correcting for censoring. The results were clearly different between the current metrics, novel metrics using cartographic distance, and novel metrics using p-Epitope distance; as well as across the metrics for magnitude, breadth, and total strength of the vaccine. For magnitude metrics, the current and novel (Cartographic) metrics distributions looked qualitatively similar, although the p-Epitope estimates were notably lower (as we observed in @fig-landscape) and there is considerably more between-group variation.
+
+The breadth metric results were striking: the estimate of breadth using the current metric (Seroconversion rate) was very consistent around $0.10$ across all subsamples -- this appears to be due to a low overall rate of seroconversion in our dataset. Our novel metric showed a higher overall estimate for both cartographic and p-Epitope antigenic distances, although the results were much more consistent across subsamples for the cartographic distance than the p-epitope distance. Finally, the total strength metrics followed the same trend that we observed in the full cohort (@tbl-metrics), but the estimates of the novel metrics using the cartographic dataset were the most consistent across subsamples. These qualitative results are supported by the intraclass correlation (ICC) that we calculated for each of the 9 immunogenicity metrics (@tbl-iccs).
+
+The current metric set had the lowest ICC among the three groups we compared for the magnitude estimate, but the highest ICC for the breadth and total strength estimates, indicating variability in the current metrics for breath and total strength was dominated by between-subsample variation. The novel metric set using the p-epitope antigenic distance had high ICCs for all three metrics. Finally, the novel metrics using the cartographic antigenic distance had a comparable ICC to the current metric set for the breadth metrics, and the lowest ICC for breadth and total strength. In particular, the ICC for total strength using the cartographic distance was much lower than the current metrics, indicating that substantially less variability in our novel metrics, when the cartographic distance is used for estimation, is due to variation across subsamples. The results for the other seasons were similar and are shown in the Supplement.
+
+```{r}
+#| label: tbl-iccs
+#| tbl-cap: "Intraclass correlation coefficients (ICCs) for consistency across the subsampled studies. Each number shown is the posterior mean and 95% CrI for the ICC, which we calculated as the between-groups variance for subgroups divided by the between-groups variance for subgroups plus the residual error variance. An ICC closer to zero indicates that little of the variance in metric estimates is due to variability across subsamples, while an ICC closer to one indicates that variability across subsamples makes up the majority of the variation."
+
+targets::tar_read("example_icc_table") |>
+	qs2::qs_read()
+```
+
+```{r}
+#| label: fig-subsamples
+#| fig-cap: "Estimated immunogenicity metrics for each simulated lab drawn from the 2016/17 subcohort data. We computed the current metrics for magnitude, breadth, and total strength, and the novel metrics usingt both the cartographic distance and the p-Epitope distance for each subsample. The black circles show samples from the posterior distribution of each metric. The red dotted line shows the overall mean metric estimate across the subsample, and the red x for each subsample shows the mean metric estimate for that subsample. In general, metrics with lower ICCs (less variation explained by subsample grouping) will have group means that are more similar to the overall mean. We show only 1000 posterior samples for each subsample/metric to avoid unnecessary overplotting."
+
+targets::tar_read("icc_plots")[[4]] |>
+	knitr::include_graphics()
+```
+
+# Discussion
+
+Our novel methods for evaluating broadly-reactive vaccine candidates are more robust to differences in virus panels than currently used metrics. In addition, our incorporation of antigenic distance allows our metrics to be used for further analyses which provide more information about the vaccine-induced immune response than metrics based only on geometric mean titers and seroconversion rates. We found that current methods for evaluating breadth and the total strength of the vaccine response (incorporating breadth) underestimate the true breadth of vaccine response. Methods based on the seroconversion rate across strains and methods that use year of isolation (or difference between years of isolation) as a proxy for antigenic distance are the most common methods used for analyzing breadth in the literature, but neither works well.
+
+Our metrics appear to be more robust and informative than the most common methods in current use, but rely strongly on the choice of an antigenic distance metric. We previously found that many antigenic distance metrics can be used to make similar predictions about vaccine response (CITE AIM 2PREPRINT WHEN WE GET IT ONLINE), which seem to contradict these results. However, the metrics we calculate here do not need to account for many sources of intraindivdual variability and confounders, and uncertainty is only induced by the uncertainty in estimating model parameters from the data, so we have a much higher resolution with which to see differences in antigenic distance metrics. The major issue with choosing the correct antigenic distance metric is that there is no ontologically correct choice -- different antigenic distance metrics serve different purposes. Our analysis on only A(H1N1) strains suggests that cartographic distance works well for estimating our metrics, likely because it is continuous (rather than discrete with a limited number of possible values like p-epitope), and because the historical panel of viruses used in our study had good coverage in cartographic distance space. However, there are many issues with HAI assays [@hensley2009] and results might vary across cohorts or with A(H3N2) viruses where HAI assays can be more troublesome. Since cartographic distance is widely accepted, we feel that recommending the use of cartographic distance for calculating our robust metrics is not overly hasty, although there is to date no major comparison of cartographic distances computed from ferret and human sera, or differences in cartographic maps across human cohorts.
+
+We also do not assess the major alternative strategy for solving the problem of differences in virus panels. Methods for imputing systematically missing strain data across different panels also seem promising [@huang2017; @einav2022], although we have not attempted to evaluate them in our subsampling context. Our robust metrics can be used alongside imputation methods, in situations where imputating titers across strain panels is reliable. A future multi-center study using the same influenza strains, vaccine candidates, and protocols (preferably with a high-throughput multiplex assay) at all study sites is necessary to truly evaluate the robustness of any procedure for measuring response breadth. Such a future study should also plan to collect sera, store serum samples long term, and run HAI assays for "future" strains that will evolve after the serum samples are collected. Since we cannot feasibly run protection or efficacy trials to assess vaccine breadth, analyzing which vaccines induce a strong response against these "future" strains will be the best surrogate to fairly assess any metric that estimates vaccine breadth.
+
+In short, our novel metrics can be used to quantify breadth of vaccine response, and compare broadly reactive vaccine candidates more robustly across labs using different virus panels. Understanding the best antigenic distance method to use for quantification is difficult, but using cartographic distance still provides researchers with much more information than current methods, despite the limitations of cartography. We hope that in the future our strategy for analyzing antibody landscapes to understand breadth of vaccine response can be combined with other promising methods and study designs to further the development of a universal influenza vaccine.
+
+# Acknowledgments
+
+We thank Michael Carlock (Cleveland Clinic, Port St. Lucie, FL, USA) for assistance with obtaining data. In addition, we thank the developer of `targets`, William Michael Landau (Eli Lilly and Company, Indianapolis, IN, USA) for assistance with developing our computational pipeline.
+
+This study was supported in part by resources and technical expertise from the Georgia Advanced Computing Resource Center, a partnership between the University of Georgia’s Office of the Vice President for Research and Office of the Vice President for Information Technology.
+
+# References
+
+::: {#refs}
+:::
+
+<!-- END OF FILE -->

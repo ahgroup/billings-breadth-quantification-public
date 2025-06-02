@@ -1,0 +1,825 @@
+---
+title: "Generative simulations for HAI as a function of distance"
+author: "Zane"
+date: last-modified
+date-format: iso
+format: docx
+execute:
+  warning: false
+  error: false
+  cache: true
+---
+
+```{r}
+#| include: false
+# So renv will do its job correctly
+box::use(
+  markdown,
+  mime,
+  rmarkdown,
+  yaml,
+  tibble,
+  # I have to put it somewhere so renv will leave me ALONE
+  BiocManager
+)
+
+# source(here::here("R", "functions", "Rethinking-Helpers.R"))
+```
+
+# Basic simulation
+
+First we will attempt to simulate raw titer data, without including antigenic
+distance in the simulation. The outcome we want this simulation to produce
+is a semi-realistic distribution of titer values with support on the observed
+measurement space. We adopt the following model, where $y_i$ is the $i$th
+individual's measured titer.
+
+$$
+\begin{align*}
+\log_2 y_i &\sim \mathcal{N}(\mu, \sigma^2) \\
+y_i^* &= \begin{cases}
+5 & \log_2 y_i < 1 \\
+5 \cdot \lfloor 2 ^ {y_i} \rfloor & \log_2 y_i \geq 1
+\end{cases}
+\end{align*}
+$$
+We adopt the transformation
+$$
+g(y) = 5 \cdot 2^{y_i}
+$$
+because the physical limit of detection (LoD) of the HAI assay is
+$$
+10 = 5 \cdot 2 ^ 1
+$$
+and values below this threshold are, by convention, recorded as $5$. So we know
+those values are below the LoD, but not what the values are. The distributional
+parameters $\mu$, the mean, and $\sigma^2$, the variance, are unknown to us
+practically and must be estimated from the data.
+
+```{r}
+one_titer_sim <- function(N = 1e4, seed = 370, mean = 3, sd = 1) {
+	set.seed(seed)
+	sim <-
+		tibble::tibble(
+			# Assume log(titer) is drawn from a normal distribution
+			raw_log_titer = rnorm(N, mean, sd),
+			# If we observe a titer with log(titer) < 1 (LOD), mark it as 0
+			trunc_log_titer = ifelse(raw_log_titer >= 1, raw_log_titer, 0),
+			# The assay is dilution based, so we only observe the floor of each
+			# value.
+			rounded_titer = floor(trunc_log_titer),
+			# Now final observed titer is equal to this transformation.
+			sim_titer = 5 * 2 ^ rounded_titer
+		) |>
+		dplyr::mutate(subject_id = dplyr::row_number())
+}
+
+out <- one_titer_sim(1000, mean = 4, sd = 2)
+#plot(out$raw_log_titer, out$trunc_log_titer)
+#points(out$raw_log_titer, out$rounded_titer, col = "blue")
+barplot(table(out$sim_titer))
+```
+
+In the above plot, you can see the result of 1000 simulations, where $mu = 4$
+and $\sigma^2 = 4$. (Note that the simulation is parametrized in terms of the
+standard deviation, $\sigma = +\sqrt{\sigma^2}$.) Notably, while the mean
+was specified as $4$ (an observed titer of $80$), the mode of the distribution
+is at $40$ instead.
+
+We can also notice that the observed mean is biased, estimated at
+$`r round(mean(log2(out[["sim_titer"]] / 5)), 2)`$ on the scale of $y_i$ in
+the above model ($`r round(5 * 2 ^ round(mean(log2(out[["sim_titer"]] / 5)), 2), 2)`$
+on the observed measurement scale). A [stackexchange post](https://math.stackexchange.com/questions/3662314/statistics-of-a-gaussian-random-variable-with-the-floor-function-transformation) suggested that as long as $sigma^2$ is
+"not small" (suggested as $\sigma^2 \geq 1$ [here](https://mathematica.stackexchange.com/questions/278040/finding-the-mean-and-variance-of-a-distribution/278164#278164)) suggests that $\mu - \frac{1}{2}$ is a
+good approximation to the mean of the transformed random variable (on the log
+scale), which is close to what we observed.
+
+I guess that this is probably somehow related to a Poisson distribution, but
+I don't know or care enough to think more deeply about that.
+
+# Including antigenic distance
+
+We can introduce the
+antigenic distance into this simple model by taking
+$$\mu = f(d)$$
+for some function $f$. For the sake of simplicity, we assume that $\mu$ is
+**linearly dependent on distance**. Our model then becomes
+$$
+\begin{align*}
+y_i^* &= \begin{cases}
+5 & \log_2 y_i < 1 \\
+5 \cdot \lfloor 2 ^ {y_i} \rfloor & \log_2 y_i \geq 1
+\end{cases} \\
+\log_2 y_i &\sim \mathcal{N}(\mu, \sigma^2) \\
+\mu &= \alpha + \beta \cdot d
+\end{align*}
+$$
+where $d \in [0, 1]$. Under this model, $\alpha$ represents the expected
+titer value when $d = 0$, which corresponds to the response to the homologous
+vaccine strain in real life. The slope, $\beta$, should be negative, and thus
+represents the rate at which expected titers should decrease as strains become
+more distant. Furthermore, we can note that
+$$E[y \mid x = 1] - E[y \mid x = 0] = \mu(1) - \mu(0) = \beta.$$
+Thus, since $d \in [0, 1]$ we can interpret $\beta$ as the difference between
+the expected titer for a completely novel strain and the expected titer for the
+homologous strain. Imposing the condition that $\mu = 0$ when
+$d = 1$ is thus equivalent to specifying that $\alpha + \beta = 0$. This would
+be a standard regression problem with linear constraints with an analytic
+maximum likelihood solution if the true $y_i$ values were observed.
+
+Anyways, as an example, consider the situation when $\alpha = 4$ and
+$\beta = -3$. For now, we leave the standard deviation as $2$, as in the
+previous simulation.
+
+```{r}
+set.seed(100)
+ex_dist_sim <-
+	tibble::tibble(
+		d = seq(0, 1, 0.1),
+		mu = 4 - 3 * d
+	) |>
+	dplyr::mutate(
+		sim = purrr::map(mu, \(x) one_titer_sim(1000, mean = x, sd = 2))
+	)
+
+library(ggplot2)
+plt <- ex_dist_sim |>
+	tidyr::unnest(sim) |>
+	dplyr::mutate(
+		sim_titer = factor(sim_titer),
+		mu = factor(mu) |> forcats::fct_inorder(),
+		distance = factor(d) |> forcats::fct_inorder()
+	) |>
+	ggplot() +
+	aes(x = sim_titer) +
+	geom_bar(col = "black", fill = "gray") +
+	facet_wrap(~distance, labeller = "label_both") +
+	labs(
+		x = "Observed titer",
+		y = "Count"
+	) +
+	zlib::theme_ms() +
+	theme(
+		axis.text.x = element_text(angle = 45),
+		plot.background = element_rect(fill = "white")
+	) +
+	coord_cartesian(
+		ylim = c(0, 700)
+	)
+
+fn <- here::here("Misc", "Lab-Notes", "06-Generative-Sims", "p01.png")
+ggsave(
+	filename = fn,
+	plot = plt,
+	width = 13,
+	height = 8
+)
+```
+
+```{r}
+#| fig.width: 6.5
+knitr::include_graphics(fn)
+```
+
+We can also do a more extreme example where we assume
+$\left| \beta \right| > \alpha,$
+which will cause the titers to decay towards the limit of detection rapidly.
+
+```{r}
+set.seed(100)
+ex_dist_sim <-
+	tibble::tibble(
+		d = seq(0, 1, 0.1),
+		mu = 4 - 6 * d
+	) |>
+	dplyr::mutate(
+		sim = purrr::map(mu, \(x) one_titer_sim(1000, mean = x, sd = 2))
+	)
+
+plt <- ex_dist_sim |>
+	tidyr::unnest(sim) |>
+	dplyr::mutate(
+		sim_titer = factor(sim_titer),
+		mu = factor(mu) |> forcats::fct_inorder(),
+		distance = factor(d) |> forcats::fct_inorder()
+	) |>
+	ggplot() +
+	aes(x = sim_titer) +
+	geom_bar(col = "black", fill = "gray") +
+	facet_wrap(~distance, labeller = "label_both") +
+	labs(
+		x = "Observed titer",
+		y = "Count"
+	) +
+	zlib::theme_ms() +
+	theme(
+		axis.text.x = element_text(angle = 45),
+		plot.background = element_rect(fill = "white")
+	) +
+	coord_cartesian(
+		ylim = c(0, 700)
+	)
+
+fn <- here::here("Misc", "Lab-Notes", "06-Generative-Sims", "p02.png")
+ggsave(
+	filename = fn,
+	plot = plt,
+	width = 13,
+	height = 8
+)
+```
+
+```{r}
+#| fig.width: 6.5
+knitr::include_graphics(fn)
+```
+
+# Model fitting -- no censoring adjustment
+
+Next we'll fit a simple Bayesian model to see if we can recover the parameters
+from the generative simulation. For the first test, we'll explicitly use the
+priors which have the true values of the simulation as their most likely
+values. We'll also use the entire simulated dataset for the first model test.
+
+```{r}
+# Test code for adding individual variations
+# tidyr::expand_grid(ids = 1:10, d = seq(0, 1, 0.1)) |> dplyr::group_by(ids) |> dplyr::mutate(mean = rnorm(1, -4, 0.2), intercept = rnorm(1, 2, 0.1)) |> dplyr::ungroup()
+library(cmdstanr)
+
+set.seed(372)
+test_dist_sim <-
+	tibble::tibble(
+		d = seq(0, 1, 0.1),
+		mu = 3 - 4 * d
+	) |>
+	dplyr::mutate(
+		sim = purrr::map(mu, \(x) one_titer_sim(1000, mean = x, sd = 2))
+	) |>
+	tidyr::unnest(sim) |>
+	dplyr::mutate(
+		log_titer = log2(sim_titer / 5)
+	)
+
+dlist <- test_dist_sim |>
+	dplyr::select(d, y = log_titer) |>
+	as.list()
+
+dlist$N <- length(dlist[[1]])
+```
+
+```{r}
+freq_test <- lm(log_titer ~ d, data = test_dist_sim)
+```
+
+```{r}
+summary(freq_test)
+```
+
+
+```{r}
+file <-
+	here::here("Misc", "Lab-Notes", "06-Generative-Sims", "test-bayes.stan")
+mod <- cmdstanr::cmdstan_model(file)
+mod$print()
+```
+
+```{r}
+# Set prior values
+dlist$s_mean <- 0.5
+dlist$a_mean <- 3
+dlist$b_mean <- -4
+dlist$a_sd <- 0.01
+dlist$b_sd <- 0.01
+dlist$U <- 0
+
+# Run model
+fit <- mod$sample(
+	data = dlist,
+	seed = 373,
+	chains = 4,
+	parallel_chains = 4,
+	iter_warmup = 1000,
+	iter_sampling = 1000,
+	refresh = 500
+)
+```
+
+```{r}
+fit$summary()
+```
+
+# Censored mean
+
+Let's try to use a Bayesian model to estimate the mean of the censored data
+from the previous example, without taking distance into account. For this
+simulated dataset, we know that the mean is 4 and the standard deviation is 2.
+
+Here's the Stan code for this mean model with censoring taken into account.
+
+```{r}
+file <-
+	here::here("Misc", "Lab-Notes", "06-Generative-Sims", "censored-mean.stan")
+mod <- cmdstanr::cmdstan_model(file)
+mod$print()
+```
+
+Next we need to set up the data for this model in Stan-friendly format.
+Note that we need to pass in the number of observed values, the number of
+censored values, and **the vector of non-censored values only.**
+
+```{r}
+censored_mean_dlist <- list()
+censored_mean_dlist$y_obs <- log2(out$sim_titer[out$sim_titer > 5] / 5)
+censored_mean_dlist$N_obs <- length(censored_mean_dlist$y)
+censored_mean_dlist$N_cens <- nrow(out) - censored_mean_dlist$N_obs
+censored_mean_dlist$U <- 0
+```
+
+```{r}
+# set.seed(100)
+# censored_mean_dlist <- list()
+# U <- 7
+# y <- rnorm(1000, 5, 2)
+# y <- ifelse(y >= U, y, U)
+# y_obs <- y[y > U]
+# censored_mean_dlist$y_obs <- y_obs
+# censored_mean_dlist$N_obs <- length(y_obs)
+# censored_mean_dlist$N_cens <- 1000 - length(y_obs)
+# censored_mean_dlist$U <- U
+```
+
+```{r}
+censored_mean_fit <- mod$sample(
+	data = censored_mean_dlist,
+	seed = 374,
+	chains = 4,
+	parallel_chains = 4,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+# Censored linear model testing
+
+```{r}
+set.seed(100)
+N <- 1000
+ex <- tibble::tibble(
+	U = -1,
+	x = rnorm(N, 0, 1),
+	y = rnorm(N, 1 + 2 * x, 1),
+	y2 = ifelse(y <= U, U, y)
+)
+```
+
+```{r}
+censored_lm_dlist <- list()
+censored_lm_dlist$y_obs <- (ex$y2[ex$y > ex$U])
+censored_lm_dlist$y_cens <- (ex$y2[ex$y <= ex$U])
+censored_lm_dlist$x_obs <- (ex$x[ex$y > ex$U])
+censored_lm_dlist$x_cens <- (ex$x[ex$y <= ex$U])
+censored_lm_dlist$N <- N
+censored_lm_dlist$N_obs <- length(censored_lm_dlist$y_obs)
+censored_lm_dlist$N_cens <- length(censored_lm_dlist$y_cens)
+# censored_lm_dlist$sigma_loc <- 1
+# censored_lm_dlist$alpha_loc <- 1
+# censored_lm_dlist$beta_loc <- 2
+# censored_lm_dlist$alpha_scale <- 1
+# censored_lm_dlist$beta_scale <- 1
+```
+
+```{r}
+file2 <-
+	here::here("Misc", "Lab-Notes", "06-Generative-Sims", "lm-censoring.stan")
+mod_cens <- cmdstanr::cmdstan_model(file2)
+mod_cens$print()
+```
+
+```{r}
+test <- mod_cens$sample(
+	data = censored_lm_dlist,
+	seed = 374,
+	chains = 4,
+	parallel_chains = 4,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+```{r}
+test$summary(variables = c("alpha", "beta", "sigma"))
+```
+
+OK, so this stan code is able to converge to the correct estimate, but I still
+don't really understand how this works without the constrained part. But I
+also couldn't get the code for the other method to work. So I guess now we
+should see if it works on the titer example from before.
+
+# Test tobit model
+
+```{r}
+m <- VGAM::vglm(y2 ~ x, family = VGAM::tobit(Lower = ex$U), data = ex)
+VGAM::summaryvglm(m)
+```
+
+# Censored LM titer example (integration method)
+
+The parameters of the simulation are: $\alpha = 3$, $\beta = -4$, and $\sigma = 2$.
+So we will see if we get those back but I think at least one will be an
+underestimate.
+
+```{r}
+censored_lm_dlist <- list()
+censored_lm_dlist$y_obs <- log2(test_dist_sim$sim_titer[test_dist_sim$sim_titer > 5] / 5)
+censored_lm_dlist$y_cens <- log2(test_dist_sim$sim_titer[test_dist_sim$sim_titer <= 5] / 5)
+censored_lm_dlist$x_obs <- (test_dist_sim$d[test_dist_sim$sim_titer > 5])
+censored_lm_dlist$x_cens <- (test_dist_sim$d[test_dist_sim$sim_titer <= 5])
+censored_lm_dlist$N <- nrow(test_dist_sim)
+censored_lm_dlist$N_obs <- length(censored_lm_dlist$y_obs)
+censored_lm_dlist$N_cens <- length(censored_lm_dlist$y_cens)
+```
+
+```{r}
+test2 <- mod_cens$sample(
+	data = censored_lm_dlist,
+	seed = 374,
+	chains = 4,
+	parallel_chains = 4,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+```{r}
+test2$summary(variables = c("alpha", "beta", "sigma"))
+```
+
+OK so interestingly we can see that sigma is overestimated, while alpha and beta
+are both underestimated. This tracks with what we have seen before, if we compare
+the estimated mus and the true mus, we will probably see something.
+
+```{r}
+estimated_mus <- test2$summary() |>
+	dplyr::filter(stringr::str_detect(variable, 'mu')) |>
+	dplyr::pull(mean)
+true_mus <- c(
+	test_dist_sim$sim_titer[test_dist_sim$sim_titer > 5],
+	test_dist_sim$sim_titer[test_dist_sim$sim_titer <= 5]
+)
+true_mus_log <- log(true_mus / 5)
+resid <- true_mus_log - estimated_mus
+hist(resid)
+```
+
+We can see that the residuals are more likely to be large, with a right
+skewed distribution. This indicates that the true values are larger than the
+estimated values, so the means are more likely to be underestimated, like
+we saw before.
+
+```{r}
+resid_obs <- resid[1:censored_lm_dlist$N_obs]
+resid_cens <- resid[censored_lm_dlist$N_obs + 1:censored_lm_dlist$N]
+plot(
+	hist(resid_obs, plot = FALSE, breaks = seq(-4, 6, 0.5)),
+	col = rgb(1,0,0,0.4),
+	freq = FALSE,
+	xlab = "mu residuals",
+	main = NULL
+)
+plot(
+	hist(resid_cens, plot = FALSE, breaks = seq(-4, 6, 0.5)),
+	xaxt = 'n',
+	yaxt = 'n',
+	col = rgb(0,0,1,0.4),
+	add = TRUE,
+	freq = FALSE
+)
+legend(
+	"topright",
+	legend = c("observed", "censored"),
+	fill = c(rgb(1, 0, 0, 0.4), rgb(0, 0, 1, 0.4)),
+)
+```
+
+# Model fitting -- with censoring
+
+```{r}
+file2 <-
+	here::here("Misc", "Lab-Notes", "06-Generative-Sims", "lm-censoring.stan")
+mod_cens <- cmdstanr::cmdstan_model(file2)
+mod_cens$print()
+```
+
+```{r}
+test_dist_sim |>
+	dplyr::select(d, y = log_titer)
+```
+
+
+
+# Do that for many different model parameters
+
+```{r}
+test_statistical_model <- function(a, b, s, n, model, seed = 370) {
+	test_dist_sim <-
+		tibble::tibble(
+			d = seq(0, 1, 0.1),
+			mu = a + b * d
+		) |>
+		dplyr::mutate(
+			sim = purrr::map(mu, \(x) one_titer_sim(n, mean = x, sd = s))
+		) |>
+		tidyr::unnest(sim) |>
+		dplyr::mutate(
+			log_titer = log2(sim_titer / 5)
+		)
+	
+	dlist <- test_dist_sim |>
+		dplyr::select(d, y = log_titer) |>
+		as.list()
+	
+	dlist$y_obs <- log2(
+		test_dist_sim$sim_titer[test_dist_sim$sim_titer > 5] / 5
+	)
+	dlist$y_cens <- log2(
+		test_dist_sim$sim_titer[test_dist_sim$sim_titer <= 5] / 5
+	)
+	dlist$x_obs <- (test_dist_sim$d[test_dist_sim$sim_titer > 5])
+	dlist$x_cens <- (test_dist_sim$d[test_dist_sim$sim_titer <= 5])
+	dlist$N <- nrow(test_dist_sim)
+	dlist$N_obs <- length(dlist$y_obs)
+	dlist$N_cens <- length(dlist$y_cens)
+	
+	
+	
+	fit <- model$sample(
+		data = dlist,
+		seed = seed,
+		chains = 2,
+		parallel_chains = 2,
+		iter_warmup = 10,
+		iter_sampling = 100,
+		refresh = 0,
+		show_messages = FALSE
+	)
+	
+	# saveRDS(
+	# 	object = fit,
+	# 	file = paste0(
+	# 		'F:\\test-bayes-results\\model-',
+	# 		a, '-', b, '-', s, '.Rds'
+	# 	),
+	# 	compress = FALSE
+	# )
+	
+	return(fit)
+}
+```
+
+```{r}
+test_fit <- test_statistical_model(2, -4, 1, 100, mod_cens)
+```
+
+
+```{r}
+test_safely <- purrr::possibly(
+	test_statistical_model,
+	otherwise = tibble::tibble(
+		variable = character(),
+		mean = numeric(),
+		median = numeric(),
+		sd = numeric(),
+		mad = numeric(),
+		q5 = numeric(),
+		q95 = numeric(),
+		rhat = numeric(),
+		ess_bulk = numeric(),
+		ess_tail = numeric()
+	)
+)
+```
+
+```{r}
+test_safe_fit <- test_safely(2, -4, 1, 100, mod_cens)
+```
+
+
+```{r}
+test_grid <- tidyr::expand_grid(
+	a = seq(1, 10, 1),
+	b = seq(-10, -1, 1),
+	s = seq(1, 5, 1)
+)
+```
+
+```{r}
+test_res <- purrr::pmap(
+	test_grid,
+	\(a, b, s) suppressMessages(
+		suppressWarnings(
+		zlib::quiet(
+			test_safely(a = a, b = b, s = s, n = 100, model = mod_cens)
+		)
+	)
+	),
+	.progress = TRUE
+)
+```
+
+```{r}
+saveRDS(test_res, here::here("test-sim.Rds"))
+```
+
+```{r}
+
+	n <- length(test_res)
+	summaries <- vector(mode = "list", length = n)
+	cli::cli_progress_bar("Running", total = n)
+	for (i in 1:n) {
+		summaries[[i]] <- test_res[[i]]$summary(variables = c("alpha", "beta", "sigma"))
+		#	svMisc::progress(i, n, TRUE)
+		cli::cli_progress_update()
+	}
+	cli::cli_progress_done()
+
+
+```
+
+
+
+```{r}
+#summaries <- purrr::map(test_res, \(x) list(x$summary()), .progress = TRUE)
+this <-
+	test_grid |>
+	tibble::as_tibble() |>
+	dplyr::mutate(
+		sim_res = summaries,
+		sim_id = dplyr::row_number()
+	)
+
+this2 <-
+	this |>
+	# dplyr::mutate(sim_res = purrr::map(
+	# 	sim_res,
+	# 	\(d) dplyr::filter(d, variable %in% c('alpha', 'beta', 'sigma'))
+	# )) |>
+	tidyr::unnest(sim_res)
+
+this3 <-
+	this2 |>
+	dplyr::rename(
+		'alpha' = a,
+		'beta' = b,
+		'sigma' = s
+	) |>
+	tidyr::pivot_longer(
+		cols = c(alpha, beta, sigma),
+		values_to = "true_value"
+	) |>
+	dplyr::filter(variable == name) |>
+	dplyr::select(-name)
+```
+
+# Method bias of coefficient estimates
+
+```{r}
+library(ggplot2)
+ggplot2::theme_set(
+	zlib::theme_ms() +
+		ggplot2::theme(
+			plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+			axis.text = ggplot2::element_text(size = 16, color = "black"),
+			axis.title = ggplot2::element_text(size = 18),
+			plot.subtitle = ggplot2::element_text(
+				size = 16, hjust = 0, margin = ggplot2::margin(b = 2)
+			),
+			plot.title = ggplot2::element_text(
+				size = 24, hjust = 0, margin = ggplot2::margin(b = 4)
+			),
+			plot.caption = ggplot2::element_text(size = 14),
+			strip.text = ggplot2::element_text(
+				size = 16, hjust = 0.5, margin = ggplot2::margin(b = 2, t = 2)
+			),
+			panel.spacing = ggplot2::unit(2, "lines"),
+			legend.position = "bottom",
+			legend.text = ggplot2::element_text(size = 16, color = "black"),
+			legend.title = ggplot2::element_text(size = 18, color = "black")
+		)
+)
+```
+
+
+```{r}
+# ggplot(this3) +
+# 	aes(
+# 		x = mean,
+# 		xmin = q5,
+# 		xmax = q95,
+# 		y = sim_id
+# 	) +
+# 	geom_point(aes(x = true_value), color = "red", shape = 3, stroke = 2) +
+# 	geom_pointrange() +
+# 	facet_wrap(~variable, scales = "free")
+```
+
+```{r}
+this3 |>
+	dplyr::mutate(bias = mean - true_value) |>
+	ggplot() +
+	aes(
+		x = bias
+	) +
+	geom_vline(xintercept = 0, color = "firebrick3", lwd = 2, lty = 2) +
+	geom_histogram(
+		binwidth = nclass.FD,
+		color = "black",
+		fill = "white"
+		) +
+	facet_wrap(~variable, scales = "free_x")
+```
+
+
+So now we have a working example of a (bad) simulation. The model has not
+converged and does not deal with the interval censoring problem correctly,
+but we can use this as a test run to figure out what else we need to do next.
+
+The dataframe `this3` in the code above has the MCMC linear model estimates for
+each of the parameters from each simulation along with the true values.
+
+# How to get predictions out of a model
+
+In order to get the vaccine metrics, we first need to figure out how to get
+the model predictions. We'll test this using the single model `test_safe_fit`
+that I previously fitted.
+
+To get the predictions we first need to get all of the samples of the
+three model parameters. Then we can use those to get a bunch of samples for
+each individual mean and those can be averaged to get a prediction- and CI.
+
+However it would be faster and more computationally efficient to take the mean
+of all the samples first so I need to stop and think if those things are equivalent.
+
+Yes, they are after working out a fairly obvious math problem. So the
+first thing we need to do is get the parameter estimates. So it's a good job
+then that `this3` above already contains these.
+
+```{r}
+parm_ests <- this3 |>
+	dplyr::select(variable, mean, sim_id) |>
+	tidyr::pivot_wider(
+		names_from = variable,
+		values_from = mean
+	)
+```
+
+So these are the mean parameter estimates for each of the simulations. Right now
+they look wrong and bad- to me but I guess I can fix that after I figure out
+how to get the predictions.
+
+So next we go over each simulation, take the x values (which are always the
+same sequence, which makes this code easier to write, tehy are always the
+sequence `seq(0, 1, 0.1)` althoguh in the future we want to cover more
+points but that will increase the runtime).
+
+
+# Metrics
+
+So next we need to get the metrics for each simulation.
+
+# TODO
+
+* Reorganize this crap
+* Figure out the other censoring method that doesn't have the integral
+* Make examples that show that even after censoring the method doesn't work
+* Try to figure out what to do with rounding
+
+* Fit our bayesian model (doesn't need to be partial pooling right now) to
+see if we recover parameters.
+* Introduce noise to the model and see when parameters are recovered and how
+noise changes the estimates.
+* Calculate the suite of metrics from the model fit under varying levels of
+noise and parameters and see how much the metrics vary under different settings.
+* Need to discuss with Andreas what exactly to do next.
+
+# Individual variations in the mean
+
+Allow
+$$
+\begin{align*}
+y_i^* &= \begin{cases}
+5 & \log_2 y_i < 1 \\
+5 \cdot \lfloor 2 ^ {y_i} \rfloor & \log_2 y_i \geq 1
+\end{cases} \\
+\log_2 y_i &\sim \mathcal{N}(\mu_i, \sigma^2) \\
+\mu_i &= \alpha_i + \beta_{i?} \cdot d
+\end{align*}
+$$
+
+
+<!--
+ok. so then I guess the next step is, make the titer dependent on antigenic distance, using a linear model as the "true" model for now. and we consider different underlying parameters to generate data, then calculate all the metrics and see what happens for each set of parameters.
+
+then I guess we can estimate the parameters in our data, and see how those match with the simulated predictions. what still isn't really clicking for me is what we do if our metrics are always more variable regardless of the underlying parameters. I still think that our AUC is inherently more useful than % seroconversion sort of in the same way that a posterior density estimate is more useful than a mean + CI.
+-->
+
+<!-- END OF FILE -->

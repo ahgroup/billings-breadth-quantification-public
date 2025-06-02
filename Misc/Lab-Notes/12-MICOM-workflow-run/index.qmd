@@ -1,0 +1,1394 @@
+---
+title: "Workflow for Presentation"
+format: html
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(ggplot2)
+
+source(here::here("R", "functions", "utils.R"))
+
+prediction_grid <- data.frame(d = seq(0, 1, 0.01))
+prediction_grid_brms <- data.frame(x = seq(0, 1, 0.01))
+```
+
+
+In this notebook, I'll walk through a demonstration of our workflow that produces suitable figures for displaying in my 2025-01-15 presentation for the MICOM / antibody dynamics working group.
+
+First we need to load the preprocessed data -- we'll specifically focus on only one data set for this example, the data from 2016/17 flu season for the H1N1 component of the vaccine.
+
+```{r}
+#| label: data loading
+
+full_dat <- qs::qread(here::here("results", "data", "full-data-model-input.qs"))
+ex_dat <- full_dat[21, ]
+dat_meta <- dplyr::select(ex_dat, -c(data, brms_data))
+dat_brms <- ex_dat$brms_data[[1]]
+dat_all <- ex_dat$data[[1]]
+dat_hom <- dat_all |>
+	dplyr::filter(strain_name == "CA/09")
+```
+
+This dataset represents a subsample of the individuals and strains used in the entire dataset, but for now we'll treat this as our population of interest. The distances are normalized so that the largest distance in this dataset is 1, and the homologous assays have distance 0. The first thing we want to do is get an estimate of our metrics on the entire dataset -- we also want to get some population estimates to calibrate our sample.
+
+# Full data model
+
+We need to load the relevant libraries as well as the Stan model setup.
+
+```{r}
+#| label: bayes setup
+
+library(brms)
+library(cmdstanr)
+source(here::here("R", "functions", "stan-code-generation.R"))
+```
+
+Now we can fit the model. We're using some default regularizing priors for this example and leaving most of the sampling arguments alone.
+
+```{r}
+#| label: fit full data model
+
+full_data_model <- brms::brm(
+	formula = brms_model_formulas$`full, with censoring`,
+	data = dat_brms,
+	prior = brms_model_priors$`full, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = 4L,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr"
+)
+```
+
+Let's take a look at the model summary.
+
+```{r}
+#| label: full model summary
+
+summary(full_data_model)
+```
+
+OK so for a production model we would want to sample this a bit longer to ensure that all Rhats are exactly 1.00, and the ESS values are all above 1000, but this looks good enough to play around with.
+
+We should also calculate the overall AUC and GMT. First we get the AUC, which we compute using a numerical integration method (trapezoid method) for each posterior sample of the parameters. (Note that we can also analytically derive this from the intercept and slope parameters, but this way is conceptually easier and is not computationally demanding. Switching to a better numerical integration rule like Simpson's method does not appear to change the results, because we are looking at a straight line, so trapezoids are a very good approximation.)
+
+```{r}
+#| label: preds and metrics for full model
+
+full_model_preds <- tidybayes::epred_draws(
+	full_data_model,
+	newdata = prediction_grid_brms,
+	re_formula = NA,
+	allow_new_levels = TRUE,
+	sample_new_levels = "uncertainty"
+) |>
+	dplyr::ungroup()
+
+full_model_preds_ind <- tidybayes::add_epred_draws(
+	full_data_model,
+	newdata = tidyr::expand_grid(
+		prediction_grid_brms,
+		id = "new"
+	),
+	re_formula = NULL,
+	allow_new_levels = TRUE,
+	sample_new_levels = "uncertainty"
+) |>
+	dplyr::ungroup()
+
+full_model_pred_summaries <-
+	full_model_preds |>
+	dplyr::summarize(
+		tidybayes::mean_hdci(.epred),
+		.by = x
+	)
+
+full_model_summaries_ind <-
+	full_model_preds_ind |>
+	dplyr::summarize(
+		tidybayes::mean_hdci(.epred),
+		.by = c(x)
+	)
+
+full_model_aucs <-
+	full_model_preds |>
+	dplyr::ungroup() |>
+	dplyr::summarise(
+		AUC = pracma::trapz(x, .epred),
+		.by = .draw
+	) |>
+	dplyr::pull(AUC) |>
+	tidybayes::mean_hdci()
+```
+
+Now we'll compute the GMT. We can correct for censoring in the estimation of the GMT by using an intercept-only regression (in this case, the intercept estimates the mean of the data) while applying the censoring correction to the likelihood. Then we just summarize the samples of the intercept parameter. We use a student $t$ prior with 3 degrees of freedom for the intercept so that it can become arbitrarily large in either direction if the data supports such an estimate. Finally we back-transform the estimate to put it on the natural scale.
+
+```{r}
+#| label: full data gmt calculation
+full_data_reduced_model <- brms::brm(
+	formula = brms_model_formulas$`reduced, with censoring`,
+	data = dat_brms,
+	prior = brms_model_priors$`reduced, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = 4L,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr"
+)
+
+full_data_gmt <-
+	tidybayes::tidy_draws(full_data_reduced_model) |>
+	dplyr::pull("Intercept") |>
+	tidybayes::mean_hdci() |>
+	dplyr::mutate(dplyr::across(c(y, ymin, ymax), \(x) 5 * 2 ^ x))
+```
+
+Now we'll visualize the overall antibody landscape for the full data set, along with the summary curve.
+
+```{r}
+
+dat_distinct <- dat_all |>
+	dplyr::distinct(strain_name, d, norm_d) |>
+	dplyr::rename(
+		"Raw" = d,
+		"Normalized" = norm_d
+	)
+
+ab_landscape <-
+	dat_all |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = norm_d, y = 5 * 2 ^ log_pretiter) +
+	ggplot2::geom_point(
+		size = 1,
+		alpha = 0.5,
+		position = ggplot2::position_jitter(0.002, 0.15, 38192)
+	) +
+	# ggplot2::geom_ribbon(
+	# 	data = full_model_pred_summaries,
+	# 	mapping = ggplot2::aes(x = x, ymin = 5 * 2 ^ ymin, ymax = 5 * 2 ^ ymax),
+	# 	alpha = 0.25,
+	# 	inherit.aes = FALSE
+	# ) +
+	ggplot2::geom_line(
+		data = full_model_preds_ind,
+		mapping = ggplot2::aes(x = x, y = 5 * 2 ^ .epred, group = .draw),
+		alpha = 0.1
+	) +
+	ggplot2::geom_ribbon(
+		data = full_model_pred_summaries,
+		mapping = ggplot2::aes(
+			x = x,y = 5 * 2 ^ y,
+			ymin = 5 * 2 ^ ymin, ymax = 5 * 2 ^ ymax),
+		fill = "#414df2",
+		alpha = 0.5,
+	) +
+	ggplot2::geom_line(
+		data = full_model_pred_summaries,
+		mapping = ggplot2::aes(x = x, y = 5 * 2 ^ y),
+		color = "#2832C2",
+		lwd = 1.5
+	) +
+	ggplot2::geom_segment(
+		data = dat_distinct |>
+			dplyr::filter(strain_name %in% c("CA/09", "MI/15", "SC/18", "NC/99", "Bei/95", "Bris/07", "Den/57")),
+		mapping = ggplot2::aes(
+			x = Normalized, xend = Normalized,
+			y = 2550, yend = 1600
+		),
+		lwd = 1.2,
+		arrow = grid::arrow(
+			length = unit(10, "pt")
+		)
+	) +
+	ggplot2::geom_label(
+		data = dat_distinct |>
+			dplyr::filter(strain_name %in% c("CA/09", "MI/15", "SC/18", "NC/99", "Bei/95", "Bris/07", "Den/57")),
+		mapping = ggplot2::aes(x = Normalized, y = 2550, label = strain_name)
+	) +
+	ggplot2::scale_y_continuous(
+		trans = "log2",
+		breaks = 5 * 2 ^ seq(0, 8, 2),
+		minor_breaks = 5 * 2 ^ seq(0, 8, 1)
+	) +
+	ggplot2::coord_cartesian(ylim = 5 * 2 ^ c(-0.5, 9.5)) +
+	ggplot2::labs(
+		x = "Normalized cartographic distance",
+		y = "Post-vaccination HAI titer"
+	) +
+	hgp::theme_ms(); ab_landscape
+
+ggplot2::ggsave(
+	plot = ab_landscape,
+	here::here("products", "2025-01-17-MICOM-Ab-presentation", "figures", "ab-landscape.png"),
+	width = 16,
+	height = 9
+)
+```
+
+# Simulation study
+
+Next we need to set up our generative simulation using the observed parameters. We'll generate ten labs with 100 individuals each that each have a subset of possible strains. Let's first take a look at the distribution of antigenic distance values and the number of strains that we have.
+
+```{r}
+#| label: unique assay strains
+dat_all$strain_name |> unique()
+```
+
+There are 16 unique strains in the dataset including the homologous strain.
+
+```{r}
+#| label: antigenic distance distribution
+universe_with_gap <- c(seq(0.05, 0.20, 0.05), seq(0.50, 1.00, 0.05))
+
+dat_distinct |>
+	tidyr::pivot_longer(-strain_name) |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = value, y = name) +
+	ggplot2::geom_segment(
+		data = dat_distinct,
+		ggplot2::aes(
+			x = Raw, xend = Normalized
+		),
+		y = 2, yend = 1,
+		inherit.aes = FALSE
+	) +
+	ggplot2::geom_point(
+		size = 3,
+		stroke = 1.5,
+		shape = 21,
+		color = "black",
+		fill = "white"
+	) +
+	ggrepel::geom_label_repel(
+		aes(
+			x = value, y = name,
+			#y = ifelse(name == "Raw", 2 + 0.2, 1 - 0.2),
+			label = strain_name
+		),
+		data = \(x) dplyr::filter(x, name == "Raw"),
+		seed = 370
+	) +
+	ggplot2::labs(
+		x = "Antigenic distance", y = NULL,
+		title = "Antigenic distance normalization for H1N1 assay strains in 2016/17"
+	) +
+	ggplot2::scale_x_continuous(
+		breaks = c(seq(0, 1, 0.2), seq(1, 4, 1)),
+		minor_breaks = c(seq(0, 1, 0.1), seq(0, 4, 0.5))
+	) +
+	hgp::theme_ms()
+```
+
+While the temporal distance would be roughly evenly spaced (figure not shown), the sequence and antigenic-based distances have a large gap in the middle -- because we are looking at H1N1, this represents the differences between the 2009 pandemic-like lineage, and the other two lineages (the SC/18-like lineage and the intermediate lineages).
+
+So when we create our universe of antigenic distances to sample from, we should take this into account. So instead of just using uniformly spaced antigenic distances we'll build this into our simulation by excluding distances between 0.2 and 0.5 from our distances that are possible to sample. The red crosses in the previous plot show our theoretical strains that are available to sample from the universe of possible strains. The distribution covers roughly the same space as the observed antigenic distances.
+
+Note that we could possible experiment with whether the universe we use explains any issues in the simulation.
+
+We'll inform the simulation using the estimated parameters from the model fit.
+
+Here I'll write the simulation from scratch in an inefficient way so we know or can easily verify that the simulation is doing what it should do.
+
+```{r}
+# First set up the simulation parameters
+set.seed(23149870)
+strain_universe <- seq(0.02, 1.00, 0.02)
+strain_universe <- universe_with_gap
+N_labs <- 25L
+
+# Sample how many subjects should be in each lab
+#individuals_per_lab <- rnorm(N_labs, 100, 25) |> round()
+individuals_per_lab <- rep(100, times = N_labs)
+
+# Sample how many strains each lab should have
+strains_per_lab <- rep(9, times = N_labs)
+
+# Get the strains for each lab and then add 0 to each one for homologous
+lab_strains <- purrr::map(
+	strains_per_lab,
+	\(x) sample(strain_universe, size = x, replace = FALSE) |>
+		c(0) |>
+		sort()
+)
+
+# Now for each lab we need to simulate the titer data.
+lab_sims <- vector(mode = "list", length = N_labs)
+# First set up the regression parameters
+global_intercept <- 5
+global_slope <- -3.6
+global_ruv <- 1.5 # residual unexplained variance
+individual_intercept_sd <- 1.4
+individual_slope_sd <- 1.7
+individual_random_cor <- -0.7
+# Reconstruct the covariance matrix since we need it for the simulation
+# Sigma = diag(sigma) * Rho * diag(sigma)
+individual_random_covariance_matrix <-
+	diag(c(individual_intercept_sd, individual_slope_sd)) %*%
+	matrix(c(1, individual_random_cor, individual_random_cor, 1), nrow = 2) %*%
+	diag(c(individual_intercept_sd, individual_slope_sd))
+
+# Now run the simulations
+for (i in 1:N_labs) {
+	# Get the number of people and number of strains in this lab
+	n_ind <- individuals_per_lab[[i]]
+	individual_labels = pad_numbers(1:n_ind)
+	lab_panel <- lab_strains[[i]]
+	
+	# Simulate the random slope and intercept for each individual
+	individual_effects <- mvtnorm::rmvnorm(
+		n = n_ind,
+		mean = c(0, 0),
+		sigma = individual_random_covariance_matrix
+	) |>
+		`colnames<-`(c("ind_int", "ind_slope")) |>
+		as.data.frame()
+	
+	# Expand the data grid for this lab
+	lab_data <-
+		cbind("subject" = individual_labels, individual_effects) |>
+		tidyr::expand_grid(
+			"d" = lab_panel
+		)
+	
+	# Now get the estimated titers from the linear model
+	titer_sim <-
+		lab_data |>
+		dplyr::mutate(
+			global_part = global_intercept + d * global_slope,
+			subject_part = ind_int + d * ind_slope,
+			mu = global_part + subject_part,
+			raw_log_titer = rnorm(dplyr::n(), mu, global_ruv),
+			trunc_log_titer = floor(pmax(raw_log_titer, 0)),
+			obs_post_titer = 5 * 2 ^ trunc_log_titer
+		)
+	
+	lab_sims[[i]] <- titer_sim
+}
+
+lab_sims_all <-
+	lab_sims |>
+	rlang::set_names(paste0("Lab ", pad_numbers(1:N_labs))) |>
+	dplyr::bind_rows(
+		.id = "Lab"
+	) |>
+	dplyr::transmute(
+		lab = factor(Lab, ordered = TRUE),
+		d, subject,
+		"log_posttiter" = trunc_log_titer,
+		"posttiter" = obs_post_titer
+	)
+```
+
+Now let's do a plot to visualize the data.
+
+```{r}
+lab_sims_all |>
+	ggplot2::ggplot() +
+	ggplot2::aes(
+		x = d,
+		y = log_posttiter
+	) +
+	geom_point(
+		size = 0.5,
+		alpha = 0.5,
+		position = ggplot2::position_jitter(0.01, 0.25, 4234L)
+	) +
+	geom_smooth(method = "lm", formula = y ~ x) +
+	facet_wrap(~lab) +
+	hgp::theme_ms()
+```
+
+Calculate the censoring corrected metrics, later we need to do the noncorrected ones.
+
+```{r}
+lab_data_nested <- lab_sims_all |> tidyr::nest(data = -lab)
+lab_data_list <- purrr::map(
+	lab_data_nested$data,
+	\(d) hgp::format_hai_data(d, post_titer = "log_posttiter")
+)
+lab_models_list <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1 + d + (1 + d | subject),
+	data = lab_data_list,
+	prior = brms_model_priors$`full, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 1234123
+)
+
+lab_models_preds <- purrr::map(
+	lab_models_list,
+	\(m) tidybayes::epred_draws(
+		m,
+		newdata = data.frame(d = seq(0, 1, 0.01)),
+		re_formula = NA
+	) |>
+		dplyr::ungroup()
+)
+
+lab_models_summaries <-
+	lab_models_preds |>
+	purrr::map(
+		\(d) d |> dplyr::summarize(
+			tidybayes::mean_hdci(.epred),
+			.by = d
+		)
+	)
+
+lab_models_aucs <-
+	lab_models_preds |>
+	purrr::map(
+		\(d) d |>
+			dplyr::summarise(
+				value = pracma::trapz(d, .epred),
+				.by = .draw
+			)
+	)
+
+lab_models_aucs_df <-
+	lab_models_aucs |>
+	dplyr::bind_rows(.id = "lab") |>
+	dplyr::mutate(metric = "AUC")
+```
+
+Now do the Bayesian GMT.
+
+```{r}
+lab_models_list_reduced <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1,
+	data = lab_data_list,
+	prior = brms_model_priors$`reduced, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 78946
+)
+
+lab_models_gmts <-
+	lab_models_list_reduced |>
+	purrr::map(
+		\(m) m |>
+			tidybayes::tidy_draws() |>
+			dplyr::select(.draw, value = Intercept)
+	)
+
+lab_models_gmts_df <-
+	lab_models_gmts |>
+	dplyr::bind_rows(.id = "lab") |>
+	dplyr::mutate(metric = "GMT")
+
+lab_models_metrics <-
+	dplyr::bind_rows(lab_models_gmts_df, lab_models_aucs_df) |>
+	dplyr::group_by(metric) |>
+	dplyr::mutate(
+		value_norm = minmax(value),
+		lab = forcats::fct_inorder(lab)
+		) |>
+	dplyr::ungroup()
+```
+
+Now make a plot.
+
+```{r}
+simulation_auc_icc_plot <-
+	lab_models_metrics |>
+	dplyr::filter(metric == "AUC") |>
+	ggplot2::ggplot() +
+	ggplot2::aes(
+		y = value_norm,
+		x = as.integer(lab),
+		group = lab
+	) +
+	ggplot2::geom_point(
+		#position = ggplot2::position_jitter(0.15, 0, 341234),
+		alpha = 0.01
+	) +
+	ggplot2::scale_x_continuous(
+		limits = c(-1, 26),
+		expand = c(0, 0),
+		breaks = seq(0, 25, 1),
+		minor_breaks = c(0, 25, 1),
+		labels = seq(0, 25, 1)
+	) +
+	ggplot2::labs(
+		y = "Minmax scaled metric value",
+		x = "Simulated lab"
+	) +
+	hgp::theme_ms()
+
+ggplot2::ggsave(
+	plot = simulation_auc_icc_plot,
+	here::here("products", "2025-01-17-MICOM-Ab-presentation", "figures", "sim-icc-auc.png"),
+	width = 7.5,
+	height = 7.5
+)
+
+simulation_gmt_icc_plot <-
+	lab_models_metrics |>
+	dplyr::filter(metric == "GMT") |>
+	ggplot2::ggplot() +
+	ggplot2::aes(
+		y = value_norm,
+		x = as.integer(lab),
+		group = lab
+	) +
+	ggplot2::geom_point(
+		#position = ggplot2::position_jitter(0.15, 0, 341234),
+		alpha = 0.01
+	) +
+	ggplot2::scale_x_continuous(
+		limits = c(-1, 26),
+		expand = c(0, 0),
+		breaks = seq(0, 25, 1),
+		minor_breaks = c(0, 25, 1),
+		labels = seq(0, 25, 1)
+	) +
+	ggplot2::labs(
+		y = "Minmax scaled metric value",
+		x = "Simulated lab"
+	) +
+	hgp::theme_ms()
+
+ggplot2::ggsave(
+	plot = simulation_gmt_icc_plot,
+	here::here("products", "2025-01-17-MICOM-Ab-presentation", "figures", "sim-icc-gmt.png"),
+	width = 7.5,
+	height = 7.5
+)
+```
+
+First try some of the random metrics we thought about.
+
+```{r}
+lab_models_metrics |>
+			dplyr::summarise(
+			"CV" = covar(value_norm),
+			"QCD" = qcd(value_norm),
+			"Gini" = gini(value_norm),
+			.by = metric
+		)
+
+lab_models_metrics |>
+			dplyr::summarise(
+			"CV" = covar(value),
+			"QCD" = qcd(value),
+			"Gini" = gini(value),
+			.by = metric
+		)
+```
+
+But I think the actual metric we want to use here is the ICC. I originally wanted to do this by hand but if we want a posterior CI for the ICC we have to estimate the variances with another mixed model.
+
+```{r}
+# Formula for ICC:
+# ICC = sigma^2_between / (sigma^2_between + sigma^2_within)
+# sigma^2_between = variance of the means of each lab
+# sigma^2_within = mean of the variances of each lab
+# auc_model <- brms::brm(
+# 	formula = value_norm ~ 1 + (1 | lab),
+# 	data = lab_models_metrics |>
+# 		dplyr::filter(metric == "AUC") |>
+# 		dplyr::select(lab, value_norm),
+# 	prior = c(
+# 		brms::prior(student_t(3, 0, 1), class = "Intercept"),
+# 		brms::prior(student_t(3, 0, 1), class = "sd"),
+# 		brms::prior(student_t(3, 0, 1), class = "sigma")
+# 	),
+# 	chains = sampling_arguments$chains,
+# 	cores = sampling_arguments$chains,
+# 	threads = brms::threading(4L),
+# 	warmup = 250,
+# 	iter = 1250,
+# 	backend = "cmdstanr"
+# )
+
+# TODO replace this with Bayesian ICC calculation
+# And when we do that we can also get the difference in ICCs with CI.
+auc_model <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | lab),
+	data = lab_models_metrics |>
+		dplyr::filter(metric == "AUC") |>
+		dplyr::select(lab, value_norm)
+)
+gmt_model <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | lab),
+	data = lab_models_metrics |>
+		dplyr::filter(metric == "GMT") |>
+		dplyr::select(lab, value_norm)
+)
+
+auc_ci <- performance::icc(auc_model, ci = TRUE)
+gmt_ci <- performance::icc(gmt_model, ci = TRUE)
+# Now calculate the (average)n within lab variance:
+# s_w = (1 / N - 1) * (1/k)
+```
+
+# Subsampling analysis
+
+First we need to construct the subsamples of the original dataset, then we'll proceed in the same way we did the simulation analysis.
+
+```{r}
+#| label: construct subsamples
+
+set.seed(1341234)
+N_subsamples <- 25L
+subsample_list <- list()
+subsample_strains <- list()
+subsample_subjects <- list()
+all_strains <- dat_all$strain_name |> unique()
+all_subjects <- dat_all$subject_id |> unique()
+strains_per_subsample <- 9L
+subjects_per_subsample <- 100L
+for (i in 1:N_subsamples) {
+	strains_to_use <- sample(all_strains, strains_per_subsample, replace = FALSE)
+	subjects_to_use <- sample(all_subjects, subjects_per_subsample, replace = FALSE)
+	
+	this_subsample <-
+		dat_all |>
+		dplyr::filter(
+			strain_name %in% strains_to_use,
+			subject_id %in% subjects_to_use
+		) |>
+		dplyr::mutate(
+			strain_name = forcats::fct_drop(strain_name)
+		)
+	
+	subsample_list[[i]] <- this_subsample
+	subsample_strains[[i]] <- strains_to_use
+	subsample_subjects[[i]] <- subjects_to_use
+}
+rm(strains_to_use, subjects_to_use, this_subsample)
+gc()
+```
+
+Now we fit the list of bayesian models.
+
+```{r}
+subsample_models_list <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1 + norm_d + (1 + norm_d | subject_id),
+	data = subsample_list,
+	prior = brms_model_priors$`full, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 7894651
+)
+
+subsample_models_list_reduced <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1,
+	data = subsample_list,
+	prior = brms_model_priors$`reduced, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 12354
+)
+```
+
+Get the AUCs
+
+```{r}
+subsample_models_preds <- purrr::map(
+	subsample_models_list,
+	\(m) tidybayes::epred_draws(
+		m,
+		newdata = data.frame(norm_d = seq(0, 1, 0.01)),
+		re_formula = NA
+	) |>
+		dplyr::ungroup()
+)
+
+subsample_models_summaries <-
+	subsample_models_preds |>
+	purrr::map(
+		\(d) d |> dplyr::summarize(
+			tidybayes::mean_hdci(.epred),
+			.by = norm_d
+		)
+	)
+
+subsample_models_aucs <-
+	subsample_models_preds |>
+	purrr::map(
+		\(d) d |>
+			dplyr::summarise(
+				value = pracma::trapz(norm_d, .epred),
+				.by = .draw
+			)
+	)
+
+subsample_models_aucs_df <-
+	subsample_models_aucs |>
+	dplyr::bind_rows(.id = "subsample") |>
+	dplyr::mutate(metric = "AUC")
+```
+
+Get the GMTs
+
+```{r}
+subsample_models_gmts <-
+	subsample_models_list_reduced |>
+	purrr::map(
+		\(m) m |>
+			tidybayes::tidy_draws() |>
+			dplyr::select(.draw, value = Intercept)
+	)
+
+subsample_models_gmts_df <-
+	subsample_models_gmts |>
+	dplyr::bind_rows(.id = "subsample") |>
+	dplyr::mutate(metric = "GMT")
+
+subsample_models_metrics <-
+	dplyr::bind_rows(subsample_models_gmts_df, subsample_models_aucs_df) |>
+	dplyr::group_by(metric) |>
+	dplyr::mutate(
+		value_norm = minmax(value),
+		subsample = forcats::fct_inorder(subsample)
+		) |>
+	dplyr::ungroup()
+```
+
+Get the ICCs
+
+```{r}
+auc_model <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | subsample),
+	data = subsample_models_metrics |>
+		dplyr::filter(metric == "AUC") |>
+		dplyr::select(subsample, value_norm)
+)
+gmt_model <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | subsample),
+	data = subsample_models_metrics |>
+		dplyr::filter(metric == "GMT") |>
+		dplyr::select(subsample, value_norm)
+)
+
+auc_ci_s <- performance::icc(auc_model, ci = TRUE)
+gmt_ci_s <- performance::icc(gmt_model, ci = TRUE)
+```
+
+```{r}
+subsample_auc_icc_plot <-
+	subsample_models_metrics |>
+	dplyr::filter(metric == "AUC") |>
+	ggplot2::ggplot() +
+	ggplot2::aes(
+		y = value_norm,
+		x = as.integer(subsample),
+		group = subsample
+	) +
+	ggplot2::geom_point(
+		#position = ggplot2::position_jitter(0.15, 0, 341234),
+		alpha = 0.01
+	) +
+	ggplot2::scale_x_continuous(
+		limits = c(-1, 26),
+		expand = c(0, 0),
+		breaks = seq(0, 25, 1),
+		minor_breaks = c(0, 25, 1),
+		labels = seq(0, 25, 1)
+	) +
+	ggplot2::labs(
+		y = "Minmax scaled metric value",
+		x = "Simulated subsample"
+	) +
+	hgp::theme_ms()
+
+ggplot2::ggsave(
+	plot = subsample_auc_icc_plot,
+	here::here("products", "2025-01-17-MICOM-Ab-presentation", "figures", "sub-icc-auc.png"),
+	width = 7.5,
+	height = 7.5
+)
+
+subsample_gmt_icc_plot <-
+	subsample_models_metrics |>
+	dplyr::filter(metric == "GMT") |>
+	ggplot2::ggplot() +
+	ggplot2::aes(
+		y = value_norm,
+		x = as.integer(subsample),
+		group = subsample
+	) +
+	ggplot2::geom_point(
+		#position = ggplot2::position_jitter(0.15, 0, 341234),
+		alpha = 0.01
+	) +
+	ggplot2::scale_x_continuous(
+		limits = c(-1, 26),
+		expand = c(0, 0),
+		breaks = seq(0, 25, 1),
+		minor_breaks = c(0, 25, 1),
+		labels = seq(0, 25, 1)
+	) +
+	ggplot2::labs(
+		y = "Minmax scaled metric value",
+		x = "Simulated subsample"
+	) +
+	hgp::theme_ms()
+
+ggplot2::ggsave(
+	plot = subsample_gmt_icc_plot,
+	here::here("products", "2025-01-17-MICOM-Ab-presentation", "figures", "sub-icc-gmt.png"),
+	width = 7.5,
+	height = 7.5
+)
+```
+
+# Calculating interindividual variance effect
+
+```{r}
+# Get posterior predictions without random effects
+fe_pp <-
+	full_data_model |>
+	brms::posterior_predict(re_formula = NA, summary = FALSE)
+
+re_pp <-
+	full_data_model |>
+	brms::posterior_predict(re_formula = NULL, summary = FALSE)
+
+fe_pp_var <- fe_pp |> apply(1, var)
+re_pp_var <- re_pp |> apply(1, var)
+```
+
+Get the pretiter stuff
+
+```{r}
+pt_model <- brms::brm(
+	formula = y | cens(c, y2) ~ 1 + norm_d +
+		(1 + norm_d | subject_id) + log_pretiter,
+	data = dat_all,
+	prior = brms_model_priors$`full, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = 4L,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr"
+)
+```
+
+```{r}
+# Get posterior predictions without random effects
+fe_pp_pt <-
+	pt_model |>
+	brms::posterior_predict(re_formula = NA, summary = FALSE)
+
+re_pp_pt <-
+	pt_model |>
+	brms::posterior_predict(re_formula = NULL, summary = FALSE)
+
+fe_pp_var_pt <- fe_pp_pt |> apply(1, var)
+re_pp_var_pt <- re_pp_pt |> apply(1, var)
+```
+
+
+```{r}
+plot_dat <-
+	dplyr::bind_rows(
+		"Fixed effects only_Distance only" = fe_pp_var,
+		"Fixed and random effects_Distance only" = re_pp_var,
+		"Fixed effects only_Distance and pre-titer" = fe_pp_var_pt,
+		"Fixed and random effects_Distance and pre-titer" = re_pp_var_pt
+	) |>
+	tidyr::pivot_longer(dplyr::everything()) |>
+	tidyr::separate_wider_delim(
+		cols = name,
+		delim = "_",
+		names = c("eff", "mod")
+	) 
+
+var_plot <-
+	ggplot2::ggplot(plot_dat) +
+	ggplot2::aes(x = eff, y = value, color = eff, shape = eff) +
+	ggplot2::geom_point(
+		position = ggplot2::position_jitter(0.25, 0.1, 123),
+		alpha = 0.25
+	) +
+	ggplot2::labs(x = NULL, y = "Variance of posterior predictions", color = NULL, shape = NULL) +
+	ggplot2::facet_wrap(~mod) +
+	ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(alpha = 1, size = 3))) +
+	ggplot2::scale_color_brewer(palette = "Dark2") +
+	hgp::theme_ms()
+
+ggplot2::ggsave(
+	plot = var_plot,
+	here::here("products", "2025-01-17-MICOM-Ab-presentation", "figures", "iiv-plot.png"),
+	width = 10,
+	height = 10
+)
+
+tidybayes::mean_hdci(fe_pp_var)
+tidybayes::mean_hdci(re_pp_var)
+tidybayes::mean_hdci(fe_pp_var / re_pp_var)
+tidybayes::mean_hdci(re_pp_var / fe_pp_var)
+tidybayes::mean_hdci(fe_pp_var_pt)
+tidybayes::mean_hdci(re_pp_var_pt)
+tidybayes::mean_hdci(fe_pp_var_pt / re_pp_var_pt)
+```
+
+
+# SD/HD example
+
+First we get the HD data
+
+```{r}
+dat_d_raw <- readr::read_rds(here::here("data", "processed", "joined-data.Rds"))
+dat_d <-
+	dat_d_raw |>
+	dplyr::filter(
+		season == "2016 - 2017",
+		method == "cartographic",
+		age >= 65,
+		strain_type == "H1N1"
+	) |>
+	dplyr::select(
+		subject_id, dose, pretiter, posttiter, d, strain_name
+	) |>
+	dplyr::mutate(
+		norm_d = minmax(d),
+		log_pretiter = hgp::hai_to_log_scale(pretiter),
+		log_posttiter = hgp::hai_to_log_scale(posttiter)
+	) |>
+	hgp::format_hai_data(post_titer = "log_posttiter")
+```
+
+Now we construct subsamples.
+
+```{r}
+#| label: construct subsamples
+set.seed(52345)
+N_subsamples_d <- 25L
+subsample_list_d <- list()
+subsample_strains_d <- list()
+subsample_subjects_d <- list()
+all_strains_d <- dat_d$strain_name |> unique()
+all_subjects_sd <- dat_d |>
+	dplyr::filter(dose == "SD") |>
+	dplyr::pull(subject_id) |>
+	unique()
+all_subjects_hd <- dat_d |>
+	dplyr::filter(dose == "HD") |>
+	dplyr::pull(subject_id) |>
+	unique()
+strains_per_subsample <- 9L
+subjects_per_subsample <- 30L
+for (i in 1:N_subsamples_d) {
+	strains_to_use <- sample(all_strains_d, strains_per_subsample, replace = FALSE)
+	subjects_to_use_sd <- sample(
+		all_subjects_sd, subjects_per_subsample, replace = FALSE
+	)
+	subjects_to_use_hd <- sample(
+		all_subjects_hd, subjects_per_subsample, replace = FALSE
+	)
+	subjects_to_use <- c(subjects_to_use_sd, subjects_to_use_hd)
+	
+	this_subsample <-
+		dat_d |>
+		dplyr::filter(
+			strain_name %in% strains_to_use,
+			subject_id %in% subjects_to_use
+		) |>
+		dplyr::mutate(
+			strain_name = forcats::fct_drop(strain_name)
+		)
+	
+	subsample_list_d[[i]] <- this_subsample
+	subsample_strains_d[[i]] <- strains_to_use
+	subsample_subjects_d[[i]] <- subjects_to_use
+}
+rm(strains_to_use, subjects_to_use, this_subsample)
+gc()
+
+subsample_list_sd <- purrr::map(
+	subsample_list_d,
+	\(d) dplyr::filter(d, dose == "SD")
+)
+subsample_list_hd <- purrr::map(
+	subsample_list_d,
+	\(d) dplyr::filter(d, dose == "HD")
+)
+```
+
+Now we fit the list of bayesian models.
+
+```{r}
+sd_models_list <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1 + norm_d + (1 + norm_d | subject_id),
+	data = subsample_list_sd,
+	prior = brms_model_priors$`full, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 23452345
+)
+
+hd_models_list <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1 + norm_d + (1 + norm_d | subject_id),
+	data = subsample_list_hd,
+	prior = brms_model_priors$`full, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 4541234
+)
+
+sd_models_list_reduced <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1,
+	data = subsample_list_sd,
+	prior = brms_model_priors$`reduced, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 12354
+)
+
+hd_models_list_reduced <- brms::brm_multiple(
+	formula = y | cens(c, y2) ~ 1,
+	data = subsample_list_hd,
+	prior = brms_model_priors$`reduced, with censoring`,
+	chains = sampling_arguments$chains,
+	cores = sampling_arguments$chains,
+	threads = brms::threading(4L),
+	warmup = sampling_arguments$iter_warmup,
+	# brms will subtract the WU samples so add them back
+	iter = sampling_arguments$iter_sampling + sampling_arguments$iter_warmup,
+	backend = "cmdstanr",
+	recompile = FALSE,
+	combine = FALSE,
+	seed = 12354
+)
+```
+
+Get the AUCs
+
+```{r}
+sd_models_preds <- purrr::map(
+	sd_models_list,
+	\(m) tidybayes::epred_draws(
+		m,
+		newdata = data.frame(norm_d = seq(0, 1, 0.01)),
+		re_formula = NA
+	) |>
+		dplyr::ungroup()
+)
+
+sd_models_summaries <-
+	sd_models_preds |>
+	purrr::map(
+		\(d) d |> dplyr::summarize(
+			tidybayes::mean_hdci(.epred),
+			.by = norm_d
+		)
+	)
+
+sd_models_aucs <-
+	sd_models_preds |>
+	purrr::map(
+		\(d) d |>
+			dplyr::summarise(
+				value = pracma::trapz(norm_d, .epred),
+				.by = .draw
+			)
+	)
+
+sd_models_aucs_df <-
+	sd_models_aucs |>
+	dplyr::bind_rows(.id = "subsample") |>
+	dplyr::mutate(metric = "AUC")
+
+hd_models_preds <- purrr::map(
+	hd_models_list,
+	\(m) tidybayes::epred_draws(
+		m,
+		newdata = data.frame(norm_d = seq(0, 1, 0.01)),
+		re_formula = NA
+	) |>
+		dplyr::ungroup()
+)
+
+hd_models_summaries <-
+	hd_models_preds |>
+	purrr::map(
+		\(d) d |> dplyr::summarize(
+			tidybayes::mean_hdci(.epred),
+			.by = norm_d
+		)
+	)
+
+hd_models_aucs <-
+	hd_models_preds |>
+	purrr::map(
+		\(d) d |>
+			dplyr::summarise(
+				value = pracma::trapz(norm_d, .epred),
+				.by = .draw
+			)
+	)
+
+hd_models_aucs_df <-
+	hd_models_aucs |>
+	dplyr::bind_rows(.id = "subsample") |>
+	dplyr::mutate(metric = "AUC")
+```
+
+Get the GMTs
+
+```{r}
+sd_models_gmts <-
+	sd_models_list_reduced |>
+	purrr::map(
+		\(m) m |>
+			tidybayes::tidy_draws() |>
+			dplyr::select(.draw, value = Intercept)
+	)
+
+sd_models_gmts_df <-
+	sd_models_gmts |>
+	dplyr::bind_rows(.id = "subsample") |>
+	dplyr::mutate(metric = "GMT")
+
+sd_models_metrics <-
+	dplyr::bind_rows(sd_models_gmts_df, sd_models_aucs_df) |>
+	dplyr::group_by(metric) |>
+	dplyr::mutate(
+		value_norm = minmax(value),
+		subsample = forcats::fct_inorder(subsample)
+		) |>
+	dplyr::ungroup()
+
+hd_models_gmts <-
+	hd_models_list_reduced |>
+	purrr::map(
+		\(m) m |>
+			tidybayes::tidy_draws() |>
+			dplyr::select(.draw, value = Intercept)
+	)
+
+hd_models_gmts_df <-
+	hd_models_gmts |>
+	dplyr::bind_rows(.id = "subsample") |>
+	dplyr::mutate(metric = "GMT")
+
+hd_models_metrics <-
+	dplyr::bind_rows(hd_models_gmts_df, hd_models_aucs_df) |>
+	dplyr::group_by(metric) |>
+	dplyr::mutate(
+		value_norm = minmax(value),
+		subsample = forcats::fct_inorder(subsample)
+		) |>
+	dplyr::ungroup()
+
+dose_models_metrics <-
+	dplyr::bind_rows(
+		"SD" = sd_models_metrics,
+		"HD" = hd_models_metrics,
+		.id = "dose"
+	)
+```
+
+Make the decisions based on the summaries
+
+```{r}
+comparisons <-
+	dose_models_metrics |>
+	dplyr::select(-value_norm) |>
+	tidyr::pivot_wider(
+		names_from = dose,
+		values_from = value
+	) |>
+	dplyr::mutate(contrast = HD - SD) |>
+	dplyr::summarize(
+		tidybayes::mean_hdci(HD - SD),
+		.by = c(subsample, metric)
+	) |>
+	dplyr::mutate(
+		pick = ifelse(y > 0, "HD", "SD")
+	)
+
+comp_plot <-
+	comparisons |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = subsample, y = y) +
+	ggplot2::geom_hline(
+		yintercept = 0,
+		linetype = 2,
+		lwd = 1,
+		color = "darkgray"
+	) +
+	ggplot2::facet_wrap(~metric, ncol = 1) +
+	ggplot2::geom_errorbar(
+		mapping = ggplot2::aes(ymin = ymin, ymax = ymax),
+		lwd = 1, width = 0.5
+	) +
+	ggplot2::geom_point(
+		mapping = ggplot2::aes(color = pick),
+		size = 3
+	) +
+	ggplot2::scale_color_brewer(palette = "Dark2") +
+	labs(
+		x = "Subsample", y = "HD metric - SD metric",
+		color = "Better vaccine"
+	) +
+	hgp::theme_ms()
+
+ggplot2::ggsave(
+	plot = comp_plot,
+	filename = 	here::here("products", "2025-01-17-MICOM-Ab-presentation", "figures", "hdsd-plot.png"),
+	height = 8, width = 12
+)
+```
+
+
+
+Get the ICCs
+
+```{r}
+auc_model_sd <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | subsample),
+	data = dose_models_metrics |>
+		dplyr::filter(metric == "AUC", dose == "SD") |>
+		dplyr::select(subsample, value_norm)
+)
+auc_model_hd <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | subsample),
+	data = dose_models_metrics |>
+		dplyr::filter(metric == "AUC", dose == "HD") |>
+		dplyr::select(subsample, value_norm)
+)
+gmt_model_sd <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | subsample),
+	data = dose_models_metrics |>
+		dplyr::filter(metric == "GMT", dose == "SD") |>
+		dplyr::select(subsample, value_norm)
+)
+gmt_model_hd <- lme4::lmer(
+	formula = value_norm ~ 1 + (1 | subsample),
+	data = dose_models_metrics |>
+		dplyr::filter(metric == "GMT", dose == "HD") |>
+		dplyr::select(subsample, value_norm)
+)
+
+auc_ci_sd<- performance::icc(auc_model_sd, ci = TRUE)
+auc_ci_hd<- performance::icc(auc_model_hd, ci = TRUE)
+gmt_ci_sd <- performance::icc(gmt_model_sd, ci = TRUE)
+gmt_ci_hd <- performance::icc(gmt_model_hd, ci = TRUE)
+```
+
+<!-- ignore this bit for now
+
+Now run the metrics to compare both (frequentist, seems to not work).
+
+```{r}
+#| eval: false
+dat_to_boot <- dplyr::bind_rows(
+	gmt = gmt,
+	auc = freq_auc
+)
+
+# gmt - auc
+# CV, QCD, Gini
+boot_stat <- function(data, index) {
+	dat <- data[index, ]
+	calc <- dat |>
+		tidyr::pivot_longer(dplyr::everything(), names_to = "metric") |>
+		dplyr::summarise(
+			"CV" = covar(value),
+			"QCD" = qcd(value),
+			"Gini" = gini(value),
+			.by = metric
+		)
+	
+	out <- as.numeric(calc[1, 2:4] - calc[2, 2:4])
+	return(out)
+}
+
+set.seed(239548)
+boots <- boot::boot(
+	dat_to_boot,
+	boot_stat,
+	R = 250
+)
+
+boot_diffs <-
+	purrr::map(
+		1:3,
+		\(i) boot::boot.ci(boots, type = "bca", index = i)
+	)
+
+boot_stats <- purrr::map2_dfr(
+	boot_diffs, c("ΔCV", "ΔQCD", "ΔGini"),
+	\(bt, n) tibble::tibble(
+		"statistic" = n,
+		.est = bt$t0,
+		.lwr = as.numeric(bt$bca[1, 4]),
+		.upr = as.numeric(bt$bca[1, 5])
+	)
+)
+
+knitr::kable(
+	boot_stats,
+	caption = paste(
+		"Difference in given statistic (GMT - AUC). Values above zero indicate a",
+		"higher inequality in GMT statistic distribution than AUC. Estimates are",
+		"shown with 95% bootstrap CI's on 10k replicates."
+	),
+	digits = 2
+)
+```
+
+-->
+
+<!-- END OF FILE -->

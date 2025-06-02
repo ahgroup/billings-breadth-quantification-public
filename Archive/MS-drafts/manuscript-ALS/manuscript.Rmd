@@ -1,0 +1,341 @@
+---
+title: "Quantification of influenza antibody vaccine responses accounting for both vaccine strength and breadth"
+author: "Amanda L. Skarlupka, W. Zane Billings, Ted M. Ross, Andreas Handel"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  bookdown::word_document2: 
+    number_sections: false
+  bookdown::html_document2:
+    number_sections: false
+bibliography: references.bib
+always_allow_html: true
+link-citations: yes
+---
+
+```{r setup, include=FALSE, echo = FALSE}
+  knitr::opts_chunk$set(
+        echo = FALSE,
+        message = FALSE,
+        collapse=FALSE,
+        warning = FALSE
+    )
+
+library(flextable) # Create tables
+library(bookdown) # Final formatting
+library(tidyverse) #Manipulation
+```
+
+# Abstract
+
+Background: Influenza vaccine-elicited immune responses ineffectively protect against strains that are antigenically different from the vaccine strains. One goal of a future universal influenza vaccine is to provide broad protection against a range of heterologous strains. It is currently unclear how to quantify breadth of protection to allow comparison across different future vaccine candidates. 
+
+Methods: We propose and explore approaches to quantify both the strength and breadth of antibody HAI response following vaccination. We evaluate the use of different distance measures between vaccine strain and other strains. Specifically, we explore time, sequence, and antigenic cartographic distance measures. 
+
+Results: We show that area under the HAI-titer curve measures for these distance measures can provide a possible way to quantify vaccine strain strength that includes heterologous responses. We find that time-based distance is an unreliable approach, while sequence- and antigenic cartographic-based measures lead to more robust findings. We illustrate the potential use of our proposed methods by comparing overall antibody responses between standard-dose and high-dose Fluzone vaccines. 
+
+Conclusion: We explored different approaches towards quantification of overall influenza vaccine responses. We showed that such approaches might be useful for future vaccine candidate selection. 
+
+
+# Key words
+
+- Breadth
+- Influenza
+- Vaccine Design
+- Vaccination
+
+# Introduction
+
+Influenza viruses infect nearly 1 billion individuals annually; in the 2019-2020 Northern Hemisphere season the Centers for Disease Control and Prevention (CDC) estimated 35 million influenza-related visits with 20,000 mortality cases (https://www.cdc.gov/flu/about/burden/2019-2020.html). The majority of viral neutralizing antibodies target the surface proteins, hemagglutinin (HA) and neuraminidase (NA). The combination of the host's selective pressure and the high mutation rate of the viral RNA polymerase leads to the surface proteins undergoing antigenic drift. Further, reassortment also occurs due to its segmented genome. Potentially resulting in progeny viruses with distinct surface protein combinations, i.e. antigenic shift. Antigenic drift and shift allow evolutionary drifted viruses and new reassortments to infect hosts with previous exposure [@kim2018].
+
+Influenza vaccine initiatives have focused on developing a broadly protective candidate that elicits protection across subtypes and ideally across all Type A influenza [@wei2020]. Multiple candidates are in development and are being evaluated for protective responses [@vogel2020]. Different assays for detecting and quantifying the vaccine response are being proposed and utilized based upon the mechanism of action and of interest [@krammer2019a]. Currently, the HA inhibiting antibodies (HAI) are still accepted as the main biomarker associated with protection. Thus, most commonly the magnitude of the vaccine response is measured by the titer increase of the serum HAI antibodies. An HAI titer of 1:40 was previously correlated with 50% protection from clinical of protection for Type A human seasonal influenza [@hobson1972; @coudeville2010]. Yet, the HAI results for the recent H3N2 isolates are becoming more unreliable due to difficulties in conducting the HAI with these newer strains from a combination of increased NA mediated agglutination and decreased HA agglutination [@mogling2017].
+
+To select the vaccine candidate that has the desired breadth and also a sufficient magnitude of response, the vaccine candidates are assessed for efficacy in pre-clinical animal models and clinical human trials. From these studies the magnitude and functionality of the antibody response is determined through the use of different assays [@krammer2019a]. The viral breadth of these responses are qualitatively analyzed. Most commonly the broadly-reactive vaccine responses are compared those of a strain-specific vaccine to conclude that the vaccine has a broader response profile. This profile is determined against a select panel of viruses.
+
+The viral breadth panel is quantified by counting the positive response. If the vaccine candidate has inhibits more viruses than the comparator it is seen as more broadly reactive [@allen2021; @dugan2020; @hinojosa2020; @li2021; @jang2021; @boyoglu-barnum2021]. This method remains the easiest to conduct. However, the selection of different virus panels by the researchers makes comparison between studies difficult. Therefore, before determining if a vaccine candidate is more broadly-reactive than another, the method for calculating the breadth of a vaccine response needs to be determined.
+
+Recent methods have moved away from focusing on the proportion of strains that had a positive assay result towards comparing antibody landscapes of individuals. Antibody landscapes depict the antibody response with respect to a specific variable. Continuous variables of interest have included the year of isolation [@yang2020; @auladell2022], genetic differences [@nachbagauer2017; @smith2004a; @gupta2006; @anderson2018; @forghani2020], HAI antigenic distance [@hay2019], and antigenic cartography distances [@fonville2014; @hinojosa2020; @fonville2015; @kucharski2018; @wang2021]. Methods for quantitatively comparing antibody landscapes have been proposed but widely utilized [@yang2020]. 
+
+Here we compare time-, sequence-, and antigenic cartography-based measures and explore how they could be used to quantify breadth of a vaccine response. We go on to provide an example to illustrate the potential use of breadth quantification. Overall, this work contributes to the definition of breadth and the reproducibility of selecting broadly reactive vaccine candidates and the ability to compare those with other candidates.
+
+# Methods
+
+## Influenza cohort study
+
+The cohort data was comprised of volunteers enrolled from September 2014 to 2019 for the Northern Hemisphere influenza season [@RN1316]. If possible, individuals were given the ability to re-enroll for the following season leading to involvement in multiple seasons (number of vaccinations received).
+
+All individuals less than 65 years of age received the recommended influenza vaccine composition in the standard dose (SD; 15 µg of each viral HA protein) formulation. Individuals greater than or equal to 65 years of age were given the choice between SD and high dose (HD; 60 µg of each viral HA protein) formulations. The intramuscular vaccines administered were Fluzone(TM) (Sanofi Pasteur, Swiftwater, PA, USA) inactivated influenza trivalent (2014 SD and HD; 2015-2019 HD) or quadrivalent (2015-2019 SD) formulations. Blood was collected from individuals at day 0 pre-vaccination and 18-35 days to target 28 days post-vaccination. Sera was extracted from blood samples and stored at -150°C until use in the hemagglutinin inhibition (HAI) assay.
+
+## Data analysis and influenza viruses
+
+Data cleaning and analysis were conducted with `r version$version.string` [@Manual]. Individuals who did not have both pre- and post-vaccination titers were removed during cleaning. Further, one individual from season 2014 was removed from the SD/HD comparisons because they received the HD vaccine with an age of 61. The analysis for the SD vs HD comparison included only individuals of age 65 years or greater. Each individual's sera samples were tested in an HAI panel consisting of H1N1 and H3N2 viruses pre- and post-vaccination (D0 and D21-D28). The reciprocal HAI titers were transformed by $log_2(\frac{titer}{5})$ prior to analysis. After transformation, titer increase was determined by subtracting pre-vaccination titer from post-vaccination titer for each strain in the virus panel. HAI titers were measured against the vaccine homologous and heterologous strains. A broad selection of H1N1 and H3N2 influenza viruses were included in the HAI panel over the different seasons (supplemental information (SI)).
+
+## Mean titer increase
+
+The mean titer increase (TI) was the average TI for all individuals who received a specific vaccine strain. The average included all measured HAI titer increases within the subtype including heterologous viruses. 
+
+## Pair-wise distance measure
+
+The distances between vaccine and heterologous strains were determined within HA subtypes. Each distance was a pair-wise distance from a specified vaccine strain to another strain in the HAI virus panel of the same subtype. Three different measures were compared, time-, genetic sequence-, and HAI antigenic cartography-based distances.
+
+### Time-based
+
+The time-based measure used the years of isolation of the select vaccine strain and a virus from the HAI panel strain of the shared subtype. The pair-wise distance was determined by taking the absolute value of the difference between the two strains' years of isolation.
+
+### Sequence-based
+
+For the sequence-based genetic approach, the hemagglutinin amino acid sequence for each vaccine strain and HAI virus were retrieved from either GISAID or UniProtKB databases. The previously described dominant p-epitope was used as the sequence-based distance measure [@gupta2006]. Briefly, the antigenic site-specific p-epitopes were determined by calculating the pairwise Hamming distance of an antigenic site and dividing by the total amino acid residues that comprise that site. Of the five site-specific p-epitopes, the maximum was defined as the dominant p-epitope measure. The amino acid epitope residue numbers that defined each antigenic site for the H1N1 and H3N2 viruses are available in the SI [@burke2014; @munoz2005; @deem2009].
+
+### Antigenic cartography-based
+
+For the antigenic approach, antigenic cartographies of the Type A influenza subtypes (H1N1, H3N2) were created separately with the human HAI datasets. Initially, cartographies of the pre- and post-vaccination HAI titers, and with and without HD sera were compared, but no meaningful difference was observed between the different datasets. The R package Racmacs was used to create the HAI-based antigenic cartographies [@Racmacs]. Sera samples and HAI viruses that had less than n + 1 titers for the dimension (n) tested were underconstrained for mapping and were removed prior to cartography creation. Dimensional analysis was conducted from one to five dimensions. Two dimensional cartography was found to be appropriate for use with both subtypes. The HAI titers used for creating the antigenic cartographies were from the individuals who received the standard dose vaccination only and post-vaccination. Mapping with the resulting data set was done with 100 optimizations. The map with the lowest resulting stress was used for calculating the pair-wise distance between viruses. More details regarding the antigenic cartography are available in SI.
+
+Antigenic cartography was utilized to provide antigenic distances between different viruses. Distances relative to the different vaccine strains were determined by calculating the Euclidean distances using the map coordinates of the vaccine strain and the other strains within the HAI panel [@cai2012].
+
+## Normalization of measures
+
+Comparison of different distance methods (time-, sequence-, and cartography-based) required the range of each distance to be normalized. Pair-wise distances of season-based analyses were divided by the maximum distance by subtype, method, vaccine strain, and season. Pair-wise distances of specific influenza strain analyses were divided by the maximum distance by subtype, method, and vaccine strain (see SI for more detailed explanation).
+
+## Linear regression and area calculations
+
+Linear regression was performed using the normalized distance measure as the independent variable and outcome (HAI titer or titer difference) as the dependent variable. The outcomes for linear regression included: pre- and post-vaccination titer and titer increase. The linear regression fitted line is depicted within figures with 95% confidence intervals. For some regressions the error bands are too small to be visualized. The fitted equations are included in the SI. The area under the linear regression was quantified based on the linear fit. If the regression line had an x-intercept between 0 and 1, the portion below y = 0 was included as a negative area measurement.
+
+## Weighting schemes
+
+To illustrate the ability to apply different weights to HAI values based on distance from the vaccine strain, we used three weighting schemes. Those included unweighted, linear decrease, and antigenic unit cut-off. The unweighted scheme was the area under the regression line with no transformation. This weighting scheme applies to situations where antibody responses to all viruses in the panel are considered equally important. The linear decrease weighting applied a greater emphasis on the closely related strains and linearly decreased that weight to 0 for the furthest strains. This scheme applies to situations where antibody responses to the vaccine virus and closely related ones are more important than to the furthest strain. The last weighting incorporates the antigenic unit threshold used for vaccine selection. An antigenic unit of 2 was used as the cutoff to represent a 4-fold HAI titer difference. All antibody responses within this measure were equally weighted, and all responses greater than it were weighted at 0. Other weighting schemes are possible and should be based on scientific expert knowledge. Our choice of those three schemes is purely meant to illustrate the approach.
+
+## Subset Analysis
+
+The full dataset was resampled to create five smaller datasets. The datasets replicated the cohort study, but with a smaller panel of viruses for breadth analysis. Therefore, all individuals were included in the subsetted data. The panels of H1N1 and H3N2 viruses were truncated to include only ten viruses from each subtype, not including the vaccine strains. The viruses included in the data subsets are depicted in the SI.
+
+## Implementation
+
+All analyses were implemented in R, using packages XYZ. Data and code to reproduce all our findings are supplied as part of the supplementary information (SI). The SI describes how to use the code to re-run the analyses.
+
+# Results
+
+## Cohort Demographics
+
+The HAI results from all standard dose recipients were used for the development of the breadth measure. The age range of these individuals varied between seasons, with seasons after 2016 including teenagers and adults.
+
+The influenza viruses included in the vaccine and viral HAI breadth panel are included below (Table \@ref(tab:viruses)).
+
+```{r viruses, tab.cap="Influenza strains included in the seasonal vaccines and HAI breadth panels", tab.id='viruses', label='viruses'}
+readRDS(here::here("tables/virus_accession.rds"))  %>%
+  dplyr::filter(short_name %in% readRDS(here::here("data/processed/viruses_used.rds"))$strain_short) %>%
+  dplyr::select(short_name, `2014`:`2019`) %>%
+  dplyr::mutate(across(c(`2014`:`2016`), ~ ifelse(short_name == "CA/09", "Vac; x", paste0(.x))),
+                across(c(`2017`:`2018`), ~ ifelse(short_name == "MI/15", "Vac; x", paste0(.x))),
+                `2019` = ifelse(short_name == "Bris/18", "Vac; x", paste0(`2019`)),
+                across(c(`2016`:`2017`), ~ifelse(short_name == "HK/14", "Vac; x", paste0(.x))),
+                `2014` = ifelse(short_name == "TX/12", "Vac; x", paste0(`2014`)),
+                `2015` = ifelse(short_name == "Switz/13", "Vac; x", paste0(`2015`)),
+                `2018` = ifelse(short_name == "Sing/16", "Vac; x", paste0(`2018`)),
+                `2019` = ifelse(short_name == "KS/17", "Vac; x", paste0(`2019`)),
+                subtype = c(rep("H1N1", 18), rep("H3N2", 21)),
+                across(c(`2014`:`2019`), ~na_if(.x, y = "NA"))) %>%
+  dplyr::select(subtype, 1:7) %>%
+  flextable() %>%
+  set_header_labels(values = list(subtype = "Subtype",
+                                 short_name = "Strain")) %>%
+  add_footer(top = FALSE, subtype = "Vac: included in the vaccine formulation for that season\nx: included in HAI breadth panel for that season") %>%
+    merge_at(j = 1:8, part = "footer") %>%
+  merge_v(j = 1) %>%
+  hline(i = 18) %>%
+  align(j = 3:8, align = "center") %>%
+    autofit()
+```
+
+
+
+## Different distance measures to evaluate HAI levels in pre- and post-vaccination titers
+
+Three methods of calculating pair-wise distances between viruses were compared to determine if one or more was more strongly associated with the HAI titer increase after vaccination. The three methods were 1.) time-based: difference in years of isolation, 2.) sequence-based: dominant p-epitope determined by Hamming distance, and 3.) antigenic cartography-based: HAI antigenic cartographic Euclidean distance. The investigated vaccine outcomes were 1.) pre- and post-vaccination titers and 2.) titer increase.
+
+Prior to comparing the three distance measures to each other, the values were normalized to a range of 0 to 1, by dividing the distance by the maximum value (Figure \@ref(fig:normalization)). This normalization did not change the relative positions of the viruses to each other, but allowed for the comparison of the area under the linear regression across the methods.
+
+```{r normalization, echo = FALSE, fig.cap= "Normalization of the pair-wise distances allows to the different methods to be compared to  each other. The distances without normalization (A, C, E) and with normalization by the maximum distance (B, D, F) are shown. The relative placement of the viruses do not change with the normalization. However, the normalization places the different pair-wise distance measures within the same range of 0 to 1. The distance measures were normalized by the maximum distance within each distance method and for all of the viruses testing in an HAI panel to the vaccine virus of CA/09. All distances were respective to CA/09. There were 773 individuals that received a CA/09 vaccine antigen (n). The raw datapoints had jitter applied with +/- 0.4 in the y-axis. P-epitope unit: number of differences per total amino acids in antigenic site"}
+
+knitr::include_graphics(here::here("figures/typeA_normalization.png"))
+
+```
+
+Over the duration of the study period, H1N1 CA/09 and H3N2 HK/14 vaccine components had the greatest number of recipients. The CA/09 component was used across the 2014 to 2016 seasons, and HK/14 for the 2016 and 2017 seasons. For both subtypes, the ordering and positioning of the HAI viruses varied based on the distance method (Figure \@ref(fig:prepost); SI). The pre- and post-vaccination HAI titers of all individuals who received SD vaccination were compared across the three different pair-wise distances for these two most common vaccine components (Figure \@ref(fig:prepost)).
+
+The H1N1 HAI panel virus positions varied across measures compared to the H3N2 viruses. This was expected due to the 2009 H1N1 pandemic which introduced a swine-origin virus into human circulation. This antigenic shift was not captured by the time-based measurement. Further, this shift is less pronounced with the p-epitope measure; more strains, such as SC/18, were located in the middle region compared to the antigenic cartography measure. The antigenic-based measure had a more distinctive divide at with strains located at the extremes. Comparatively, since the introduction of H3N2 into the human population in 1968, the subtype has undergone continuous antigenic drift with no shifts. Thus the three measures correlate strongly with each other as expected. 
+
+Dependent upon subtype, different measures may lead to different conclusions with regards to the distance between two viruses. With the H1N1, CA/09 and NC/99 have a small year-based distance, but a large p-epitope distance. These variations result in different antibody landscapes. For H3N2, the distances are similar across the measures, and thus result in similar antibody landscapes. However, these similar results will only remain as long as the positive correlation between measures remains strong. 
+
+```{r prepost, echo = FALSE, fig.cap= "Pre- and post-vaccination antibody landscapes for CA/09 and HK/14 strains. All standard dose individuals who received CA/09 or HK/14 vaccine components for all of the seasons were initially analyzed to determine trends in the relationship between distance and HAI titer. Individual HAI titers for the strains (points) were analyzed with linear regression. Three methods used for calculating the pair-wise distance from the vaccine strain were compared: year, p-epitope, and antigenic cartography. Linear regressions of the pre- and post-vaccination titers with 95% confidence intervals were shown for each panel. For some regressions the error bands are too small to be visualized. The distance measures were normalized by the maximum distance within each distance method and strain. Depending upon the distance measure, the HAI panel virus locations vary (see change in position of selected strain labels). The labeled viruses are arbitrarily chosen to depict the change in positions. The raw datapoints had jitter applied with +/- 0.4 in the y-axis. n: sample size"}
+
+knitr::include_graphics(here::here("figures/strain_CA09HK14_prepost.png"))
+
+```
+The HAI antibody pre- and post-vaccination responses for each of the individual seasons and strains are shown in SI. 
+
+## Titer increase
+
+Pre- and post-vaccination titers provide information regarding baseline and post-vaccination HAI titer. Since an individual's respond to vaccination  was the primary outcome of interest, titer increase was investigated. The relationship previously observed with pre- and post-vaccination remained when analyzing titer increase to the two vaccine components (Figure \@ref(fig:titinc)). For sequence- and antigenic-based measures, average titer increase for CA/09 declined as the distance from the vaccine strain increased. This response is expected due to Fluzone vaccination eliciting a strain-specific antibody response. The relationship between the time-based distance measure and HAI titer increase was minimal. The three measures for HK/14 provided similar outcome responses such as linear regression slope and intercept. 
+
+```{r titinc, echo = FALSE, fig.cap= "Titer increase to CA/09 and HK/14 vaccine components for standard dose recipients. The linear regression of the titer increase with 95% confidence intervals are shown for each distance method. For some regressions the error bands are too small to be visualized. The measures were normalized by the maximum value by distance method and strain. The raw datapoints had jitter applied with +/- 0.4 in the y-axis. Raw data points that fell outside of the y-axis bounds are not shown." }
+
+knitr::include_graphics(here::here("figures/strain_CA09HK14_titerincrease.png"))
+
+```
+
+## Quantification of breadth and application of weighting
+
+So far, we have considered different measures of distance between vaccine and heterologous strains, and how they impact the estimate of heterologous protection. While figures like the ones we just showed are informative, it might sometimes be useful to condense the estimated cross-protection and breadth of a given vaccine component (and if combined, the full vaccine) into a single number. One way this can be accomplished is by considering the area under the regression line as the total amount of cross-protection induced by a specific vaccine component. 
+
+A question then arises on how to weigh this area under the regression line (in the following called area under the curve (AUC)). One way is to assume that the response to each strain receives the same weight, independent of distance from the vaccine strain. This uniform weighing, or unweighted approach corresponds to a simple calculation of the AUC (Figure \@ref(fig:weightings)). An alternative approach is to give more recent strains a larger weight, with linearly increasing weight as strains become more distant. Yet another approach might be to only weigh recent strains, and discard the contribution of any strain further away than some distance from the vaccine strain. Many other weighting schemes are of course possible. Expert judgment will need to decide which weighting scheme is most relevant for a given situation. However, custom weighting increases the objectivity of the decisions and allows for reproducibility. Here, we are agnostic regarding the best choice of weighting, and simply use these three schemes to illustrate how one could potentially quantify breadth in a single numeric value.
+
+```{r weightings, fig.cap="Applied weighting schemes. Weighting of the results places emphasis on desired antibody responses while reducing emphasis of undesired ones. Presented here include unweighted, linear reduction, and antigenic weighting schemes. The AUC for each graph is quantified in the upper right hand corners. In the original unweighted scheme the AUC is equally weighted at each distance. The linear weighting weights the AUC at a distance of 0 at 1, and the AUC at the distance of 1 at 0, with the weight linearly decreasing. The antibody response to the furthest virus is effectively reduced to have no impact on the breadth measurement. In a negative linear relationship, the contributions of the viruses with increasing distance have less weight. In the last row, antigenic unit step weighting is based on the two antigenic units distance threshold used for vaccine selection. AUC measures within those two antigenic units of the vaccine strain they are weighted at 1. Whereas, outside of the cutoff the AUC has a final weight of 0. AUC: Area under the curve"}
+knitr::include_graphics(here::here("figures/weighting_example.png"))
+
+```
+
+The AUCs for vaccine strain, weighting scheme, and distance method were quantified in Table \@ref(tab:auc). The mean titer increase was also determined for each vaccine strain. The mean titer increase was the average TI for all HAI results for all individuals who received a specified vaccine strain.
+
+```{r auc, tab.cap="Area under the curve (AUC) of the H1N1 and H3N2 vaccine strains for the three distance and weighting methods.", tab.id='auc', label='auc'}
+readRDS(file = here::here("tables/auc_sd_strain.rds")) %>%
+  dplyr::mutate(vac_short = substr(vac_short,
+                                   start = 6,
+                                   stop = nchar(paste(vac_short)))) %>%
+  tidyr::pivot_wider(names_from = method,
+                    values_from = starts_with("auc")) %>%
+    left_join(y = readRDS(file = here::here("data/processed/averaged_SD_pro.rds"))) %>%
+  dplyr::select(strain_type, vac_short, mean_tit, starts_with("auc_pred"), starts_with("auc_linear"), starts_with("auc_anti")) %>%
+  flextable::flextable() %>%
+    flextable::add_header_row(top = TRUE,
+                 values = c(" ", "Unweighted", "Linear", "2 Antigenic Units"),
+                 colwidths = rep(3, 4)) %>%
+  flextable::align(align = "center", part = "all") %>%
+  flextable::set_header_labels(values = list(
+                                 strain_type = "Subtype",
+                                 vac_short = "Strain",
+                                 mean_tit = "Mean TI",
+                                 #pro = "Proportion >= 2 TI",
+                                 auc_pred_Year = "Year",
+                                 `auc_pred_P-epitope` = "P-epitope",
+                                 auc_pred_Cartography = "Cartography",
+                                 auc_linear_Year = "Year",
+                                 `auc_linear_P-epitope` = "P-epitope",
+                                 auc_linear_Cartography = "Cartography",
+                                 auc_anti_Year = "Year",
+                                 `auc_anti_P-epitope` = "P-epitope",
+                                 auc_anti_Cartography = "Cartography"
+                                 )) %>%
+  flextable::merge_v(j = 1) %>%
+  flextable::hline(i = 3) %>%
+  flextable::vline(j = c(2, 3, 6, 9))
+```
+
+## Robustness of Breadth Quantification
+
+To get an idea of the reproducibility of the different distance measures, the full data set was separated into five different subsets. These subsets are meant to replicate the hypothetical scenario of five different research groups conducting the same analysis but choosing different virus panels to measure heterologous HAI responses. The vaccine strains were included in all subsets, and ten HAI panel viruses were randomly chosen for each subset. The range of these datasets were quantified as well as the difference between the minimum and maximum AUC values (Table \@ref(tab:subset)). The mean titer increase was also included.
+
+```{r subset, tab.cap="Subset variation analysis of five randomized HAI panel subsets.", tab.id='subset', label='subset'}
+
+readRDS(file = here::here("tables/subset_analysis/SD_strain_variation.rds")) %>%
+  dplyr::select(strain_type, vac_short, method, min, max) %>%
+  mutate(diff = max-min,
+    across(c(min, max, diff), round, digits = 3)) %>%
+  flextable::flextable() %>%
+  flextable::align(align = "center", part = "all") %>%
+  flextable::set_header_labels(values = list(
+                                 strain_type = "Subtype",
+                                 vac_short = "Strain",
+                                 method = "Method",
+                                 #mean = "Mean",
+                                 #sd = "Standard Deviation",
+                                 #var = "Variance",
+                                 #cv = "Coefficient of Variation"
+                                 min = "Minimum",
+                                 max = "Maximum",
+                                 diff = "Difference"
+                                 )) %>%
+  flextable::merge_v(j = 1:2) %>%
+  flextable::hline(i = seq(from = 4, to = 32, by = 4))
+
+```
+
+
+## Case-study
+
+Although it is known that the HD vaccine elicits a greater magnitude of response to the vaccine strain than a SD dose, whether is elicits a broader response is not well characterized. Therefore, these distance measures and the resulting breadth quantification were applied to compare HD and SD vaccination responses to determine differences in elicited breadth. Individuals who were equal to or older than 65 years of age and received either the SD or HD vaccine were analyzed (SI).
+
+When comparing the SD and HD responses for the most common H1N1 vaccine strain (CA/09), HD vaccination elicited overall a stronger response when using p-epitope and cartography distances (Figure \@ref(fig:titinc-sdhd)). For the other H1N1 components the same results were observed for MI/15 (SI). For HD Bris/18 strain from the 2019 season had a smaller area than the SD for all weighting schemes (Table \@ref(tab:auc-sdhd-strain)). For the 2019 season, the mean titer increase of the HD individuals was lower than that of the SD individuals as well for both the H1N1 and H3N2 strains. 
+
+The most common H3N2 vaccine strain (HK/14), and Switz/13, Sing/16, and KS/17 minimal changes in breadth comparing the SD to HD (Figure \@ref(fig:titinc-sdhd) and SI). Only the TX/12 HD vaccine strain elicited an increased breadth (SI). The HD KS/17 strain from the 2019 season also had a smaller area than the SD (Table \@ref(tab:auc-sdhd-strain)).
+
+```{r titinc-sdhd, fig.cap= "Standard and high dose vaccine elicited titer increase after vaccination with CA/09 and HK/14 vaccine strains in individuals greater than or equal to 65 years of age. Overall HD vaccination elicited stronger and broader antibody response than the SD vaccine for H1N1, and equal to or greater than for the H3N2. The linear regression of the titer increase with 95% confidence intervals are shown for the dose received. For some regressions the error bands are too small to be visualized.  The measures were normalized by the maximum value by method and vaccine strain. The black dashed line indicates no titer increase. The raw datapoints had jitter applied with +/- 0.4 in the y-axis. Raw data points that fell outside of the y-axis bounds are not shown."}
+knitr::include_graphics(here::here("figures/manuscript/strain_CA09HK14_titerincrease_dose.png"))
+```
+
+
+```{r auc-sdhd-strain, tab.cap= "AUC for three weighting schemes for 65+ individuals by strain", label="auc-sdhd-strain", tab.id='auc-sdhd-strain'}
+readRDS(file = here::here("tables/manuscript/auc_sdhd_strain.rds")) %>%
+  dplyr::mutate(vac_short = factor(vac_short, labels = substr(levels(vac_short), #Remove the H1N1/H3N2 in front
+                                                              start = 6,
+                                                              stop = nchar(levels(vac_short))))) %>%
+  tidyr::pivot_wider(names_from = dose,
+              values_from = auc_pred:auc_linear) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(auc_pred_change = auc_pred_HD - auc_pred_SD,
+         auc_linear_change = auc_linear_HD - auc_linear_SD,
+         auc_anti_change = auc_anti_HD - auc_anti_SD,
+         .keep = "unused") %>%
+  tidyr::pivot_wider(names_from = method,
+                     values_from = dplyr::ends_with("change")) %>%
+  dplyr::left_join(y = readRDS(file = here::here("data/processed/averaged_SDHD_pro.rds"))) %>%
+  dplyr::select(strain_type, vac_short, mean_ti_diff, starts_with("auc")) %>%
+  dplyr::distinct() %>%
+    flextable::flextable() %>%
+      flextable::add_header_row(top = TRUE,
+                 values = c(" ", "Unweighted", "Linear", "2 Antigenic Units"),
+                 colwidths = rep(3, 4)) %>%
+  flextable::set_header_labels(values = list(strain_type = "Subtype",
+                                  vac_short = "Strain",
+                                  mean_ti_diff = "Mean TI Difference",
+                                  #rel_risk_HD_SD = "RR Ratio HD:SD",
+                                 auc_pred_change_Year = "Year",
+                                 `auc_pred_change_P-epitope` = "P-epitope",
+                                 auc_pred_change_Cartography = "Cartography",
+                                 auc_linear_change_Year = "Year",
+                                 `auc_linear_change_P-epitope` = "P-epitope",
+                                 auc_linear_change_Cartography = "Cartography",
+                                 auc_anti_change_Year = "Year",
+                                 `auc_anti_change_P-epitope` = "P-epitope",
+                                 auc_anti_change_Cartography = "Cartography")) %>%
+    flextable::merge_v(j = "strain_type") %>%
+   flextable::hline(i = 3) %>%
+  flextable::vline(j = c(2, 3, 6, 9)) %>%
+  flextable::align(align = "center", part = "all") %>%
+  flextable::autofit() %>%
+  add_footer(top = FALSE, strain_type = "Values shown are difference between HD and SD AUCs (HD-SD = Difference)\nMean TI Difference: Difference between HD mean titer increase and SD mean titer increase") %>%
+  merge_at(j = 1:12, part = "footer")
+
+
+```
+
+
+\newpage
+
+# Discussion
+
+In this study, we compared three different distance measures to determine the relationship between a vaccine strain and the distance to a heterologous virus. Time-, sequence-, and antigenic-based distance measures were compared through linear regression to quantify antigenic breadth after vaccination. Further a subset analysis was conducted to gain a better understanding around the reproducibility of the different measurements. 
+
+Overall, we found that for H1N1 vaccines if only using the year of isolation the resulting antibody landscape would have been would have been reported as negligible. For the H1N1 the sequence- or cartographic-based distances provided the strongest association with vaccine outcome than the year-based measure. This is thought to be due to the antigenic shift that occurred in 2009 that is captured in the sequence- and cartographic-based measures. 
+
+For the H3N2 vaccine strains, the year of isolation correlated highly with the sequence and cartographic measures. The H3N2 viruses have undergone constant antigenic drift over time with no antigenic shifts, leading to this correlation. Further, even though the three measures varied minimally between some strains (H3N2 strains), the year method never had a stronger association than the other two. Therefore, the sequence and cartographic measures performed equal to or better than the year-based measure. Consequently, it was determined that sequence and cartographic methods are preferred over using the year of isolation.
+
+For now, using the time-based measure yields similar results as the sequence and cartographic measures. However, only human isolated viruses that underwent this antigenic drift were included in the panel. Developing a vaccine that protects from potential zoonotic pandemics requires a virus panel that includes viruses isolated from animal reservoirs. Antigenically distinct H3 influenza is common in the swine population, and variants have been isolated from human infection [@bangaru2016]. These viruses would overlap in time of isolation with the human isolated viruses; the year, sequence, and cartographic values would no longer correlate. Hence, although the different measures were not significantly different in this study, these methods would be preferred in a study looking at a more comprehensive panel. 
+
+The differences observed between the sequence- and cartographic-based methods were minimal for both the H1N1 and H3N2 for season and strain comparisons. In fact, for the H3N2 subtype, the p-epitope measure had consistently greater AUC than the cartographic measure. It is reassuring that the sequence-based method provided results consistent with the cartographic ones due to the number of resources necessary for calculating the cartographies. The generation of sera and testing the panel of viruses provides direct antigenic data but is not feasible to conduct for a large-scale project. Therefore, using the sequence data, even though there is no perfect correlation with antigenicity, may provide an appropriate surrogate. Further, the HAI assay results were used as the outcome in this study. HAI cartography may not be suitable if using a different assay such as total antibody binding data (HAI only measures RBS binding antibodies), and new cartographies would need to be created to match the outcome.
+
+Vaccine candidates and immune responses of interest are becoming more diverse. Many research groups are investigating multiple subtype breadth and breadth with other proteins such as the NA [@skarlupka2021; @chen2018]. These methods can be applied to these components as well. Overall, the techniques described here can assist in selecting vaccine candidates, delivery platforms, and adjuvants when the goal is to expand the breadth of the immune response. Adopting an objective, reproducible breadth value would be beneficial for the research community.
+
+One of the limitations of using titer increase and post-vaccination titer as a measurement is a physiological maximum. A maximum threshold of HAI titer limits the antibody response observed [@attias2021; @krammer2021]. Therefore, if an individual has pre-existing titers to a virus through multiple influenza exposures, a smaller titer increase can be observed than a naive individual. This smaller increase may have no bearing on the efficacy of the vaccine. To overcome this limitation, future studies can investigate the outcome of seroconversion, which is an HAI antibody titer greater than or equal to 1:40.
+
+\newpage
+
+# Bibliography

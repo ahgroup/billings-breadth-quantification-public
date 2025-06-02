@@ -1,0 +1,490 @@
+---
+title: "Generative simulations for HAI as a function of distance"
+author: "Zane"
+date: last-modified
+date-format: iso
+format: docx
+execute:
+  warning: false
+  error: false
+  cache: true
+---
+
+```{r}
+#| include: false
+# So renv will do its job correctly
+box::use(
+  markdown,
+  mime,
+  rmarkdown,
+  yaml,
+  tibble,
+  # I have to put it somewhere so renv will leave me ALONE
+  BiocManager
+)
+
+# source(here::here("R", "functions", "Rethinking-Helpers.R"))
+```
+
+
+# Basic simulation
+
+First we will attempt to simulate raw titer data, without including antigenic
+distance in the simulation. The outcome we want this simulation to produce
+is a semi-realistic distribution of titer values with support on the observed
+measurement space. We adopt the following model, where $y_i$ is the $i$th
+individual's measured titer.
+
+$$
+\begin{align*}
+\log_2 y_i &\sim \mathcal{N}(\mu, \sigma^2) \\
+y_i^* &= \begin{cases}
+5 & \log_2 y_i < 1 \\
+5 \cdot \lfloor 2 ^ {y_i} \rfloor & \log_2 y_i \geq 1
+\end{cases}
+\end{align*}
+$$
+We adopt the transformation
+$$
+g(y) = 5 \cdot 2^{y_i}
+$$
+because the physical limit of detection (LoD) of the HAI assay is
+$$
+10 = 5 \cdot 2 ^ 1
+$$
+and values below this threshold are, by convention, recorded as $5$. So we know
+those values are below the LoD, but not what the values are. The distributional
+parameters $\mu$, the mean, and $\sigma^2$, the variance, are unknown to us
+practically and must be estimated from the data.
+
+
+```{r}
+one_titer_sim <- function(N = 1e4, seed = 370, mean = 3, sd = 1) {
+	set.seed(seed)
+	sim <-
+		tibble::tibble(
+			# Assume log(titer) is drawn from a normal distribution
+			raw_log_titer = rnorm(N, mean, sd),
+			# If we observe a titer with log(titer) < 1 (LOD), mark it as 0
+			trunc_log_titer = ifelse(raw_log_titer >= 1, raw_log_titer, 0),
+			# The assay is dilution based, so we only observe the floor of each
+			# value.
+			rounded_titer = floor(trunc_log_titer),
+			# Now final observed titer is equal to this transformation.
+			sim_titer = 5 * 2 ^ rounded_titer
+		) |>
+		dplyr::arrange(raw_log_titer)
+}
+
+out <- one_titer_sim(1000, mean = 4, sd = 2)
+#plot(out$raw_log_titer, out$trunc_log_titer)
+#points(out$raw_log_titer, out$rounded_titer, col = "blue")
+barplot(table(out$sim_titer))
+```
+
+
+In the above plot, you can see the result of 1000 simulations, where $mu = 4$
+and $\sigma^2 = 4$. (Note that the simulation is parametrized in terms of the
+standard deviation, $\sigma = +\sqrt{\sigma^2}$.) Notably, while the mean
+was specified as $4$ (an observed titer of $80$), the mode of the distribution
+is at $40$ instead.
+
+We can also notice that the observed mean is biased, estimated at
+$`r round(mean(log2(out[["sim_titer"]] / 5)), 2)`$ on the scale of $y_i$ in
+the above model ($`r round(5 * 2 ^ round(mean(log2(out[["sim_titer"]] / 5)), 2), 2)`$
+on the observed measurement scale). A [stackexchange post](https://math.stackexchange.com/questions/3662314/statistics-of-a-gaussian-random-variable-with-the-floor-function-transformation) suggested that as long as $sigma^2$ is
+"not small" (suggested as $\sigma^2 \geq 1$ [here](https://mathematica.stackexchange.com/questions/278040/finding-the-mean-and-variance-of-a-distribution/278164#278164)) suggests that $\mu - \frac{1}{2}$ is a
+good approximation to the mean of the transformed random variable (on the log
+scale), which is close to what we observed.
+
+I guess that this is probably somehow related to a Poisson distribution, but
+I don't know or care enough to think more deeply about that.
+
+# Including antigenic distance
+
+We can introduce the
+antigenic distance into this simple model by taking
+$$\mu = f(d)$$
+for some function $f$. For the sake of simplicity, we assume that $\mu$ is
+**linearly dependent on distance**. Our model then becomes
+$$
+\begin{align*}
+y_i^* &= \begin{cases}
+5 & \log_2 y_i < 1 \\
+5 \cdot \lfloor 2 ^ {y_i} \rfloor & \log_2 y_i \geq 1
+\end{cases} \\
+\log_2 y_i &\sim \mathcal{N}(\mu, \sigma^2) \\
+\mu &= \alpha + \beta \cdot d
+\end{align*}
+$$
+where $d \in [0, 1]$. Under this model, $\alpha$ represents the expected
+titer value when $d = 0$, which corresponds to the response to the homologous
+vaccine strain in real life. The slope, $\beta$, should be negative, and thus
+represents the rate at which expected titers should decrease as strains become
+more distant. Furthermore, we can note that
+$$E[y \mid x = 1] - E[y \mid x = 0] = \mu(1) - \mu(0) = \beta.$$
+Thus, since $d \in [0, 1]$ we can interpret $\beta$ as the difference between
+the expected titer for a completely novel strain and the expected titer for the
+homologous strain. Imposing the condition that $\mu = 0$ when
+$d = 1$ is thus equivalent to specifying that $\alpha + \beta = 0$. This would
+be a standard regression problem with linear constraints with an analytic
+maximum likelihood solution if the true $y_i$ values were observed.
+
+Anyways, as an example, consider the situation when $\alpha = 4$ and
+$\beta = -3$. For now, we leave the standard deviation as $2$, as in the
+previous simulation.
+
+
+```{r}
+set.seed(100)
+ex_dist_sim <-
+	tibble::tibble(
+		d = seq(0, 1, 0.1),
+		mu = 4 - 3 * d
+	) |>
+	dplyr::mutate(
+		sim = purrr::map(mu, \(x) one_titer_sim(1000, mean = x, sd = 2))
+	)
+
+library(ggplot2)
+plt <- ex_dist_sim |>
+	tidyr::unnest(sim) |>
+	dplyr::mutate(
+		sim_titer = factor(sim_titer),
+		mu = factor(mu) |> forcats::fct_inorder(),
+		distance = factor(d) |> forcats::fct_inorder()
+	) |>
+	ggplot() +
+	aes(x = sim_titer) +
+	geom_bar(col = "black", fill = "gray") +
+	facet_wrap(~distance, labeller = "label_both") +
+	labs(
+		x = "Observed titer",
+		y = "Count"
+	) +
+	zlib::theme_ms() +
+	theme(
+		axis.text.x = element_text(angle = 45),
+		plot.background = element_rect(fill = "white")
+	) +
+	coord_cartesian(
+		ylim = c(0, 700)
+	)
+
+fn <- here::here("Misc", "Lab-Notes", "06-Generative-Sims", "p01.png")
+ggsave(
+	filename = fn,
+	plot = plt,
+	width = 13,
+	height = 8
+)
+```
+
+```{r}
+#| fig.width: 6.5
+knitr::include_graphics(fn)
+```
+
+
+We can also do a more extreme example where we assume
+$\left| \beta \right| > \alpha,$
+which will cause the titers to decay towards the limit of detection rapidly.
+
+
+```{r}
+set.seed(100)
+ex_dist_sim <-
+	tibble::tibble(
+		d = seq(0, 1, 0.1),
+		mu = 4 - 6 * d
+	) |>
+	dplyr::mutate(
+		sim = purrr::map(mu, \(x) one_titer_sim(1000, mean = x, sd = 2))
+	)
+
+plt <- ex_dist_sim |>
+	tidyr::unnest(sim) |>
+	dplyr::mutate(
+		sim_titer = factor(sim_titer),
+		mu = factor(mu) |> forcats::fct_inorder(),
+		distance = factor(d) |> forcats::fct_inorder()
+	) |>
+	ggplot() +
+	aes(x = sim_titer) +
+	geom_bar(col = "black", fill = "gray") +
+	facet_wrap(~distance, labeller = "label_both") +
+	labs(
+		x = "Observed titer",
+		y = "Count"
+	) +
+	zlib::theme_ms() +
+	theme(
+		axis.text.x = element_text(angle = 45),
+		plot.background = element_rect(fill = "white")
+	) +
+	coord_cartesian(
+		ylim = c(0, 700)
+	)
+
+fn <- here::here("Misc", "Lab-Notes", "06-Generative-Sims", "p02.png")
+ggsave(
+	filename = fn,
+	plot = plt,
+	width = 13,
+	height = 8
+)
+```
+
+```{r}
+#| fig.width: 6.5
+knitr::include_graphics(fn)
+```
+
+
+# Model fitting -- no censoring adjustment
+
+Next we'll fit a simple Bayesian model to see if we can recover the parameters
+from the generative simulation. For the first test, we'll explicitly use the
+priors which have the true values of the simulation as their most likely
+values. We'll also use the entire simulated dataset for the first model test.
+
+
+```{r}
+library(cmdstanr)
+
+set.seed(372)
+test_dist_sim <-
+	tibble::tibble(
+		d = seq(0, 1, 0.1),
+		mu = 3 - 4 * d
+	) |>
+	dplyr::mutate(
+		sim = purrr::map(mu, \(x) one_titer_sim(1000, mean = x, sd = 2))
+	) |>
+	tidyr::unnest(sim) |>
+	dplyr::mutate(
+		log_titer = log2(sim_titer / 5)
+	)
+
+dlist <- test_dist_sim |>
+	dplyr::select(d, y = log_titer) |>
+	as.list()
+
+dlist$N <- length(dlist[[1]])
+```
+
+```{r}
+freq_test <- lm(log_titer ~ d, data = test_dist_sim)
+```
+
+```{r}
+summary(freq_test)
+```
+
+```{r}
+file <-
+	here::here("Misc", "Lab-Notes", "06-Generative-Sims", "test-bayes.stan")
+mod <- cmdstanr::cmdstan_model(file)
+mod$print()
+```
+
+```{r}
+# Set prior values
+dlist$s_mean <- 0.5
+dlist$a_mean <- 3
+dlist$b_mean <- -4
+dlist$a_sd <- 0.01
+dlist$b_sd <- 0.01
+
+# Run model
+fit <- mod$sample(
+	data = dlist,
+	seed = 373,
+	chains = 4,
+	parallel_chains = 4,
+	iter_warmup = 1000,
+	iter_sampling = 1000,
+	refresh = 500
+)
+```
+
+```{r}
+fit$summary()
+```
+
+
+# Censored mean
+
+Let's try to use a Bayesian model to estimate the mean of the censored data
+from the previous example, without taking distance into account. For this
+simulated dataset, we know that the mean is 4 and the standard deviation is 2.
+
+Here's the Stan code for this mean model with censoring taken into account.
+
+
+```{r}
+file <-
+	here::here("Misc", "Lab-Notes", "06-Generative-Sims", "censored-mean.stan")
+mod <- cmdstanr::cmdstan_model(file)
+mod$print()
+```
+
+
+Next we need to set up the data for this model in Stan-friendly format.
+Note that we need to pass in the number of observed values, the number of
+censored values, and **the vector of non-censored values only.**
+
+
+```{r}
+censored_mean_dlist <- list()
+censored_mean_dlist$y_obs <- log2(out$sim_titer[out$sim_titer > 5] / 5)
+censored_mean_dlist$N_obs <- length(censored_mean_dlist$y)
+censored_mean_dlist$N_cens <- nrow(out) - censored_mean_dlist$N_obs
+```
+
+```{r}
+censored_mean_fit <- mod$sample(
+	data = censored_mean_dlist,
+	seed = 374,
+	chains = 4,
+	parallel_chains = 4,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+
+
+# Model fitting -- with censoring
+
+
+```{r}
+file2 <-
+	here::here("Misc", "Lab-Notes", "06-Generative-Sims", "lm-censoring.stan")
+mod_cens <- cmdstanr::cmdstan_model(file2)
+mod_cens$print()
+```
+
+```{r}
+test_dist_sim |>
+	dplyr::select(d, y = log_titer)
+```
+
+
+
+
+# Do that for many different model parameters
+
+
+```{r}
+test_statistical_model <- function(a, b, s, n, model, seed = 370) {
+	test_dist_sim <-
+		tibble::tibble(
+			d = seq(0, 1, 0.1),
+			mu = a + b * d
+		) |>
+		dplyr::mutate(
+			sim = purrr::map(mu, \(x) one_titer_sim(n, mean = x, sd = s))
+		) |>
+		tidyr::unnest(sim) |>
+		dplyr::mutate(
+			log_titer = log2(sim_titer / 5)
+		)
+	
+	dlist <- test_dist_sim |>
+		dplyr::select(d, y = log_titer) |>
+		as.list()
+	
+	dlist$N <- length(dlist[[1]])
+	dlist$s_mean <- 1/s
+	dlist$a_mean <- a
+	dlist$b_mean <- b
+	dlist$a_sd <- 0.1
+	dlist$b_sd <- 0.1
+	
+	fit <- model$sample(
+		data = dlist,
+		seed = seed,
+		chains = 4,
+		parallel_chains = 4,
+		iter_warmup = 1000,
+		iter_sampling = 1000,
+		refresh = 0,
+		show_messages = FALSE
+	)
+	
+	
+	
+	saveRDS(
+		object = fit,
+		file = paste0(
+			'F:\\test-bayes-results\\model-',
+			a, '-', b, '-', s, '.Rds'
+		),
+		compress = FALSE
+	)
+	
+	return(fit$summary())
+}
+```
+
+```{r}
+test_safely <- purrr::possibly(
+	test_statistical_model,
+	otherwise = 'failed'
+)
+```
+
+```{r}
+test_grid <- tidyr::expand_grid(
+	a = seq(0, 1, 1),
+	b = seq(-10, -9, 1),
+	s = seq(1, 2, 0.1)
+)
+```
+
+```{r}
+test_res <- purrr::pmap(
+	test_grid,
+	\(a, b, s) suppressMessages(
+			test_safely(a = a, b = b, s = s, n = 1000, model = mod)
+	),
+	.progress = TRUE
+)
+```
+
+
+
+# TODO
+
+* Fit our bayesian model (doesn't need to be partial pooling right now) to
+see if we recover parameters.
+* Introduce noise to the model and see when parameters are recovered and how
+noise changes the estimates.
+* Calculate the suite of metrics from the model fit under varying levels of
+noise and parameters and see how much the metrics vary under different settings.
+* Need to discuss with Andreas what exactly to do next.
+
+# Individual variations in the mean
+
+Allow
+$$
+\begin{align*}
+y_i^* &= \begin{cases}
+5 & \log_2 y_i < 1 \\
+5 \cdot \lfloor 2 ^ {y_i} \rfloor & \log_2 y_i \geq 1
+\end{cases} \\
+\log_2 y_i &\sim \mathcal{N}(\mu_i, \sigma^2) \\
+\mu_i &= \alpha_i + \beta_{i?} \cdot d
+\end{align*}
+$$
+
+
+<!--
+ok. so then I guess the next step is, make the titer dependent on antigenic distance, using a linear model as the "true" model for now. and we consider different underlying parameters to generate data, then calculate all the metrics and see what happens for each set of parameters.
+
+then I guess we can estimate the parameters in our data, and see how those match with the simulated predictions. what still isn't really clicking for me is what we do if our metrics are always more variable regardless of the underlying parameters. I still think that our AUC is inherently more useful than % seroconversion sort of in the same way that a posterior density estimate is more useful than a mean + CI.
+-->
+
+<!-- END OF FILE -->
+

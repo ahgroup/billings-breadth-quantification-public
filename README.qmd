@@ -1,0 +1,73 @@
+---
+format: gfm
+---
+
+<!-- README.md is generated from README.qmd. Please edit that file -->
+
+```{r setup, include = FALSE}
+require(rmarkdown, quietly = TRUE)
+require(yaml, quietly = TRUE)
+require(quarto, quietly = TRUE)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Breadth Quantification (BQ)
+
+Description here
+
+## TODO
+
+* [ ] update ICCs
+* [ ] future results based on feedback
+* [ ] CIVICs reporting metadata
+* [ ] Create public repo / zenodo
+
+Potential journals for submission: target PNAS/Proc Soc B, writing needs to be NON TECHNICAL!
+
+## Software requirements
+
+- `r version$version.string`.
+- `renv` version 1.1.4, which should attempt to install itself when you start R in the working directory for this project.
+- A compilation toolchain that works with R. On Windows you need RTools43, on MacOS you need the updated version of the XCode Tools. On Linux you probably need a lot of system utilities.
+- Quarto version `r quarto::quarto_version()`.
+- The packages declared in `renv.lock`.
+    * First, some packages need manual installs.
+    * The packages `stringfish` and `qs2` need to be installed from source (at time of writing), otherwise they won't work correctly. You can install these with `renv::install(c("qs2@0.1.4", "stringfish@0.16.0"), type = "source')`.
+    * On UGA's `sapelo2` cluster, most `Rcpp` packages need to be installed from source because of the LAPACK/BLAS configuration. You can install these with `renv::install(c("Rcpp@1.0.13", "RcppEigen@0.3.4.00", "RcppParallel@5.1.8"), type = "source))`. If you get any errors about LAPACK/BLAS on `sapelo2`, try building those packages from source in the same way.
+    * Once you've done the manual package installs, you should be able to use `renv::restore()` to install the remaining dependencies.
+- Any system dependencies required by those packages. If you are missing some, you probably need to install them before you can successfully install the packages. See, e.g., `renv::sysreqs()`.
+- `cmdstan` version `r cmdstanr::cmdstan_version()`. Once you have `cmdstanr` installed, you need to have a working installation of `cmdstan`. Please follow the guide and tests on the [`cmdstan` quick start guide](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) if you haven't done this before.
+
+## Endpoint files
+
+```{r}
+#| label: endpoint file paths
+
+print_paths <- function(paths) {paste0('`', paths, '`', collapse = "; ")}
+
+# Make sure all "endpoint" files are loadable.
+# Mostly cause it makes the pipeline plot look nice.
+# Manuscript and supplement and metadata
+ms_files <- targets::tar_read("manuscript")
+sp_files <- targets::tar_read("supplement")
+md_files <- targets::tar_read("supplementary_methods")
+#md_files <- targets::tar_read("zipped_metadata_submission")
+# Data files
+reporting_data_files <- targets::tar_read("reporting_data_files")
+model_data_files <- targets::tar_read("model_data_files")
+subsample_data_files <- targets::tar_read("subsample_data_files")
+# Model files
+model_metadata <- targets::tar_read("model_metadata_file")
+model_fits <- targets::tar_read("full_data_model_fit_files")
+# Subsample model files
+subsample_model_metadata <- targets::tar_read("subsample_model_metadata_files")
+subsample_model_fits <- targets::tar_read("subsample_model_fit_files")
+```
+
+In addition to our figures and tables for the manuscript, our pipeline produces multiple output files which could be suitable for further examination or analysis. These are included in our repo as the following files.
+
+
+<!-- END OF FILE -->

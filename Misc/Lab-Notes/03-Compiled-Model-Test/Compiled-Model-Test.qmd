@@ -1,0 +1,861 @@
+---
+title: "Pre-compiled model test"
+format: html
+---
+
+```{r}
+#| label: setup
+#| include: false
+# So renv will do its job correctly
+box::use(
+	readr,
+	tidyr,
+	dplyr,
+  cmdstanr[...],
+	rstan[...]
+)
+
+get_fn <- function(home = here::here(), dir, idx, ext = ".Rds") {
+	paste0(
+		home, "/", dir, "/Model",
+		stringr::str_pad(idx, width = 2, side = "left", pad = "0"), ext
+	)
+}
+
+get_rstan_diagnostics <- function(fit, fn) {
+	sink(fn)
+	sink(stdout(), type = "message")
+	rstan::check_hmc_diagnostics(fit)
+	sink()
+	sink(stderr(), type = "message")
+}
+
+tidy_PI <- function(x, ...) {
+	rethinking::PI(x, ...) |>
+		setNames(c("lwr", "upr")) |>
+		tibble::enframe()
+}
+
+source(here::here("R", "functions", "rethinking-helpers.R"))
+```
+
+
+Since I am using the same models over and over, one of the main time sinks
+is unnecessary re-compilation of the Stan code. Unfortunately in rethinking
+there is no real way to do this, because `ulam` doesn't take an argument for
+a compiled model. So instead we have to figure out how to get all of the
+same output from `cmdstanr`.
+
+# Data setup
+
+For this test, I'll fit the previously defined complete pooling model once
+for each vaccine strain, antigenic distance method, and outcome, so that
+we will get the same 72 models that I am used to at this point. First I'll
+copy over the data cleaning.
+
+```{r data cleaning}
+clean_data <-
+	readr::read_rds(
+		here::here("data", "processed", "distance_data.rds")
+	)
+
+dat <-
+	clean_data |>
+	dplyr::mutate(
+		vaccine_type = stringr::str_remove(vaccine_type, "_vaccine_fullname$") |>
+			stringr::str_to_upper() |>
+			factor()
+	) |>
+	dplyr::filter(
+		vaccine_type == strain_type,
+		# Get only the Ag distance methods that Amanda used.
+		method %in% c("cart_2d_post", "p_epi", "year"),
+		season < 2019
+	) |>
+	dplyr::mutate(
+		dplyr::across(tidyselect:::where(is.factor), forcats::fct_drop)
+	)
+
+# Pivot the data so we can fit pre/post models at the same time
+dat_models <-
+	dat |>
+	dplyr::select(-pretiter, -postiter) |>
+	tidyr::pivot_longer(
+		cols = c(prevactiter, postvactiter, titerincrease),
+		names_to = "outcome",
+		values_to = "y"
+	) |>
+	# Turn the categorical variables into integer indexes, this is required
+	# for index coding in stan
+	dplyr::mutate(
+		id = uniq_id |>
+			factor() |>
+			forcats::fct_inorder() |>
+			as.integer()
+	) |>
+	# Normalize the antigenic distance measurements within vaccine group
+	dplyr::group_by(vaccine_fullname, method) |>
+	dplyr::mutate(
+		norm_dist = distance / max(distance)
+	) |>
+	dplyr::ungroup()
+
+# We want to fit a model for every unique combination of:
+# vaccine strain; outcome; distance method.
+# (Models will be fitted ACROSS seasons, not per-season.)
+# We'll do this by nesting the data into strata to get a per-stratum
+# data frame and then mapping the model fitting function over the
+# nested data frames.
+dat_nested1 <-
+	dat_models |>
+	dplyr::filter(dose == "SD") |>
+	# Select only the data we need RIGHT NOW to prevent Stan from throwing a fit,
+	# it will often get angry over unused data that is in the wrong format.
+	dplyr::select(
+		# Variables that should go into the Stan model. These DO need to be
+		# processed to be NUMERIC.
+		id = uniq_id, y, x = norm_dist,
+		# Stratum/nesting variables -- these do NOT need to be processed.
+		vaccine_fullname, method, outcome
+	) |>
+	# Cleaning up the factor variabels that have to become indices
+	# it has to be done in groups to ensure there are no missing levels!
+	dplyr::group_by(dplyr::across(!c(id, x, y))) |>
+	dplyr::mutate(
+		id = id |> factor() |> forcats::fct_inorder() |> as.integer()
+	) |>
+	dplyr::ungroup() |>
+	# This line creates the stratified data frames. Analogous to base R split()
+	# but organized better.
+	tidyr::nest(dat = c(id, x, y))
+
+dat_nested <-
+	dat_nested1 |>
+	# rethinking will convert data to a list so we may as well do it ourselves.
+	# This turns each of the subsample data frames into a list of vectors.
+	# Note that some of the Ag distance methods are missing values so we also
+	# need to omit those missing values.
+	dplyr::mutate(dat = purrr::map(dat, \(x) x |> na.omit() |>as.list()))
+```
+
+So now we have a list-column (that is, `dat_nested$dat`) of data frames to
+iterate the model over. We need to fit the **same model on each of these**
+**data frames**! So as long as the Stan code is set up to recieve data of
+varying lengths, there is no reason to recompile the model each time. First,
+we need to add a parameter with the number of data points in each model to
+the data list. We should also probably get in the habit of creating a variable
+for the number of groups as well, because we'll eventually need that in
+the multilevel models we want to fit.
+
+```{r adding N}
+dat_nested$dat <-
+	purrr::map(
+		dat_nested$dat,
+		\(x) {
+			c(x, "N" = length(x$id), "k" = max(x$id))
+		}
+	)
+```
+
+# Model setup
+
+OK, now we need to get the `cmdstanr` model ready. First we need to write the
+Stan code that fits the model.
+
+````{verbatim, lang = "stan"}
+// Input data for the model
+// Input data is of length N.
+// There are two variables that we will use: y and x.
+data {
+  int<lower=0> N;
+  array[N] int<lower=0> id;
+  vector[N] y;
+  vector[N] x;
+}
+
+// The parameters accepted by the model.
+// Our model has a variance parameter, s, and two linear model parameters.
+// A slope a, and an intercept b.
+parameters {
+  real a;
+  real b;
+  real<lower=0> s;
+}
+
+// The model to be estimated.
+// The outcome, y, is normally distributed, where the conditional mean
+// on x is fitted to a linear model.
+model {
+	vector[N] mu;
+	s ~ exponential(1);
+	b ~ normal(0, 5);
+	a ~ normal(0, 5);
+	for (i in 1:N) {
+		mu[i] = a + b * x[i];
+	}
+  y ~ normal(mu, s);
+}
+````
+
+Now we need to set up a `cmdstanr` model object and compile the code.
+
+```{r}
+m <-
+	cmdstanr::cmdstan_model(
+		stan_file = here::here("Stan", "complete-pooling-across-seasons.stan"),
+		compile = FALSE
+	)
+
+m$compile(
+	quiet = FALSE,
+	pedantic = TRUE,
+	cpp_options = list(stan_threads = TRUE)
+)
+```
+
+Ok, it looks like the model compiled alright. As a bonus we don't get pages
+and pages of warning messages like we do from `rethinking` creating Stan
+code! Ok, now we need to use this model to sample from the posterior
+distribution independently after seeing each of these data sets.
+
+```{r}
+# This is a non-generalizable function that I wrote to keep things in the
+# that don't need to be defined everywhere.
+fit_all_models <- function(dat, dir, RSTAN_OUT) {
+	starttime <- Sys.time()
+	# Setup the compiled model in case I overwrite m somewhere
+	m <- cmdstanr::cmdstan_model(
+		stan_file = here::here("Stan", "complete-pooling-across-seasons.stan"),
+		exe_file  = here::here("Stan", "complete-pooling-across-seasons.exe"),
+		compile = TRUE,
+		cpp_options = list(stan_threads = TRUE)
+	)
+	
+	# Function for sample from the model at each iteration of the loop
+	sample_from_model <- function(d, id, n, model) {
+		paste0("Starting model ", id, " of ", n, "!\n") |>
+			crayon::white() |>
+			crayon::bgBlue() |>
+			cat()
+		
+		out <-
+			model$sample(
+				data = d,
+				seed = 370,
+				chains = 8,
+				parallel_chains = 8,
+				threads_per_chain = 2,
+				iter_warmup = 1250,
+				iter_sampling = 1250,
+				adapt_delta = 0.95
+			)
+		return(out)
+	}
+	
+	# Easy error handling for the model, if it runs great, if there is an
+	# error in the fit it will return "uh-oh!" without crashing the
+	# entire loop
+	possibly_sample_from_model <- purrr::possibly(sample_from_model, "uh-oh!")
+	
+	# Need this constant for message printing
+	n_mods <- nrow(dat)
+	
+	purrr::iwalk(
+		dat[["dat"]],
+		\(d, idx) {
+			# Get the file name to save at
+			fn <- paste0(
+				here::here("Results", "_Out"), "/", dir, "/Model",
+				stringr::str_pad(idx, side = "left", width = "2", pad = "0"), ".Rds"
+			)
+			
+			# Invoke the model fitting routine
+			mod <- possibly_sample_from_model(d, idx, n_mods, m)
+			
+			# Fit models with cmdstan, but then read the model back as an Rstan object
+			# So I can use the rstan::extract function that McElreath uses to get the
+			# output in the same format as rethinking.
+			if (isTRUE(RSTAN_OUT)) {
+				mod <- rstan::read_stan_csv(mod$output_files())
+			}
+			
+			# Save the results to disk
+			readr::write_rds(mod, fn, compress = "gz")
+			
+			# Cleanup this iteration of the loop to save ram
+			rm(mod)
+			invisible(gc())
+		}
+	)
+	stoptime <- Sys.time()
+	
+	message("Fitting took ", difftime(stoptime, starttime) |> format())
+	
+	invisible(m)
+}
+
+# Invoke the routine
+if(interactive()) {
+	fit_all_models(dat_nested,dir = "CompileTest/Fit",  TRUE)
+}
+```
+
+OK so it looks like all the models fitted. And none of the model sizes are
+suspiciously small so I guess they all fitted correctly. I didn't track
+the time on this but I think skipping the compilation step should've saved at
+least a minute per model, though there's still some overhead with compressing
+the files and running the loop.
+
+Ok, now we have to figure out how to process the models.
+
+# Model processing
+
+For each model, we need to be able to get the diagnostics and the posterior
+samples in a similar format to what is returned by `rethinking` (which uses
+`cmdstanr` as a backend so it is possible). Eventually we'll also have to
+figure out how to get samples from the prior, but that is a problem for
+the future.
+
+```{r}
+process_all_models <- function(file_location, home_dir) {
+	# Get the list of files to process
+	fn <- list.files(file_location, full.names = TRUE)
+	
+	# Set home directory for saving files, it will be like 2 microseconds faster 
+	# to do it outside of the loop part
+	h <- home_dir
+	
+	purrr::iwalk(
+		fn,
+		\(f, idx) {
+			# Read in the model
+			m <- readr::read_rds(f)
+			
+			# Get the summary
+			summary(m, probs = c(0.055, 0.945))$summary |>
+				as.data.frame() |>
+				tibble::rownames_to_column("parameter") |>
+				dplyr::filter(!parameter %in% c("lp__", "dev", "log_lik")) |>
+				readr::write_rds(get_fn(h, "Summary", idx))
+			
+			# Get the diagnostics
+			# TODO make an actual function that returns this stuff as
+			# actual values instead of text
+			get_rstan_diagnostics(m, get_fn(h, "Diag", idx, ext = ".txt"))
+			
+			# Get the posterior samples and remove the parts we don't care about
+			p <-
+				rstan::extract(
+					m,
+					pars = c("dev", "lp__", "log_lik"),
+					include = FALSE
+				)
+			
+			readr::write_rds(p, get_fn(h, "Post", idx))
+			
+			# Get the predictions
+			preds <-
+				purrr::map(
+					seq(0, 1, 0.01),
+					\(x) {rnorm(10000, p$a + p$b * x, x)}
+				) |>
+				do.call(what = cbind) |>
+				`colnames<-`(seq(0, 1, 0.01)) |>
+				as.data.frame() |>
+				tibble::rowid_to_column("sampleID") |>
+				tidyr::pivot_longer(
+					cols = !sampleID,
+					names_to = "distance",
+					values_to = "y",
+					names_transform = list(distance = as.numeric)
+				)
+			
+			# TODO update this so that it works for the partial pooling models
+			# Get the mean and PI for each unit
+			# No need to marginalize since we are doing complete pooling
+			pred_summary <-
+				preds |>
+				dplyr::reframe(
+					est = mean(y),
+					tidy_PI(y),
+					.by = distance
+				) |>
+				tidyr::pivot_wider(
+					names_from = name,
+					values_from = value
+				)
+			
+			readr::write_rds(pred_summary, get_fn(h, "Preds", idx))
+			
+			# Cleanup this iteration
+			rm(m, p, preds, pred_summary)
+			invisible(gc())
+		},
+		.progress = "Processing models!"
+	)
+}
+
+process_all_models(
+	file_location = here::here("Results/_Out/CompileTest/Fit"),
+	home_dir = here::here("Results", "_Out", "CompileTest")
+)
+```
+
+PROCESSING PREADS AND STUFF FOR POSTER
+
+```{r}
+# TODO FIX THIS LATER I HAD TO PUT THIS HERE TO GET IT TO WORK WITH THE
+# NEW FITTED MODELS 2022-02-20
+marginals_data <-
+	dat_nested |>
+		tibble::add_column(
+		preds = purrr::map(
+			list.files("Results/_Out/CompileTest/Preds", full.names = TRUE),
+			readr::read_rds
+		)
+	)
+plt_marg <-
+	marginals_data |>
+	tidyr::unnest(preds) |>
+	dplyr::select(-dat)
+plt_test <-
+	plt_marg |>
+	dplyr::filter(
+		# TODO FILTER PLOTS THAT USE THIS IN THIS SCRIPT CAUSE I CHANTGED IT
+		vaccine_fullname %in% c("H1N1-California-2009", "H3N2-Hong Kong-2014")
+	) |>
+		dplyr::mutate(
+		o = factor(outcome,
+							 levels = c("prevactiter", "postvactiter", "titerincrease"),
+							 labels = c("log2(Pre-vaccination titer/5)",
+							 					  "log2(Post-vaccination titer/5)",
+							 					  "log2(Titer ratio)")),
+		m = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c(
+				"Year difference",
+				"p-Epitope sequence distance",
+				"Antigenic cartography distance"
+			)
+		)
+	)
+dat_parms <-
+	marginals_data |>
+	dplyr::mutate(
+		# Iterate over the precis files (that we already saved) to get the linear
+		# model mean parameter estimates for each model
+		parameters = 	purrr::map(
+			list.files(path = "Results/_Out/CompileTest/Summary", full.names = TRUE),
+			\(f) {
+				p <- readr::read_rds(f)
+				parms <-
+					p |>
+					dplyr::filter(parameter %in% c("a", "b")) |>
+					dplyr::select(parameter, est = mean, lwr = `5.5%`, upr = `94.5%`) |>
+					tibble::tibble()
+			}
+		),
+		# Compute the mean outcome for comparison to AUCS
+		ymean = purrr::map(
+			dat,
+			\(d) ggplot2::mean_cl_normal(d$y, conf.int = .89) |>
+				rlang::set_names(c("est", "lwr", "upr")) |>
+				tibble::tibble()
+		)
+	) |>
+	dplyr::select(-dat, -preds)
+# This data frame contains the antigenic distance unit cutoffs for weighting
+cutoff_df <-
+	readr::read_rds(file = here::here("Results/tables/AU_cutoff.rds")) |>
+	dplyr::filter(distance_type == "Strain") |>
+	# Remove the subtype from the beginning of the short_name
+	dplyr::mutate(
+		short_name = gsub("^.{4}:", "", vac_short)
+	) |>
+	dplyr::select(short_name, cutoff) |>
+	dplyr::left_join(
+		# This file contains the conversion between the short name and the long name
+		readr::read_rds(here::here("data", "processed", "virus_info.rds")),
+		by = "short_name"
+	) |>
+	dplyr::select(vaccine_fullname = analysis_name, cutoff)
+
+# First we need to join this DF to the outcomes
+AUC_comps <-
+	marginals_data |>
+	dplyr::left_join(cutoff_df, by = "vaccine_fullname") |>
+	# Calculate the AUC for each model -- uses trapezoidal approximation
+	# Consider switching to a better method? Not like it matters for a
+	# straight line though
+	# We use the three different weighting schemes as well.
+	# Finally, the SEs were computed by taking the AUC of the low and high
+	# marginal predictions band. Unclear where this is correct or we would
+	# need to bootstrap on the individual samples or something.
+	dplyr::mutate(
+		AUC_unweighted = purrr::map(
+			preds,
+			\(d) tibble::tibble(
+				est = pracma::trapz(d$distance, d$est),
+				lwr = pracma::trapz(d$distance, d$lwr),
+				upr = pracma::trapz(d$distance, d$upr)
+			)
+		),
+		AUC_linear = purrr::map(
+			preds,
+			\(d) tibble::tibble(
+				est = pracma::trapz(d$distance, d$est * (1 - d$distance)),
+				lwr = pracma::trapz(d$distance, d$lwr * (1 - d$distance)),
+				upr = pracma::trapz(d$distance, d$upr * (1 - d$distance))
+			)
+		),
+		AUC_step = purrr::map2(
+			preds, cutoff,
+			\(d, c) tibble::tibble(
+				est = pracma::trapz(d$distance, d$est * (d$distance <= c)),
+				lwr = pracma::trapz(d$distance, d$lwr * (d$distance <= c)),
+				upr = pracma::trapz(d$distance, d$upr * (d$distance <= c))
+			)
+		),
+	) |>
+	dplyr::mutate(
+		AUC = purrr::pmap(
+			list(AUC_unweighted, AUC_linear, AUC_step),
+			\(x, y, z) dplyr::bind_rows(
+				"unweighted" = x,
+				"linear" = y,
+				"2 AU" = z,
+				.id = "weighting"
+			)
+		),
+		.keep = "unused"
+	) |>
+	dplyr::select(-dat, -preds, -cutoff) |>
+	tidyr::unnest(AUC) |>
+	dplyr::mutate(name = paste0("AUC (", weighting, ")"), .keep = "unused")
+dat_table <-
+	dat_parms |>
+	tidyr::unnest(parameters) |>
+	tidyr::pivot_wider(
+		names_from = parameter,
+		values_from = c(est, lwr, upr),
+		names_glue = "{parameter}_{.value}"
+	) |>
+	tidyr::unnest(ymean, names_sep = "_") |>
+	tidyr::pivot_longer(cols = !(vaccine_fullname:outcome)) |>
+	tidyr::separate(name, into = c("name", "stat")) |>
+	tidyr::pivot_wider(names_from = stat, values_from = value) |>
+	dplyr::bind_rows(AUC_comps) |>
+	dplyr::left_join(
+		# Get the short names back
+		readr::read_rds(here::here("data", "processed", "virus_info.rds")),
+		by = c("vaccine_fullname" = "analysis_name")
+	) |>
+	dplyr::mutate(
+		subtype = substr(vaccine_fullname, 1, 4),
+		method = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c("Year difference", "p-Epitope", "Antigenic cartography")
+		),
+		outcome = factor(
+			outcome,
+			levels = c("prevactiter", "postvactiter", "titerincrease"),
+			labels = c("log2 pre-titer",
+								 "log2 post-titer",
+								 "log2 titer ratio")
+		),
+		name = factor(
+			name,
+			levels = c("ymean", "AUC (unweighted)", "AUC (linear)", "AUC (2 AU)",
+								 "a", "b"),
+			labels = c("Mean outcome",
+								 "AUC (unweighted)",
+								 "AUC (linear)",
+								 "AUC (2 AU)",
+								 "Intercept",
+								 "Slope")
+		)
+	) |>
+	dplyr::select(
+		subtype, strain = short_name, outcome, method, est, lwr, upr, name
+	) |>
+	dplyr::arrange(subtype, strain, outcome, method, name)
+
+readr::write_rds(
+	list(dat_models, plt_test, dat_table),
+	file = here::here("Andreas-Poster-Plots/p1data.Rds")
+)
+```
+
+# repeat all of that mess but this time with dose stratified
+
+```{r}
+dat_dose <-
+	clean_data |>
+	dplyr::mutate(
+		vaccine_type = stringr::str_remove(vaccine_type, "_vaccine_fullname$") |>
+			stringr::str_to_upper() |>
+			factor()
+	) |>
+	dplyr::filter(
+		vaccine_type == strain_type,
+		# Get only the Ag distance methods that Amanda used.
+		method %in% c("cart_2d_post", "p_epi", "year"),
+		season < 2019,
+		age >= 65
+	) |>
+	dplyr::mutate(
+		dplyr::across(tidyselect:::where(is.factor), forcats::fct_drop)
+	) |>
+	dplyr::select(-pretiter, -postiter) |>
+	tidyr::pivot_longer(
+		cols = c(prevactiter, postvactiter, titerincrease),
+		names_to = "outcome",
+		values_to = "y"
+	) |>
+	# Turn the categorical variables into integer indexes, this is required
+	# for index coding in stan
+	dplyr::mutate(
+		id = uniq_id |>
+			factor() |>
+			forcats::fct_inorder() |>
+			as.integer()
+	) |>
+	# Normalize the antigenic distance measurements within vaccine group
+	dplyr::group_by(vaccine_fullname, method) |>
+	dplyr::mutate(
+		norm_dist = distance / max(distance)
+	) |>
+	dplyr::ungroup()
+
+dat_dose2 <-
+	dat_dose |>
+	# Select only the data we need RIGHT NOW to prevent Stan from throwing a fit,
+	# it will often get angry over unused data that is in the wrong format.
+	dplyr::select(
+		# Variables that should go into the Stan model. These DO need to be
+		# processed to be NUMERIC.
+		id = uniq_id, y, x = norm_dist,
+		# Stratum/nesting variables -- these do NOT need to be processed.
+		vaccine_fullname, method, outcome, dose
+	) |>
+	# Cleaning up the factor variabels that have to become indices
+	# it has to be done in groups to ensure there are no missing levels!
+	dplyr::group_by(dplyr::across(!c(id, x, y))) |>
+	dplyr::mutate(
+		id = id |> factor() |> forcats::fct_inorder() |> as.integer()
+	) |>
+	dplyr::ungroup() |>
+	# This line creates the stratified data frames. Analogous to base R split()
+	# but organized better.
+	tidyr::nest(dat = c(id, x, y)) |>
+	# rethinking will convert data to a list so we may as well do it ourselves.
+	# This turns each of the subsample data frames into a list of vectors.
+	# Note that some of the Ag distance methods are missing values so we also
+	# need to omit those missing values.
+	dplyr::mutate(
+		dat = purrr::map(dat, \(x) x |> na.omit() |>as.list()),
+		dat = purrr::map(dat, \(x) {c(x, "N" = length(x$id), "k" = max(x$id))})
+	)
+```
+
+```{r}
+# Invoke the routine
+if(interactive()) {
+	fit_all_models(dat_dose2, dir = "CompileTestDose/Fit", TRUE)
+}
+process_all_models(
+	file_location = here::here("Results/_Out/CompileTestDose/Fit"),
+	home_dir = here::here("Results", "_Out", "CompileTestDose")
+)
+```
+
+GET ALL THE STUFF FOR THE PSOTER
+
+```{r}
+# TODO FIX THIS LATER I HAD TO PUT THIS HERE TO GET IT TO WORK WITH THE
+# NEW FITTED MODELS 2022-02-20
+marginals_data <-
+	dat_dose2 |>
+		tibble::add_column(
+		preds = purrr::map(
+			list.files("Results/_Out/CompileTestDose/Preds", full.names = TRUE),
+			readr::read_rds
+		)
+	)
+plt_marg <-
+	marginals_data |>
+	tidyr::unnest(preds) |>
+	dplyr::select(-dat)
+plt_test <-
+	plt_marg |>
+	dplyr::filter(
+		# TODO FILTER PLOTS THAT USE THIS IN THIS SCRIPT CAUSE I CHANTGED IT
+		vaccine_fullname %in% c("H1N1-California-2009", "H3N2-Hong Kong-2014")
+	) |>
+		dplyr::mutate(
+		o = factor(outcome,
+							 levels = c("prevactiter", "postvactiter", "titerincrease"),
+							 labels = c("log2(Pre-vaccination titer/5)",
+							 					  "log2(Post-vaccination titer/5)",
+							 					  "log2(Titer ratio)")),
+		m = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c(
+				"Year difference",
+				"p-Epitope sequence distance",
+				"Antigenic cartography distance"
+			)
+		)
+	)
+dat_parms <-
+	marginals_data |>
+	dplyr::mutate(
+		# Iterate over the precis files (that we already saved) to get the linear
+		# model mean parameter estimates for each model
+		parameters = 	purrr::map(
+			list.files(path = "Results/_Out/CompileTestDose/Summary", full.names = TRUE),
+			\(f) {
+				p <- readr::read_rds(f)
+				parms <-
+					p |>
+					dplyr::filter(parameter %in% c("a", "b")) |>
+					dplyr::select(parameter, est = mean, lwr = `5.5%`, upr = `94.5%`) |>
+					tibble::tibble()
+			}
+		),
+		# Compute the mean outcome for comparison to AUCS
+		ymean = purrr::map(
+			dat,
+			\(d) ggplot2::mean_cl_normal(d$y, conf.int = .89) |>
+				rlang::set_names(c("est", "lwr", "upr")) |>
+				tibble::tibble()
+		)
+	) |>
+	dplyr::select(-dat, -preds)
+# This data frame contains the antigenic distance unit cutoffs for weighting
+cutoff_df <-
+	readr::read_rds(file = here::here("Results/tables/AU_cutoff.rds")) |>
+	dplyr::filter(distance_type == "Strain") |>
+	# Remove the subtype from the beginning of the short_name
+	dplyr::mutate(
+		short_name = gsub("^.{4}:", "", vac_short)
+	) |>
+	dplyr::select(short_name, cutoff) |>
+	dplyr::left_join(
+		# This file contains the conversion between the short name and the long name
+		readr::read_rds(here::here("data", "processed", "virus_info.rds")),
+		by = "short_name"
+	) |>
+	dplyr::select(vaccine_fullname = analysis_name, cutoff)
+
+# First we need to join this DF to the outcomes
+AUC_comps <-
+	marginals_data |>
+	dplyr::left_join(cutoff_df, by = "vaccine_fullname") |>
+	# Calculate the AUC for each model -- uses trapezoidal approximation
+	# Consider switching to a better method? Not like it matters for a
+	# straight line though
+	# We use the three different weighting schemes as well.
+	# Finally, the SEs were computed by taking the AUC of the low and high
+	# marginal predictions band. Unclear where this is correct or we would
+	# need to bootstrap on the individual samples or something.
+	dplyr::mutate(
+		AUC_unweighted = purrr::map(
+			preds,
+			\(d) tibble::tibble(
+				est = pracma::trapz(d$distance, d$est),
+				lwr = pracma::trapz(d$distance, d$lwr),
+				upr = pracma::trapz(d$distance, d$upr)
+			)
+		),
+		AUC_linear = purrr::map(
+			preds,
+			\(d) tibble::tibble(
+				est = pracma::trapz(d$distance, d$est * (1 - d$distance)),
+				lwr = pracma::trapz(d$distance, d$lwr * (1 - d$distance)),
+				upr = pracma::trapz(d$distance, d$upr * (1 - d$distance))
+			)
+		),
+		AUC_step = purrr::map2(
+			preds, cutoff,
+			\(d, c) tibble::tibble(
+				est = pracma::trapz(d$distance, d$est * (d$distance <= c)),
+				lwr = pracma::trapz(d$distance, d$lwr * (d$distance <= c)),
+				upr = pracma::trapz(d$distance, d$upr * (d$distance <= c))
+			)
+		),
+	) |>
+	dplyr::mutate(
+		AUC = purrr::pmap(
+			list(AUC_unweighted, AUC_linear, AUC_step),
+			\(x, y, z) dplyr::bind_rows(
+				"unweighted" = x,
+				"linear" = y,
+				"2 AU" = z,
+				.id = "weighting"
+			)
+		),
+		.keep = "unused"
+	) |>
+	dplyr::select(-dat, -preds, -cutoff) |>
+	tidyr::unnest(AUC) |>
+	dplyr::mutate(name = paste0("AUC (", weighting, ")"), .keep = "unused")
+dat_table <-
+	dat_parms |>
+	tidyr::unnest(parameters) |>
+	tidyr::pivot_wider(
+		names_from = parameter,
+		values_from = c(est, lwr, upr),
+		names_glue = "{parameter}_{.value}"
+	) |>
+	tidyr::unnest(ymean, names_sep = "_") |>
+	tidyr::pivot_longer(cols = !(vaccine_fullname:dose)) |>
+	tidyr::separate(name, into = c("name", "stat")) |>
+	tidyr::pivot_wider(names_from = stat, values_from = value) |>
+	dplyr::bind_rows(AUC_comps) |>
+	dplyr::left_join(
+		# Get the short names back
+		readr::read_rds(here::here("data", "processed", "virus_info.rds")),
+		by = c("vaccine_fullname" = "analysis_name")
+	) |>
+	dplyr::mutate(
+		subtype = substr(vaccine_fullname, 1, 4),
+		method = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c("Year difference", "p-Epitope", "Antigenic cartography")
+		),
+		outcome = factor(
+			outcome,
+			levels = c("prevactiter", "postvactiter", "titerincrease"),
+			labels = c("log2 pre-titer",
+								 "log2 post-titer",
+								 "log2 titer ratio")
+		),
+		name = factor(
+			name,
+			levels = c("ymean", "AUC (unweighted)", "AUC (linear)", "AUC (2 AU)",
+								 "a", "b"),
+			labels = c("Mean outcome",
+								 "AUC (unweighted)",
+								 "AUC (linear)",
+								 "AUC (2 AU)",
+								 "Intercept",
+								 "Slope")
+		)
+	) |>
+	dplyr::select(
+		subtype, dose, strain = short_name, outcome, method, est, lwr, upr, name
+	) |>
+	dplyr::arrange(subtype, dose, strain, outcome, method, name)
+
+readr::write_rds(
+	list(dat_dose, plt_test, dat_table),
+	file = here::here("Andreas-Poster-Plots/p2data.Rds")
+)
+```
+
+<!-- END OF FILE -->

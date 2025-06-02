@@ -1,0 +1,96 @@
+---
+title: "Strain panel subsampling"
+format: docx
+execute: 
+  echo: false
+---
+
+In this document, I'll do a brief writeup of everything that I've gotten done
+since the last time we worked on this project (covering the last four
+sets of lab notes).
+
+# Partial pooling test
+
+The first writeup was a proof-of-concept draft to test the idea of multilevel
+modeling for this problem. We ran into an issue with Amanda's project of
+trying to combine standard errors across multiple models and decided
+that a partial pooling approach would be best so of course we had to switch
+to a Bayesian framework. This document
+
+1. Writes out simple mathematical models for partial pooling;
+2. Demonstrates how to fit these Bayesian models to the data; and
+3. Compares the three models to each other. All three estimates of the mean
+were somewhat similar, although the estimates for the no pooling
+model were clearly more affected by outliers than the other two models.
+The estimates of the mean were quite similar between the partial pooling and
+the complete pooling models, although the partial pooling model provides a
+fair assessment of the variance across individuals, while the complete pooling
+model has false confidence in its estimate.
+ 
+```{r}
+#| fig-width: 6.5
+#| fig-cap: 'Results from the three model tests on a specific season.'
+knitr::include_graphics(here::here("Andreas-Poster-Plots", "model-test.png"))
+```
+
+We decided to use the partial pooling model going forward. We briefly discussed
+whether to make the model more complicated (by e.g., allowing for correlations
+between the slope and intercept parameters), but decided that we probably do
+not need to do that at this point. The simple partial pooling model is good
+enough for us to make our point.
+
+# Partial pooling across seasons
+
+Next we discussed whether our results should be calculated per-vaccine strain
+or per-season, pooling all applicable seasons together. At this time, we
+concluded that the per-strain analysis was fine, but **as of our most
+recent dissusions in May, 2023**, we now think that pooling across seasons
+is likely a bad idea, partially inspired by the Skowronski paper that discussed
+heterogeneity across seasons. Fortunately this change is not that impactful
+and only affects a few of the analyses, since the strains tended to change
+frequently. This affects the influenza B analyses more, which we have also
+decided not to focus on yet (the influenza B analyses can likely be a separate
+paper).
+
+In this writeup, I also walk through the housekeeping steps of batch loading
+models and dealing with the marginal predictions. One of the main issues we
+encountered was having to compile the same model multiple times which is
+clearly very inefficient and leads to a lot of wasted computational time.
+On future projects where we need to fit many Bayesian models, **it will not
+be feasible to use the rethinking package.** We will likely need to switch to
+invoking `rstan` or `cmdstanr` commands directly, after potentially using
+`brms` or `rethinking` to build initial template Stan code. If `brms` has an
+option to pre-compile models we might be able to use that as well, but another
+major problem with `brms` is that none of us seem to know what it is doing.
+
+# Compiled Model Test
+
+In this document, I work through the code for implementing the pre-compiled
+models using a combination of `rstan` and `cmdstanr`. Eventually this needs to
+be converted to only using `cmdstanr`, it just uses `rstan` right now because
+it depends on Richard McElreath's code from `rethinking`, which only deals
+with `rstan` objects.
+
+# Panel Subsampling
+
+IN this document, I started working on what I call the "panel subsampling"
+experiment. Our hypothesis is that in some way, our magnitude, breadth, and
+strength metrics are more robust than the commonly used metrics, which
+are percent of strains seroconverted to and GMT or geometric mean titer
+increase. 
+
+However, this was not the case. In my test analysis (see the document for details).
+
+```{r}
+knitr::include_graphics(here::here("Rplot.png"))
+```
+
+What we need to do now is:
+
+1. determine how we want to run the simulations (since they are computationally intensive);
+2. think about why our results look so bad and how we can remedy them;
+3. think about how we should look at the simulation results in order to better understand
+what is going on here; and 
+4. figure out why it looked good for Amanda's results but not for mine and what I am doing differently.
+
+<!-- END OF FILE -->

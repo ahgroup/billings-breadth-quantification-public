@@ -1,0 +1,23 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+Results/_Out/
+Results/_Out/*
+Results-Old/
+Archive/Results-Old/
+*cache*
+*$* # office temporary files
+
+# Ignore the large files that may be too big too commit
+Results/Large-Files
+!Results/Large-Files/README.md
+Results-Old/Large-Files
+Archive/results-old/
+Archive/Results-Old/
+Archive/test-case-study-fits.Rds
+
+# Ignore the targets metadata stache
+_targets/
+logs/

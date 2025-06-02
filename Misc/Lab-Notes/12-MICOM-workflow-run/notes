@@ -1,0 +1,5 @@
+BQ could be substantially sped up if we narrow our dataset focus.
+E.g. only do the BQ stuff for two seasons/vaccine strains, and then use a cross-comparison to show how we would use the AUC to choose a vaccine candidate.
+Only do fits with censoring, don’t focus on censoring methodological issues in this paper except in supplement. It appears to not be the main driver of the results and I think “does the censoring correction help in HAI modeling” is a good paper to write since Zelner never published his. Maybe Murphy is interested in writing this.
+We can leave exploring the different distance metrics, etc. to my Aim 3 paper, and potentially use the AUC of the titer vs. distance curve (titers conditional on other confounding effects) as a descriptive statistic.
+Also show in BQ paper how we can look at variance explained by antigenic distance vs. individual effects.

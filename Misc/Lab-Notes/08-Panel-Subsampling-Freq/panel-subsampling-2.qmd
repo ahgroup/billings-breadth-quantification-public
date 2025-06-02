@@ -1,0 +1,372 @@
+---
+title: "Panel-Subsmpling-Take-2"
+author: "Zane"
+format: docx
+---
+
+For the CEIRR 2023 presentation conference, we need to evaluate our
+proposed metrics by subsampling different "lab panels" from the real
+data. For now we'll do this for the CA/09 strain only, but we can
+work on doing it for more vaccine components after the conference.
+
+A lot of this code will be copied from the original panel subsampling
+code, but I decided to write new code since right now I don't have time
+for the Bayesian models to run. We need to get this in a simular
+form to the simulated data in `metric-test.qmd` so we can use the same
+functions.
+
+# Data cleaning
+
+```{r}
+clean_data <-
+	readr::read_rds(
+		here::here("data", "processed", "distance_data.rds")
+	)
+
+dat <-
+	clean_data |>
+	dplyr::mutate(
+		vaccine_type = stringr::str_remove(vaccine_type, "_vaccine_fullname$") |>
+			stringr::str_to_upper() |>
+			factor()
+	) |>
+	dplyr::filter(
+		vaccine_type == strain_type,
+		# Get only the Ag distance methods that Amanda used.
+		method %in% c("cart_2d_post", "p_epi", "year"),
+		vaccine_fullname == "H1N1-California-2009",
+		dose == "SD"
+	) |>
+	dplyr::mutate(
+		dplyr::across(tidyselect:::where(is.factor), forcats::fct_drop)
+	) |>
+	# Remove the columns I know we do not need here
+	dplyr::select(
+		-c(pretiter, postiter, vac_short, strain_short)
+	)
+
+# Pivot the data so we can fit pre/post models at the same time
+dat_models <-
+	dat |>
+	tidyr::pivot_longer(
+		cols = c(postvactiter, titerincrease),
+		names_to = "outcome",
+		values_to = "y"
+	) |>
+	# Turn the categorical variables into integer indexes, this is required
+	# for index coding in stan
+	dplyr::mutate(
+		id = uniq_id |>
+			factor() |>
+			forcats::fct_inorder() |>
+			as.integer()
+	) |>
+	# Normalize the antigenic distance measurements within vaccine group
+	dplyr::group_by(vaccine_fullname, method) |>
+	dplyr::mutate(
+		norm_dist = distance / max(distance)
+	) |>
+	dplyr::ungroup()
+
+# Save the dataset to file so Zane can use it in another presentation
+# 2024-04-13
+readr::write_rds(dat_models, here::here("pres-data.Rds"))
+
+# We want to fit a model for every unique combination of:
+# vaccine strain; outcome; distance method.
+# (Models will be fitted ACROSS seasons, not per-season.)
+# We'll do this by nesting the data into strata to get a per-stratum
+# data frame and then mapping the model fitting function over the
+# nested data frames.
+dat_nested <-
+	dat_models |>
+	# Select only the data we need RIGHT NOW to prevent Stan from throwing a fit,
+	# it will often get angry over unused data that is in the wrong format.
+	dplyr::select(
+		# Variables that should go into the Stan model. These DO need to be
+		# processed to be NUMERIC.
+		uniq_id, y, norm_dist, prevactiter,
+		# Stratum/nesting variables -- these do NOT need to be processed.
+		vaccine_fullname, method, outcome,
+		# Strain name variable to filter on later. doesn't needed to be
+		# processed as it will be removed in a later step
+		strains_fullname
+	) |>
+	# Cleaning up the factor variabels that have to become indices
+	# it has to be done in groups to ensure there are no missing levels!
+	dplyr::group_by(
+		dplyr::across(!c(uniq_id, norm_dist, y, strains_fullname))
+	) |>
+	dplyr::ungroup() |>
+	# This line creates the stratified data frames. Analogous to base R split()
+	# but organized better.
+	tidyr::nest(dat = c(uniq_id, norm_dist, y,
+											strains_fullname, prevactiter)) |>
+	# TODO EVENTUALLY DO THIS FOR ALL OUTCOMES
+	dplyr::filter(outcome == "postvactiter") |>
+	dplyr::select(-outcome)
+```
+
+# Subsampling
+```{r}
+{ # Group this bit so that the seed set always runs with the sampling bit
+	set.seed(123)
+	N <- 10
+	k <- 10
+	strains <- unique(dat_models$strains_fullname)
+	# We don't want to sample the homologous strain, we always want to include
+	# it. so remove from this list
+	strains <- strains[strains != "H1N1-California-2009"]
+	# Generate all of the combinations of 9 strains (we want to have 10 in
+	# total once we add homologous strain).
+	# This produces an array of size k by (N choose k)
+	all_subsamples <- combn(strains, 9)
+	# Now randomly sample column indices to ensure we don't sample the
+	# same sub-panel twice.
+	# array, but this makes it easier to join with the dataframe correctly.
+	subsamples <-
+		purrr::map(
+			sample.int(ncol(all_subsamples), N),
+			\(i) c("H1N1-California-2009", all_subsamples[, i])
+		)
+	
+	# Get the IDs to sample for each lab as well
+	ids <- purrr::map(
+		1:10,
+		\(x) sample(dat_models$uniq_id, size = 100, replace = FALSE)
+	)
+	
+	# Put the two things together
+	sample_df <- tibble::tibble(subsamples, ids)
+	
+	# Save memory
+	rm(subsamples, ids)
+}
+
+dat_modeling <-
+	# Do the crossing part as described
+	tidyr::expand_grid(dat_nested, sample_df) |>
+	# Filter each row and remove strain variable
+	dplyr::mutate(
+		lab = rep(1:10, times = 3),
+		# Filter so that each lab DF only has the correct panel. Also
+		# remove the strain variable since we don't really need it now,
+		# we can always look up which strains the lab had.
+		dat = purrr::map2(
+			dat, subsamples,
+			\(d, l) d |>
+				dplyr::filter(strains_fullname %in% l) |>
+				dplyr::select(-strains_fullname)
+		),
+		# Filter so that each lab DF only has the correct individuals.
+		dat = purrr::map2(
+			dat, ids,
+			\(d, l) d |>
+				dplyr::filter(uniq_id %in% l)
+		)
+	)
+```
+
+# Reshape data
+
+Now this stuff was all copied from before and adjusted to remove
+the Stan-specific code bits. Now we need to reshape it to look like
+the output of `ex_sim` from the `metric-test.qmd` code. So first
+we'll do that. Each element in the `dat` column should be a
+tibble with the columns `lab`, `d`, `id`, `mu`, `y_sim`, `y_obs`, and `y_nat`.
+
+```{r}
+nested_labs <-
+	dat_modeling |>
+	dplyr::mutate(
+		dat = purrr::map(
+			dat,
+			\(x) x |>
+				dplyr::mutate(
+					d = norm_dist,
+					id = dplyr::dense_rank(uniq_id),
+					y_obs = y,
+					y_nat = 5 * 2 ^ y,
+					.keep = "none"
+				)
+		)
+	) |>
+	tidyr::unnest(dat) |>
+	dplyr::select(-subsamples, -ids) |>
+	tidyr::nest(dat = c(lab, d, id, y_obs, y_nat))
+```
+
+Now that the data is reformatted (it is just missing the `mu` and the
+`y_sim` column since those are unobservable), we can try to apply
+our functions from `metric-test.qmd`. These need to be moved
+into an R script eventually.
+
+In order to avoid dealing with a nested data frame with its own
+nested data frames, for now we will just use the `p_epi` dataset.
+In the future we will be able to run these simulations in a loop
+or something to avoid this issue.
+
+```{r}
+case_study_df <- nested_labs$dat[[1]]
+```
+
+First get the linear model fits.
+
+```{r}
+get_lm_fit <- function(sim_data, ...) {
+	lm_fits <-
+		sim_data |>
+		tidyr::nest(model_data = -lab) |>
+		dplyr::mutate(
+			lm_fit = purrr::map(model_data, \(x) lm(formula = y_obs ~ d, data = x)),
+			lm_stats = purrr::map(lm_fit, \(x) broom::tidy(x)),
+			# Get the predictions on the observed data points
+			lm_preds = purrr::map2(lm_fit, model_data, \(x, y) broom::augment(x, y)),
+			# Get the predictions on the interpolated x grid
+			lm_interp = purrr::map(
+				lm_fit,
+				\(x, y) broom::augment(x, newdata = tibble::tibble(d = seq(0, 1, 0.01)))
+			)
+		) |>
+		dplyr::select(-model_data)
+	return(lm_fits)
+}
+
+cs_lm <- get_lm_fit(case_study_df)
+```
+
+Now get the metrics.
+
+```{r}
+geo_mean <- function(x, na.rm = FALSE, ...) {
+	if (!is.numeric(x)) {
+		stop("All inputs must be numeric.")
+	}
+	
+	if (isTRUE(na.rm)) {
+		x <- na.omit(x)
+	}
+	
+	out <- exp(mean(log(x)))
+	return(out)
+}
+
+get_metrics <- function(lm_fit_df) {
+	out <-
+		lm_fit_df |>
+		dplyr::mutate(
+			#AUC Calculation -- no weighting
+			AUC = purrr::map_dbl(
+				lm_interp,
+				# Calculate the pointwise AUC using the trapezoidal method
+				\(d) pracma::trapz(d$d, d$.fitted)
+			),
+			# Intercept of line
+			intercept = purrr::map_dbl(
+				lm_interp,
+				\(d) d$.fitted[d$d == 0]
+			),
+			# percent of values above threshold (3)
+			p40 = purrr::map_dbl(
+				lm_interp,
+				\(d) mean(d$.fitted >= 3)
+			),
+			# seroconversion rate
+			scr = purrr::map_dbl(
+				lm_preds,
+				\(d) mean(d$y_obs >= 3)
+			),
+			# geometric mean titer
+			gmt = purrr::map_dbl(
+				lm_preds,
+				\(d) geo_mean(d$y_nat)
+			),
+			# homologous only GMT
+			gmt_hom = purrr::map_dbl(
+				lm_preds,
+				\(d) d |> dplyr::filter(d == 0) |> dplyr::pull(y_nat) |> geo_mean()
+			)
+		)
+	
+	return(out)
+}
+
+cs_met <- get_metrics(cs_lm)
+```
+
+Summarize the metrics into our nice table.
+
+```{r}
+reshape_metrics_data <- function(metrics_df, ...) {
+	out <-
+		metrics_df |>
+		dplyr::select(
+			lab,
+			AUC,
+			intercept,
+			p40,
+			scr,
+			gmt,
+			gmt_hom
+		) |>
+		tidyr::pivot_longer(-lab) |>
+		# Cleanup for plotting
+		dplyr::mutate(
+			name = dplyr::case_match(
+				name,
+				"gmt_hom" ~ "Magnitude-Current",
+				"scr" ~ "Breadth-Current",
+				"gmt" ~ "Total-Current",
+				"intercept" ~ "Magnitude-Proposed",
+				"p40" ~ "Breadth-Proposed",
+				"AUC" ~ "Total-Proposed"
+			)
+		) |>
+		tidyr::separate(
+			name,
+			into = c("metric", "which"),
+			sep = "-"
+		)
+	
+	return(out)
+}
+
+coef_var <- function(x) {
+	m <- mean(x)
+	s <- sd(x)
+	
+	return(s / m)
+}
+
+make_cv_table <- function(metrics_df, d = 3) {
+	tab <-
+		metrics_df |>
+		reshape_metrics_data() |>
+		dplyr::group_by(metric, which) |>
+		dplyr::summarise(
+			CV = coef_var(value),
+			mean = mean(value),
+			sd = sd(value),
+			.groups = "drop"
+		) |>
+		dplyr::mutate(
+			dplyr::across(tidyselect::where(is.numeric), \(x) round(x, d))
+		) |>
+		dplyr::arrange(metric, which)
+	
+	return(tab)
+}
+
+cs_met |>
+	make_cv_table()
+```
+
+Calculate the average amount of LoD.
+
+```{r}
+case_study_df |>
+	dplyr::group_by(lab) |>
+	dplyr::summarise(pct_lod = mean(y_nat <= 5), .groups = "drop") |>
+	dplyr::mutate(overall = mean(pct_lod))
+```
+

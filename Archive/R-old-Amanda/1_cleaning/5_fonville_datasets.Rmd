@@ -1,0 +1,285 @@
+---
+title: "Fonville, 2016 Human and Ferret Maps"
+author: "Amanda Skarlupka"
+date: "12/29/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = T, warning = T)
+
+```
+
+# Purpose of this code:
+
+This code takes the raw data from the Fonville 2016 paper and creates AcMap datafiles from the HAI data from both the ferrets and human HAIs. The HAI data is only for the H3N2 viruses only. 
+
+# Products of this code:
+
+* Ferret Acmap RDS datafile
+
+* Figure of the comparison of the antigenic maps with the Fonville and Smith ferret H3 HAIs
+
+* Human child sera Acmap RDS datafile
+
+```{r data}
+
+#Load packages:
+
+library(tidyverse) #Data cleaning
+library(kableExtra) #Creating Tables
+library(Racmacs) #Creating Acmaps
+library(here) #Accessing files
+library(readxl) #Reading excel files
+library(ggrepel) #Additional formatting for ggplots
+
+
+
+#Load functions:
+
+source(here::here("R/functions/antigenic-cartography.R")) #Antigenic cartography functions
+
+
+#Raw HAI data from the Fonville paper:
+
+sheets_to_read <- readxl::excel_sheets(here::here("data/raw/fonville_jiv367supp_tables.xlsx")) ##Obtain the sheets in the workbook
+
+list_with_sheets <- lapply(sheets_to_read,
+                           function(i) readxl::read_excel(here::here("data/raw/fonville_jiv367supp_tables.xlsx"), 
+                                                  sheet = i, 
+                                                  skip = 1))
+
+for (i in 1:length(sheets_to_read)) {
+  names(list_with_sheets)[i] <- sheets_to_read[i]
+}
+
+```
+
+# Datasets:
+
+* Dataset S1: The season; corresponding weeks of influenza A/H3N2 incidence exceeding 10 cases of influenza-like-illness (ILI) per 10.000 inhabitants in the Netherlands; the sample selection window based on 2 weeks around the epidemic interval; and the virus used to screen for influenza virus-positive samples. 								
+
+* Dataset S2: Sample information, screening titers and full hemagglutination inhibition (HI) data set of titers against 23 test viruses of all influenza virus-positive children’s sera.
+
+* Dataset S3: HI titers of 24 ferret sera to the 23 test viruses
+
+* Dataset S4: The subset of the HI table used to calculate the antigenic map based on the high-responding human sera (Figure 2).
+
+* Dataset S5: The subset of the HI table used to calculate the antigenic map of ferret sera in Figure 3 using the same subset of viruses as Dataset S4.
+
+* Dataset S6: The subset of the HI table used to calculate the antigenic map based on all human sera that had at least one titer of 240 or higher (Figure 4A, B). 
+
+* Dataset S7: The subset of the HI table used to calculate the antigenic map of ferret sera in Figure 4C, D using the same subset of viruses as Dataset S6.
+
+## Acmaps
+
+###  Dataset S5
+Ferret acmap using Dataset 5
+
+```{r DS5, echo = TRUE}
+ferret_titer_table <- list_with_sheets[["Dataset S5"]] # Fonville HAI titer table
+
+  names <- ferret_titer_table$virus
+  
+Racmacs::make.acmap(
+  titer_table = ferret_titer_table[,-1],
+  number_of_dimensions = 2,
+  number_of_optimizations = 100,
+  ag_names = names,
+  sr_names = colnames(ferret_titer_table)[-1]
+) %>%
+  Racmacs::save.acmap(., 
+             filename = here::here("data/processed/h3_maps/fonville_ferret_ds5.ace"))
+#The GU/54/89 sera cannot be placed in a 2D map and a message should be received   
+
+fonville_df <- AcmapToDF(map = read.acmap(here::here("data/processed/h3_maps/fonville_ferret_ds5.ace")))
+
+fonville_df %>%
+  ggplot2::ggplot(aes(x = V1, 
+             y = V2, 
+             color = type)) +
+  ggplot2::geom_point() +
+  ggrepel::geom_text_repel(label = fonville_df$identifier) +
+  ggplot2::labs(title = "Antigenic Cartography Ferret H3N2 HAI (Fonville, 2016)",
+       caption = "The GU/54/89 sera did not have enough titrations\nto position in 2 dimensions\nData extracted from Fonville, 2016: Dataset S5",
+       color = "Type") +
+  ggplot2::xlab("Antigenic Distance Unit") +
+  ggplot2::ylab("Antigenic Distance Unit")
+
+
+```
+
+Smith Cartography without down selection:
+
+There are 273 Viral isolates that the HAI were tested against
+There are 79 post infection ferret antisera
+
+```{r}
+path_to_titer_file <- system.file("extdata/h3map2004_hitable.csv", package = "Racmacs") # Smith HAI titer table
+smith_titer_table  <- as.data.frame(Racmacs::read.titerTable(path_to_titer_file))
+
+suppressWarnings({
+Racmacs::make.acmap(
+  titer_table = smith_titer_table,
+  number_of_dimensions = 2,
+  number_of_optimizations = 300,
+  ag_names = rownames(smith_titer_table),
+  sr_names = colnames(smith_titer_table)
+) %>%
+  Racmacs::save.acmap(., 
+             filename = here::here("data/processed/h3_maps/smith_2004.ace"))
+})
+#There should be a message of instability. Even with increasing the optimizations to 300, it is unable to find a better optimum. Since this is just to verify the results, the warning was suppressed. 
+
+
+```
+
+
+Compares the Smith Ferret HAIs to the Fonville Ferret HAIs
+
+```{r Fonville-Smith-Compare}
+
+# Cleaning of the Smith Data to select only the antigens and sera used also in Fonville
+
+subset <- smith_titer_table[(rownames(smith_titer_table) %in% ferret_titer_table$virus),(colnames(smith_titer_table) %in% colnames(ferret_titer_table))]
+
+subset_ferret <- ferret_titer_table %>%
+  tibble::column_to_rownames("virus")
+
+
+subset_ferret <- subset_ferret[(rownames(subset_ferret) %in% rownames(subset)),(colnames(subset_ferret) %in% colnames(subset))]
+
+subset_ferret <- subset_ferret %>%
+  tibble::rownames_to_column("virus") %>%
+  dplyr::mutate(type = "Fonville")
+
+subset %>%
+  tibble::rownames_to_column("virus") %>%
+  dplyr::mutate(type = "Smith") %>%
+  rbind(subset_ferret) %>%
+  dplyr::select(virus, type, contains("/")) %>%
+  dplyr::mutate(across(contains("/"), 
+                       ~ifelse(.x == "<10" | .x == "<5", "*", .x)),
+         virus = factor(virus, 
+                        levels = c("NL/938/92", "ST/20/93", "FI/381/95", "WU/359/95", "HK/280/97", "SY/5/97", "PM/2007/99", "FU/411/02", "NL/1/02"))) %>%
+  dplyr::arrange(virus) %>%
+  kableExtra::kable(col.names = c("Virus", "Study", colnames(subset)), 
+                    align = "c", 
+                    caption = "Comparison of the Smith and Fonville HAI data" ) %>%
+  kableExtra::kable_styling(full_width = T) %>%
+  kableExtra::add_header_above(c(" " = 2, "H3N2 ferret sera used in HAI panel" = 13)) %>%
+  kableExtra::row_spec(c(3:4, 7:8, 11:12, 15:16), background = "#BBBBBB") %>%
+  kableExtra::column_spec(c(4, 6, 8, 10, 12, 14), border_right = T, border_left = T) %>% 
+  kableExtra::footnote(symbol = "Values that are <10 or <5")
+
+```
+
+```{r}
+
+# Make a Acmap with the Smith, 2004 sera/antigens that were used in the Fonville paper
+
+smith_titer_table <- subset %>%
+  tibble::rownames_to_column("virus")
+
+names <- smith_titer_table$virus
+
+  
+Racmacs::make.acmap(
+  titer_table = smith_titer_table[,-1],
+  number_of_dimensions = 2,
+  number_of_optimizations = 100,
+  ag_names = names,
+  sr_names = colnames(smith_titer_table)[-1],
+  options = list(ignore_disconnected = TRUE)) %>%
+  Racmacs::save.acmap(., 
+             filename = here::here("data/processed/h3_maps/smith_ferret_check.ace"))
+  
+smith_df <- AcmapToDF(map = Racmacs::read.acmap(here::here("data/processed/h3_maps/smith_ferret_check.ace")))
+
+
+smith_df %>%
+  ggplot2::ggplot(aes(x = V1, 
+                      y = V2, 
+                      color = type)) +
+  ggplot2::geom_point() +
+  ggrepel::geom_text_repel(label = smith_df$identifier) +
+  ggplot2::labs(title = "Antigenic Cartography Ferret H3N2 HAI (Smith, 2004)",
+       caption = "Data extracted from Smith, 2004",
+       color = "Type") +
+  ggplot2::xlab("Antigenic Distance Unit") +
+  ggplot2::ylab("Antigenic Distance Unit")
+
+
+# Align the Smith map to the Fonville map and then plot. 
+
+smith_re <- Racmacs::realignMap(map = Racmacs::read.acmap(here::here("data/processed/h3_maps/smith_ferret_check.ace")), 
+                                target_map = Racmacs::read.acmap(here::here("data/processed/h3_maps/fonville_ferret_ds5.ace")))
+
+smith_re_df <- AcmapToDF(map = smith_re)
+#Expected Warning: The following SERA are too underconstrained to position in 2 dimensions and coordinates have been set to NaN:
+
+#'GU/54/89'
+#'NL/620/89'
+#'BE/32V/92'
+#Expected Warning: The following SERA have do not have enough titrations to position in 2 dimensions. Coordinates were still optimized but positions will be unreliable
+
+#'NL/47/95'
+#'
+#'These are the points that cannot be placed on the ggplot. 
+
+smith_re_df$study <- "smith"
+fonville_df$study <- "fonville"
+
+comp <- base::rbind(smith_re_df, 
+              fonville_df)
+
+(plt <- comp %>%
+  ggplot2::ggplot(aes(x = V1, 
+             y = V2, 
+             color = study)) +
+  ggplot2::geom_point() +
+  ggrepel::geom_text_repel(aes(label = identifier))+
+  ggplot2::facet_wrap(vars(type)) +
+  ggplot2::xlab("Antigenic Distance Unit") +
+  ggplot2::ylab("Antigenic Distance Unit") +
+  ggplot2::labs(title = "Comparison of the antigenic maps created with Fonville and Smith Ferret H3 HAIs",
+       caption = "Smith, 2004 map was created separately and then aligned with the Fonville, 2016 map.\nThe maps are separated by just the viruses (antigen) used in the HAI and the ferret specific sera (sera)\n2002 was the lastest virus used for the Smith, 2004 study"))
+
+ggplot2::ggsave(
+  filename = here::here(
+    "Results", "Figures", "H3",
+    "test.png"
+  ), 
+  plot = plt, 
+  width = 10,
+  height = 8
+)
+
+```
+
+## Dataset S4
+Human acmap using Dataset 4. 
+
+```{r DS4, echo = TRUE}
+human_titer_table <- list_with_sheets[["Dataset S4"]]
+names <- human_titer_table$virus
+
+Racmacs::make.acmap(
+  titer_table = human_titer_table[,-1],
+  number_of_dimensions = 2,
+  number_of_optimizations = 100,
+  ag_names = names,
+  sr_names = colnames(human_titer_table)[-1]
+) %>%
+  Racmacs::save.acmap(., filename = here::here("data/processed/h3_maps/fonville_human_ds4.ace"))
+
+#Expected Warning: The following ANTIGENS have do not have enough titrations to position in 2 dimensions. Coordinates were still optimized but positions will be unreliable
+
+#'NL/938/92'
+#'ST/20/93'
+#'BR/10/07'
+#'Since this is the data that is available, this will have to do
+
+```
+
+

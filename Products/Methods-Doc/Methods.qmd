@@ -1,0 +1,647 @@
+---
+title: "Calculating breadth statistics"
+author: "Zane Billings"
+date: last-modified
+date-format: iso
+format:
+  docx: 
+    toc: false
+    number-sections: false
+    reference-doc: "../../Assets/word-template.docx"
+execute: 
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+source(here::here("R", "Utils.R"))
+
+
+suppressPackageStartupMessages({
+	library(yaml, include.only = NULL)
+	library(knitr, include.only = NULL)
+	library(quarto, include.only = NULL)
+	library(flextable)
+	library(brms)
+})
+
+# Set the knitr option that stops it from mangling file paths from here()
+# I got weird errors with targets that couldn't fix unless I did this.
+# In the future need to figure out how to programatically generate the YAML
+# header cause it doesn't make sense that relative paths are required there
+# but mess up everything else?
+options(knitr.graphics.rel_path = FALSE)
+
+
+
+dat_use <-
+	here::here("Products", "Methods-Doc", "methods-ex-dat.qs2") |>
+	qs2::qd_read()
+
+dat_print <-
+	dat_use |>
+	dplyr::select(-pretiter) |>
+	`colnames<-`(
+		c(
+			"ID",
+			"Assay Strain",
+			"Post-vac HAI",
+			"Ag Distance"
+		)
+	)
+
+dat_processed <-
+	dat_use |>
+	dplyr::select(-pretiter) |>
+	dplyr::mutate(
+		posttiter = hgp::hai_to_log_scale(posttiter),
+		distance = minmax(distance)
+	)
+
+titer_data <- dat_processed
+
+example_data_pretiters <- dat_use$pretiter
+
+head_tail <- function(dat, n = 6) {
+	if (!is.numeric(n) || n >= nrow(dat)) {
+		stop("'n' should be an integer and < nrow(dat)!")
+	} else if (length(n) == 1) {
+		head_n <- n
+		tail_n <- n
+	} else if (length(n) == 2) {
+		head_n <- n[[1]]
+		tail_n <- n[[2]]
+	} else {
+		stop("'n' should be length 1 or 2.")
+	}
+	
+	header <- head(dat, n = head_n)
+	footer <- tail(dat, n = tail_n)
+	
+	middle <- dat[0, ]
+	middle[1, 1] <- "$\\ \\vdots$"
+	
+	out <- dplyr::bind_rows(header, middle, footer)
+	return(out)
+}
+```
+
+
+In this document, we will use an example to show how our summary statistics are calculated. Note that using our method requires adopting a Bayesian approach. **At this time, it is quite difficult to fit a frequentist model that simultaneously accounts for censoring and incorporates random effects.** Because the censoring correction seems to be incredibly important for our results, we *strongly* recommend using the Bayesian approach.
+
+However, if you *must* use a frequentist method for some reason, you could apply frequentist mixed-effects models to our data and use bootstrapping produces to get confidence intervals for the statistics of interest. If you know of an `R` package which can fit mixed-effects models with censored outcomes, please let us know so we can update these instructions.
+
+# Data description and format
+
+The type of data that our methods apply to are panels of immunological assays to multiple different influenza strains. The following example data are a completely randomized, anonymized subset of the UGAFluVac HAI data from Ted Ross's lab group. So our results in this document might not make sense, but they are used for a calculation example, not to draw any conclusions. @tbl-ex shows the example dataset before preprocessing. We do not include any pre-titer or demographic information in these calculations right now.
+
+We store the data in "long form" so that each immunological assay represents one record in the dataset (i.e., one row of data). Before we can fit any models there are several preprocessing steps that should be performed first.
+
+1. Post-vaccination titer should be transformed to the log-scale. We always normalize the HAI titers based on the limit of detection (LoD) of 10 also, so that the values coded as 5 (below LoD) become $0$ on the log scale. If $x$ is the natural scale HAI titer, like the ones shwon in @tbl-ex, you can get the log-scale values $y$ using the transformation $$y = \log_2 \left(\frac{x}{5}\right).$$
+1. The antigenic distance should be normalized. We use min-max normalization[^1] to ensure that the range of the datapoints is transformed to $[0, 1]$. If $d$ is a raw distance value like you see in @tbl-ex, and $d_{\text{norm}}$ is the normalized antigenic distance, the formula for min-max normalization is $$d_{\text{norm}} = \frac{d - \min(d)}{\max(d) - \min(d)}.$$
+
+```{r}
+#| label: tbl-ex
+options(knitr.kable.NA = '')
+head_tail(dat_print) |>
+	knitr::kable(
+		digits = 2,
+		caption = "Example uncleaned dataset for analysis."
+	)
+```
+
+@tbl-ex-process shows the same example data after processing.
+
+We also recommend visualizing the data before proceeding to ensure there are no issues. Since the HAI titers are integer-valued, we apply a small amount of random jitter to the data before plotting[^2].
+
+As you can see in @fig-all-ls, the individual landscapes are extremely messy. This is due in part to the inherent measurement error in HAI titers, along with the variance induced by strain-specific effects (i.e. some strains tend to work better with HAI than others, regardless of how many antibodies are in the serum sample). The messy appearance of these individual landscapes **is to be expected.** That is why we need to fit a summary curve.
+
+```{r}
+#| label: tbl-ex-process
+dat_processed |>
+		`colnames<-`(
+		c(
+			"ID",
+			"Assay Strain",
+			"Post-vac HAI",
+			"Ag Distance"
+		)
+	) |>
+	head_tail() |>
+	knitr::kable(
+		digits = 2,
+		caption = "Example pre-processed dataset for analysis."
+	)
+```
+
+# Coding censored data
+
+We still have one more essential data cleaning step, however. We will fit all of our Bayesian models using the accessible and performant `brms` package. However, `brms` requires us to code our censored outcome in a specific way, which is documented in the [`brmsformula` information](https://paulbuerkner.com/brms/reference/brmsformula.html).
+
+We know that our HAI data has both left-censored and interval-censored values, and no completely observed (un-censored). @fig-censoring-mechanism shows an example of the censoring mechanism for HAI. Other immunological assays will have different mechanisms for censoring, so this particular step only applies to HAI.
+
+```{r}
+#| label: fig-all-ls
+#| fig-cap: "Transformed titer vs. normalized antigenic distance. Each point represents one HAI titer measurement and each line connects all of the measurements for a particular subject."
+dat_processed |>
+	dplyr::mutate(
+		y_j = posttiter + runif(dplyr::n(), -0.35, 0.35),
+		id = forcats::fct_inorder(id)
+	) |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = distance, y = y_j, group = id) +
+	ggplot2::geom_line(
+		alpha = 0.15,
+		linewidth = 0.5
+	) +
+	ggplot2::geom_point(
+		alpha = 0.5,
+		size = 0.5
+	) +
+	ggplot2::scale_y_continuous(
+		breaks = seq(0, 10, 2)
+	) +
+	ggplot2::labs(
+		x = "Normalized antigenic distance",
+		y = "Log HAI titer"
+	) +
+	hgp::theme_ms()
+```
+
+```{r}
+#| label: fig-censoring-mechanism
+#| fig-cap: "Censoring mechanisms that apply to the latent or underlying continuous titers (left panel) during the measurement process to produce interval censored observations (middle panel), which are binned continuous values, and left censored observations (right panel), which are below the limit of detection."
+
+knitr::include_graphics(here::here("Products", "Methods-Doc", "censoring_optimized.png"), rel_path = FALSE)
+```
+
+Coding censored data with mixed censoring types in `brms` format is a bit annoying. Instead of having one `posttiter` variable, we need to have three variables in the data which are called `y`, `c`, and `y2` in the `brms` documentation. Since the data below the LoD are coded as 0, but the actual LoD is 10 (or 1 in the transformed HAI data), we have to do some cleanup.
+
+1. The variable `c` is an indicator for the censoring status. We set it to `left` if our value is left censored, which occurs when the posttiter is $0$, and we set it to `interval` otherwise, which is all of our other observations.
+1. The variable `y` should be coded as the lower limit of detection (i.e., $1$ on our transformed scale) for left-censored observations, which is easy, because we already did that in the HAI processing transformation. For interval-censored observations, `y` needs to be the lower bound of the interval. Since HAI titers are always rounded down as part of the data generating mechanism, our outcome variable is already correctly coded, so we don't need to do anything else here.
+1. The variable `y2` represents the upper bound for an interval censored observation, so for left-censored observations it should be the same as `y`, but for interval-censored observations, it should be `y + 1`.
+
+If you use `R` and `tidyverse`, you can use this code for cleaning up the censored data[^3]. In this code, `titer_data` is the dataset shown in @tbl-ex-process, and `posttiter` is the name of the column containing the HAI data.
+
+```{r}
+#| label: hai censoring cleanup
+#| echo: TRUE
+
+titer_data_cens <-
+	titer_data |>
+	dplyr::mutate(
+		c = ifelse(posttiter == 0, "left", "interval"),
+		y = ifelse(c == "left", 1, posttiter),
+		y2 = ifelse(c == "left", 1, posttiter + 1)
+	)
+```
+
+@tbl-hai-cens shows the dataset with the variables correctly encoded for the censoring correction.
+
+```{r}
+#| label: tbl-hai-cens
+#| tbl-cap: "The cleaned dataset with the new columns `c`, `y`, and `y2` that must be passed to `brms` to correctly apply the likelihood correction for censoring."
+
+head_tail(titer_data_cens) |>
+	knitr::kable(digits = 2)
+```
+
+Now that the data are processed and ready to use we can calculate the statistics of interest.
+
+\clearpage
+# Math notation
+
+We'll use the following notation in all of our math formulas.
+
+- $i = 1, \ldots, n$ indexes study subjects, where $i = 1$ represents the first study subject and $n$ represents the sample size.
+- $s = 0, \ldots S$ indexes the different assay strains. Here, $s = 0$ is the homologous strain, and $s = 1, \ldots, S$ are the heterologous strains -- the particular order of the strains doesn't matter.
+- $d_s$ is the antigenic distance between strain $s$ and the vaccine strain. Thus, $d_0 = 0$ for the homologous strain and $0 < d_s \leq 1$ for every other $0 < s \leq S$.
+
+We also define seroprotection and seroconversion as follows:
+$$\text{Seroprotected}_{i,s} = I\left( \text{post-vaccination titer}_{i,s} \geq 40 \right),$$
+and
+
+$$\text{Seroconverted}_{i,s} = I\left( \frac{\text{post-vaccination titer}_{i,s}}{\text{pre-vaccination titer}_{i,s}} \geq 4 \right) \times I \left( \text{Seroprotected}_{i,s} \right).$$
+
+Note that on the log-scale, we have
+$$\text{Seroconverted}_{i,s} = I\left( \log\frac{\text{post-vaccination titer}_{i,s}}{\text{pre-vaccination titer}_{i,s}} \geq 2 \right) \times I \left( \log \text{post-vaccination titer}_{i,s} \geq 3 \right).$$
+
+
+# Unweighted statistics
+
+First we want to calculate the statistics that don't take antigenic distance into account. The formulas **without taking censoring into account** are as follows. All are simple to calculate and can be done in a spreadsheet or with basic R code.
+
+1. **Magnitude**: measured by the geometric mean titer to the homologous strain:
+$$\text{GMT}_0 = \exp\left(\frac{1}{n} \sum_{i=1}^n \log \text{titer}_{i, s=0}\right).$$
+1. **Breadth**: measured by the seroconversion rate across all strains. Note that since seroconversion status is binary, taking the mean gives us a proportion:
+$$\text{SCR} = \frac{1}{n}\frac{1}{S} \sum_{i = 1}^n \sum_{s = 0}^S \text{Seroconverted}_{ij}.$$
+
+1. **Strength**: measured by the geometric mean titer across all of the observed strains:
+$$\text{GMT} = \exp\left(\frac{1}{n} \sum_{i=1}^n \sum_{s=0}^S \log \text{titer}_{i, s}\right).$$
+
+**However, when we take censoring into account we actually need to fit a model.**
+
+## GMT~0~
+
+Note that when we fit a regression model that *only has an intercept term*, say
+$$y_i = \alpha + \varepsilon_i,$$
+the estimate of $\alpha$ actually estimates $\bar{y}$, the mean of the response variable. Since we can easily apply a censoring correction to a regression model, fitting an intercept-only regression model provides an easy way to estimate the mean while correcting for censoring.
+
+To estimate $GMT_0$, we need to fit an intercept-only regression model to the post-vaccination titer data for only the homologous strain. We can do this in `brms` while applying a censoring correction like this (make sure to run `library(brms)` at the top of your R script!).
+
+```{r}
+#| label: brms GMT_0
+#| echo: true
+#| cache: true
+#| output: false
+
+titer_data_homologous <- dplyr::filter(titer_data_cens, distance == 0)
+
+gmt_0_model <- brms::brm(
+	formula = y | cens(c, y2) ~ 1,
+	data = titer_data_homologous,
+	family = gaussian,
+	prior = c(
+		brms::prior(student_t(3, 0, 3), class = "Intercept"),
+		brms::prior(student_t(3, 0, 3), class = "sigma")
+	),
+	cores = 4,
+	chains = 4,
+	warmup = 250,
+	iter = 1250,
+	backend = "cmdstanr",
+	seed = 213948
+)
+```
+
+A full tutorial on the `brms` package is beyond the scope of our instructions, but excellent tutorials can be found [on the `brms` package website](https://paulbuerkner.com/brms/). We will provide a brief explanation of the arguments we chose.
+
+* `formula`: follows the `brms` syntax for censoring, which is `y | cens(c, y2)` as explained earlier. The `~` separates the response terms from the predictor terms, and having `1` as the only predictor fits a regression model with only an intercept.
+* `data`: the data we want to fit the model to goes here. All of the variables mentioned in `formula` have to match a column in `data`.
+* `family`: "gaussian" indicates that we want to fit a standard regression model where the error term has a normal (or Gaussian) distribution.
+* `prior`: since we are using a Bayesian model, we have to set priors. Setting priors can be contentious, and in general you can use whichever priors you prefer. We advocate for using generic `student_t(3, 0, 3)` priors for these models, because they allow for large parameter estimates if they are supported by the data, but they prefer to be skeptical and assume that parameters are small, similar to the how we assume a null hypothesis is true and try to falsify it in frequentist hypothesis testing.
+* `cores`: if your computer has multiple cores (most modern computers have at least 4), you can run multiple model chains in parallel to speed up the model fitting.
+* `chains`: each "chain" of the model starts from a different initial condition and then tries to sample from the posterior distribution. Running multiple chains and making sure they agree provides evidence that we are sampling from the whole posterior distribution. Most bayesian statisticians recommend running at least 4 chains per model.
+* `warmup`: the number of samples the model should draw in the warmup step, when it is calibrating. These will not be used for inference, but if you don't run enough it will degrade the quality of your model fit.
+* `iter`: the number of total samples the model should draw (per chain), so the number of post-warmup samples you will use for inference is `iter` - `warmup`.
+* `backend`: we strongly recommend using the [`cmdstanr`](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) package here, because it is more modern and has more tools available for use than the default `rstan` package. However if you have difficulties installing `cmdstanr`, you can use `rstan` instead which is easier to set up.
+* `seed`: you have to specify this to make sure your results are exactly reproducible. It can be any integer number, but different values will result in different random number draws and thus slightly different results.
+
+We should also check the model diagnostics by looking at the summary. Again, we won't do an in-depth explanation of Bayesian model diagnostics here, but typically you want all of the `Rhat` estimates to be `1.00` (sometimes `1.01` can be ok if you are doing a quick check), and you want both `bulk ESS` and `tail ESS` to be above 500 (or above 1000 if you need precise estimates of quantiles or variances).
+
+```{r}
+#| echo: true
+summary(gmt_0_model)
+```
+
+We see that our model passes those quick diagnostic guidelines. We'll skip these checks for the rest of these instructions because I already checked the models, but whenever you fit your bayesian models, you need to check these diagnostics. If any of the checks don't pass, you should try increasing `warmup` (above 500 typically is not useful, though) and `iter` (increase this one as much as needed until you reach the diagnostic targets). More troubleshooting advice is easy to find on the [Stan discourse forum](https://discourse.mc-stan.org/).
+
+Now with the arguments explain we can use this code to extract the posterior samples of the intercept, which correspond to the posterior samples of the `GMT`. Then we can summarize the posterior samples into a point estimate and credible interval for our metric[^hdci].
+
+```{r}
+#| echo: true
+gmt_0_samples <-
+	gmt_0_model |>
+	tidybayes::tidy_draws() |>
+	dplyr::select(b_Intercept)
+
+tidybayes::mean_hdci(gmt_0_samples) |>
+	# This step back-transforms the log-scale estimates to the natural scale
+	dplyr::mutate(
+		dplyr::across(c("b_Intercept", ".lower", ".upper"), \(x) 5 * 2 ^ x)
+	)
+```
+
+So our censoring-corrected estimate of the GMT~0~ metric is $183$ with a 95% CI of $(146, 227)$.
+
+## SCR
+
+Now that we've estimated the $GMT_0$, the other parameters will be simpler because almost everything stays the same. Because all seroconversion measurements are binary (they are either $0$ for not seroconverted or $1$ for seroconverted), several things are different about this model.
+
+First we need to calculate the seroconversion status, which is easy. **However, you must have the pre-vaccination titers**. We have them for our example data, but if you don't have pre-vaccination data, you can only look at seroprotection, not seroconversion. Note that we calculate the fold change (ratio of post-vaccination titer divided by pre-vaccination titer) using a difference instead of a division because the log of a fraction is equal to the difference of the logs[^log].
+
+```{r}
+#| label: scr calc
+#| echo: true
+
+titer_data_sc <-
+	titer_data_cens |>
+	tibble::add_column(pretiter = log2(example_data_pretiters / 5)) |>
+	dplyr::mutate(
+		fold_change = posttiter - pretiter,
+		seroprotection = posttiter >= 3,
+		seroconversion = seroprotection * (fold_change >= 2)
+	)
+```
+
+We don't have to correct for censoring, and we need to fit a logistic regression model instead of a linear regression model. Even though we don't apply censoring corrections here, **we choose to fit this with a bayesian model anyways to ensure our CI's are comparable!**
+In the code for this model, notice that we only have one prior -- because logistic regression models don't have a $\sigma^2$ residual variance parameter, we don't need a prior for it.
+
+```{r}
+#| label: scr model
+#| cache: true
+#| echo: true
+#| output: false
+
+scr_model <- brms::brm(
+	formula = seroconversion ~ 1,
+	data = titer_data_sc,
+	family = bernoulli("logit"),
+	prior = c(
+		brms::prior(student_t(3, 0, 3), class = "Intercept")
+	),
+	cores = 4,
+	chains = 4,
+	warmup = 250,
+	iter = 1250,
+	backend = "cmdstanr",
+	seed = 213948
+)
+```
+
+We still get the posterior samples of the intercept though.
+
+```{r}
+#| echo: true
+scr_samples <-
+	scr_model |>
+	tidybayes::tidy_draws() |>
+	dplyr::select(b_Intercept)
+
+tidybayes::mean_hdci(scr_samples)
+```
+
+So our estimate of the seroconversion rate is $0.21$ with a 95% CI of $(0.19, 0.24)$.
+
+## GMT
+
+Estimating the GMT is exactly the same as estimating the GMT~0~, except we use the entire dataset instead of only the homologous strain measurements.
+
+```{r}
+#| label: brms GMT
+#| cache: true
+#| echo: true
+#| output: false
+
+gmt_model <- brms::brm(
+	formula = y | cens(c, y2) ~ 1,
+	data = titer_data_cens,
+	family = gaussian,
+	prior = c(
+		brms::prior(student_t(3, 0, 3), class = "Intercept"),
+		brms::prior(student_t(3, 0, 3), class = "sigma")
+	),
+	cores = 4,
+	chains = 4,
+	warmup = 250,
+	iter = 1250,
+	backend = "cmdstanr",
+	seed = 213948
+)
+```
+
+We extract and summarize the posterior samples of the intercept, exactly the same as the GMT~0~.
+
+```{r}
+#| echo: true
+gmt_samples <-
+	gmt_model |>
+	tidybayes::tidy_draws() |>
+	dplyr::select(b_Intercept)
+
+tidybayes::mean_hdci(gmt_samples) |>
+	# This step back-transforms the log-scale estimates to the natural scale
+	dplyr::mutate(
+		dplyr::across(c("b_Intercept", ".lower", ".upper"), \(x) 5 * 2 ^ x)
+	)
+```
+
+So our censoring-corrected estimate of the GMT metric is $66$ with a 95% CI of $(60, 73)$.
+
+Now, calculating the models with antigenic distance included is a bit more involved. The first step is to fit our antibody landscape model.
+
+# Summary antibody landscape
+
+The first step in calculating the antigenic-distance based metrics is to compute the **summary antibody landscape**. This is a mathematical model that takes all of the individual antibody landscapes from @fig-all-ls as the input, and produces a study-level summary curve that represents the average antibody landscape in the study sample.
+
+We use a multilevel linear regression (AKA mixed-effects regression) model to construct the summary antibody landscape. Letting the log postvaccination titers by $y$, the model is as follows.
+$$
+\begin{aligned}
+y_{i, s} &\sim \text{Normal}\left(\mu_{i, s}, \sigma^2\right) \\
+\mu_{i, s} &= \beta_0 + b_{0, i} + \left(\beta_1 + b_{1, i} \right) \cdot d_s \\
+\begin{pmatrix} b_{0, i} \\ b_{1, i} \end{pmatrix} &\sim \text{MVN}\left(\vec{0}, \Sigma_b\right)
+\end{aligned}
+$$
+
+We have a population level intercept and slope for distance, and each individual $i$ also gets their own intercept and slope, which are correlated and drawn from a distribution that we can estimate. Because we are using a Bayesian model, we also have to specify priors. Here we use priors that are sensible for most similar problems, but discussing the parametrization is quite mathematically dense so not too useful here[^chol], so just note that the prior we use for class "corr" is different because of this parametrization.
+
+```{r}
+#| label: summary landscape model
+#| echo: true
+#| cache: true
+#| output: false
+
+summary_landscape_model <-
+	brms::brm(
+		formula = y | cens(c, y2) ~ 1 + distance + (1 + distance | id),
+		data = titer_data_cens,
+		family = gaussian,
+		prior = c(
+			brms::prior(student_t(3, 0, 3), class = "Intercept"),
+			brms::prior(student_t(3, 0, 3), class = "b"),
+			brms::prior(student_t(3, 0, 3), class = "sd"),
+			brms::prior(student_t(3, 0, 3), class = "sigma"),
+			brms::prior(lkj(2), class = "cor")
+		),
+		cores = 4,
+		chains = 4,
+		warmup = 250,
+		iter = 1250,
+		backend = "cmdstanr",
+		seed = 213948
+	)
+```
+
+Note that in the above code, the formula part `1 + distance` adds the study-level (fixed effects) parameters for the intercept and the antigenic distance slope, and the part `(1 + distance | id)` adds the individual-level (random effects) parameters for each individual id.
+
+Now that we fit the model (and I made sure to check that the diagnostics are sufficient as mentioned earlier) we want to extract the summary antibody landscape fit. Because we used a multilevel model, there are many ways to get predictions and uncertainty about the best antibody landscape that summarizes the population level. However, we chose to use the global grand mean prediction[^heiss] and associated HDCI.
+
+**Make sure to keep the entire set of posterior predictions, because the AUC and other landscape metrics are calculated from the posterior samples.** (That's `summary_landscape_preds` in our code below.) Also note the variable `h` that we assign below -- this is called the step size for our interpolated predictions. Making `h` smaller will result in more fine-grained predictions and thus more accurate metric calculations, but the storage space and memory requirements for the posterior samples increase rapidly as `h` decreases. We have found that `h = 0.01` offers a good balance between memory usage and prediction accuracy.
+
+```{r}
+#| label: summary landscape fit
+#| echo: true
+
+h <- 0.01
+
+summary_landscapes_preds <-
+	summary_landscape_model |>
+	tidybayes::epred_draws(
+		newdata = data.frame(distance = seq(0, 1, h)),
+		re_formula = NA
+	) |>
+	dplyr::ungroup()
+
+summary_landscape_intervals <-
+	summary_landscapes_preds |>
+	dplyr::summarize(
+		tidybayes::mean_hdci(.epred),
+		.by = distance
+	)
+```
+
+Now we'll take our previous plot of the individual antibody landscapes and add the summary antibody landscape on top (@fig-sum-landscape).
+
+We're currently experimenting with nonlinear methods for fitting the summary antibody landscape, but right now this linear regression version appears to be doing ok. Now that we have the summary antibody landscape posterior samples, we can calculate the metrics based on the posterior samples.
+
+# Landscape-based statistics
+
+All three of the landscape-based statistics can be expressed as functions of the posterior predictions of the summary antibody landscape, so we'll use that to calculate them.
+
+```{r}
+#| label: fig-sum-landscape
+#| fig-cap: "Individual antibody landscapes (lines) and observed HAI data (points), with the study-level posterior mean summary landscape and 95% HDCI (blue line and ribbon)."
+
+dat_processed |>
+	dplyr::mutate(
+		y_j = posttiter + runif(dplyr::n(), -0.35, 0.35),
+		id = forcats::fct_inorder(id)
+	) |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = distance, y = y_j, group = id) +
+	ggplot2::geom_line(
+		alpha = 0.15,
+		linewidth = 0.5
+	) +
+	ggplot2::geom_point(
+		alpha = 0.5,
+		size = 0.5
+	) +
+	ggplot2::geom_ribbon(
+		data = summary_landscape_intervals,
+		mapping = ggplot2::aes(x = distance, y = y, ymin = ymin, ymax = ymax),
+		alpha = 0.25,
+		fill = "#1338B3",
+		inherit.aes = FALSE
+	) +
+	ggplot2::geom_line(
+		data = summary_landscape_intervals,
+		mapping = ggplot2::aes(x = distance, y = y),
+		linewidth = 1,
+		color = "#1338B3",
+		inherit.aes = FALSE
+	) +
+	ggplot2::scale_y_continuous(
+		breaks = seq(0, 10, 2)
+	) +
+	ggplot2::labs(
+		x = "Normalized antigenic distance",
+		y = "Log HAI titer"
+	) +
+	hgp::theme_ms()
+```
+
+## Magnitude
+
+We measure the magnitude of the summary landscape as the intercept of the line -- recall that we only saved the posterior samples of the conditional predictions though, so we should express this as the average prediction when $d = 0$. That is,
+$$\text{Magnitude} = \frac{1}{m}\sum_{j=1}^m\hat{\beta}_{0,j},$$
+where $j = 1, \ldots, m$ indexes the posterior samples from the model. Estimating this from the posterior samples is easy because all we have to do is average the predictions where $d = 0$.
+
+```{r}
+#| label: magnitude calc
+#| echo: true
+
+summary_landscapes_preds |>
+	dplyr::filter(distance == 0) |>
+	dplyr::summarize(tidybayes::mean_hdci(.epred))
+```
+
+So we see that our estimate for the magnitude is $5.92$ with a credible interval of $(5.57, 6.28)$.
+
+We can also backtransform this one to HAI units to compare it to the GMT~0~ estimate.
+
+```{r}
+#| label: backtransform calc
+#| echo: true
+5 * 2 ^ c(5.92, 5.57, 6.28)
+```
+
+As you can see, this is actually larger than the $GMT_0$ estimate -- accounting for the antigenic distance allows us to get a better estimate of the average homologous response.
+
+## Breadth
+
+Our estimate of the breadth is the intersection between the horizontal line $y = 3$ (or $y = 40$ on the natural scale of the HAI titers) and the summary antibody landscape. This estimates the antigenic distance where we expect post-vaccination HAI titers to drop below the clinical protection threshold. The first thing we need to do is for each sample find the predicted values that are closest to 3. Then we get the distance value associated with that prediction, and that is our measurement of the breadth.
+
+```{r}
+#| label: breadth calc
+#| echo: true
+summary_landscapes_preds |>
+	# minimizing |prediction - 3| over the draws will tell us which x-value is
+	# closest to a y-value of 3.
+	dplyr::mutate(
+		diff_from_threshold = abs(.epred - 3)
+	) |>
+	dplyr::summarize(
+		# For each posterior sample (aka posterior draw) of the summary landscape,
+		# get the predicted y-value that is closest to 3.
+		closest = min(diff_from_threshold),
+		# Now get the x-value that's associated with that y-value -- this is the
+		# estimate for that posterior draw.
+		breadth = distance[which.min(diff_from_threshold)],
+		.by = .draw
+	) |>
+	# Summarize the posterior samples into a point estimate and CI
+	dplyr::summarize(
+		tidybayes::mean_hdci(breadth)
+	)
+```
+
+So our estimate of the breadth for our example data is $0.61$ with a 95% CI of $(0.56, 0.66)$.
+
+## Strength
+
+The last metric we need to calculate is the AUC. Because we're using a linear regression model, we could actually write out a formula to easily calculate the AUC from the intercept and slope samples. But because we want to generalize to potentially more complicated models, we need to do some numeric calculations (this is true for the breadth estimate as well).
+
+Since we already have the interpolated posterior samples, we can calculate the numeric AUC using [any of the existing methods for numerical integration](https://en.wikipedia.org/wiki/Numerical_integration). The computationally fastest and simplest to implement is the trapezoidal rule, which has a computationally efficient implementation in the function `pracma::trapz()`. All we have to do is put in the interpolated `distance` values and their corresponding posterior predictions and this function estimates the area under the curve for us -- we repeat this for each posterior sample of the summary landscape to get a credible interval.
+
+```{r}
+#| label: AUC calc
+#| echo: TRUE
+
+summary_landscapes_preds |>
+	# Calculate the AUC for each posterior sample of the line
+	dplyr::summarize(
+		AUC = pracma::trapz(x = distance, y = .epred),
+		.by = .draw
+	) |>
+	# And summarize it into a point estimate and interval
+	dplyr::summarise(
+		tidybayes::mean_hdci(AUC)
+	)
+```
+
+So our estimate for the AUC for the example data is $3.54$ with a 95% CI of $(3.31, 3.78)$. Normally, the units for the AUC estimate are a product of the units for the x-variable and the units for the y-variable. But since we min-max scaled the x-variable, it is actually unitless -- that means we can interpret the AUC as an average log-titer measurement over the antigenic distances. So, we can backtransform the AUC to the nominal HAI scale to get a better understanding.
+
+```{r}
+5 * 2 ^ c(3.54, 3.31, 3.78)
+```
+
+These numbers are on the same order of magnitude as the GMT estimates, but a bit smaller -- it's still kind of hard to directly interpret the "goodness" of this number, and it is best used for comparison across multiple vaccinces, panels of historical viruses, or subsamples.
+
+# Contact info
+
+Please contact Zane Billings (email: wesley.billings@uga.edu) or Andreas Handel (email: ahandel@uga.edu) for questions about these methods.
+
+<!-- footnotes -->
+[^1]: Min-max normalization is a linear and monotonic transformation, so it preserves all of the statistical properties we care about. Using min-max normalization on the antigenic distance makes sure that AUC values using different antigenic distance methods and different assay panels can be fairly compared against each other (as long as the outcome is HAI). Other normalization methods like $z$-score standardization might be useful but we haven't compared them.
+[^2]: If you use `ggplot2` like we do, we recommend adding jitter manually rather than using `ggplot2`'s built-in jitter functionality. As of the time of writing, there is no way to have `ggplot2`'s built-in jitter apply the same jitter to both ends of a line and to a point.
+[^3]: If you prefer not to use `tidyverse`, the `ifelse()` statements in the code will still work, you just need to make sure to use a function like `transform()` or `with()`, or manually specify the dataset for each column every time, i.e. `titer_data$posttiter` if you aren't using a function that adds the column names to the scope.
+[^hdci]: We typically use the mean as the point estimate along with a 95% highest density continuous interval (HDCI), implemented through `tidybayes::mean_hdci()`. You could also use the median or the mode (also called the MAP or Maximum *a posteriori* estimate) for the point estimate, and you could also use an equal-tailed credible interval. The choice depends on personal preference and interpretation.
+[^log]: That is, $\log(a / b) = \log(a) - \log(b)$.
+[^chol]: The Student $t$ priors are the same as those we used in the simpler models. However, the multivariate normal distribution can be problematic to parametrize, especially in terms of a prior for $\Sigma_b$, the covariance matrix of the random effects. The best solution, and the one used by `brms`, is to use a Cholesky decomposition of the covariance matrix and apply a Lewandowski-Kurowicka-Joe prior to the Cholesky factor of $\Sigma_b$. We recommend $\eta = 2$ as a sensible default for the covariance Cholesky factor prior.
+[^heiss]: there is unfortunately no standard language used to describe these different methods, other than getting lost in describing different parts of the model as marginal or conditional. We adopt the terminology of Andrew Heiss, who provides an excellent layman-friendly explanation of this issue in [a blog post](https://www.andrewheiss.com/blog/2021/11/10/ame-bayes-re-guide/).
+
+<!-- end of file -->

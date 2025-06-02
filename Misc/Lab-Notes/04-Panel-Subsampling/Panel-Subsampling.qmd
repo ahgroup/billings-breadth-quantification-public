@@ -1,0 +1,730 @@
+---
+title: "Strain panel subsampling"
+format: html
+---
+
+```{r}
+#| label: setup
+#| include: false
+# So renv will do its job correctly
+box::use(
+	readr,
+	tidyr,
+	dplyr,
+  cmdstanr[...],
+	rstan[...]
+)
+
+
+get_fn <- function(home = here::here(), dir, idx, ext = ".Rds") {
+	paste0(
+		home, "/", dir, "/Model",
+		stringr::str_pad(idx, width = 2, side = "left", pad = "0"), ext
+	)
+}
+
+get_rstan_diagnostics <- function(fit, fn) {
+	sink(fn)
+	sink(stdout(), type = "message")
+	rstan::check_hmc_diagnostics(fit)
+	sink()
+	sink(stderr(), type = "message")
+}
+
+tidy_PI <- function(x, p = 0.89) {
+	rethinking::PI(x, prob = p) |>
+		setNames(rep(c("upr", "lwr"), times = length(p))) |>
+		tibble::enframe()
+}
+```
+
+
+In this analysis, I will repeat the model fits after sampling a random
+panel of viruses from the historical strains that are available to us. The idea
+is that this will approximate what happens when different labs choose different
+historical strains to measure, and we can compare the changes in AUC, slope,
+intercept, and mean titer increase across the various subsampled panels.
+
+# Definitions
+
+* **Panel**: the set of historical assay strains that were used for assays
+during a particular study or study season.
+* **Assay strain**: the strain used to perform an HAI assay on a serum sample,
+not necessarily a strain to which the sample donor has been exposed to.
+
+# Data setup
+
+First I'm going to do this on a very limited scale to make a table/figure for
+Andreas' poster presentation. Then we can decide a better way to do this
+and do it for all strains in the future. First I'll start by applying the
+standard data cleaning that I've used to get the data in nested format,
+although I'll hold off on putting the data in the list format that stan needs.
+
+**I'll also filter the data down so that we are just looking at data for**
+**the H1N1-California-2009 vaccine.**
+
+```{r data cleaning}
+clean_data <-
+	readr::read_rds(
+		here::here("data", "processed", "distance_data.rds")
+	)
+
+dat <-
+	clean_data |>
+	dplyr::mutate(
+		vaccine_type = stringr::str_remove(vaccine_type, "_vaccine_fullname$") |>
+			stringr::str_to_upper() |>
+			factor()
+	) |>
+	dplyr::filter(
+		vaccine_type == strain_type,
+		# Get only the Ag distance methods that Amanda used.
+		method %in% c("cart_2d_post", "p_epi", "year"),
+		vaccine_fullname == "H1N1-California-2009",
+		dose == "SD"
+	) |>
+	dplyr::mutate(
+		dplyr::across(tidyselect:::where(is.factor), forcats::fct_drop)
+	) |>
+	# Remove the columns I know we do not need here
+	dplyr::select(
+		-c(pretiter, postiter, vac_short, strain_short)
+	)
+
+# Pivot the data so we can fit pre/post models at the same time
+dat_models <-
+	dat |>
+	tidyr::pivot_longer(
+		cols = c(postvactiter, titerincrease),
+		names_to = "outcome",
+		values_to = "y"
+	) |>
+	# Turn the categorical variables into integer indexes, this is required
+	# for index coding in stan
+	dplyr::mutate(
+		id = uniq_id |>
+			factor() |>
+			forcats::fct_inorder() |>
+			as.integer()
+	) |>
+	# Normalize the antigenic distance measurements within vaccine group
+	dplyr::group_by(vaccine_fullname, method) |>
+	dplyr::mutate(
+		norm_dist = distance / max(distance)
+	) |>
+	dplyr::ungroup()
+
+# We want to fit a model for every unique combination of:
+# vaccine strain; outcome; distance method.
+# (Models will be fitted ACROSS seasons, not per-season.)
+# We'll do this by nesting the data into strata to get a per-stratum
+# data frame and then mapping the model fitting function over the
+# nested data frames.
+dat_nested <-
+	dat_models |>
+	# Select only the data we need RIGHT NOW to prevent Stan from throwing a fit,
+	# it will often get angry over unused data that is in the wrong format.
+	dplyr::select(
+		# Variables that should go into the Stan model. These DO need to be
+		# processed to be NUMERIC.
+		id = uniq_id, y, x = norm_dist, p = prevactiter,
+		# Stratum/nesting variables -- these do NOT need to be processed.
+		vaccine_fullname, method, outcome,
+		# Strain name variable to filter on later. doesn't needed to be
+		# processed as it will be removed in a later step
+		s = strains_fullname
+	) |>
+	# Cleaning up the factor variabels that have to become indices
+	# it has to be done in groups to ensure there are no missing levels!
+	dplyr::group_by(dplyr::across(!c(id, x, y, s))) |>
+	dplyr::mutate(
+		id = id |> factor() |> forcats::fct_inorder() |> as.integer()
+	) |>
+	dplyr::ungroup() |>
+	# This line creates the stratified data frames. Analogous to base R split()
+	# but organized better.
+	tidyr::nest(dat = c(id, x, y, s, p)) |>
+	# TODO EVENTUALLY DO THIS FOR ALL OUTCOMES
+	dplyr::filter(outcome == "titerincrease") |>
+	dplyr::select(-outcome)
+```
+
+OK, so that's the regular data cleaning. Now we want to do the panel subsampling
+part. So here is my plan for doing that.
+
+1. Get a list of all the unique assay strains in the data (for this vaccine
+strain, in the future we will have to do this per-strain).
+1. Get $N$ number of subsamples of 10 strains from the list.
+1. Get a data frame that crosses the existing columns of `dat_nested` with
+the subsamples, so that there is now one column per model configuration
+(already the case for `dat_nested`) *for each subsample*.
+1. Map over the `dat` column containing the data for modeling, and filter it
+to only contain the strains in the `subsample` entry in the same row.
+1. Fit the models to each row of the data as usual.
+1. Process the data for passing to `Stan` as usual.
+
+
+```{r subsampling}
+{ # Group this bit so that the seed set always runs with the sampling bit
+	set.seed(370)
+	N <- 10
+	k <- 10
+	strains <- unique(dat_models$strains_fullname)
+	# We don't want to sample the homologous strain, we always want to include
+	# it. so remove from this list
+	strains <- strains[strains != "H1N1-California-2009"]
+	# Generate all of the combinations of 9 strains (we want to have 10 in
+	# total once we add homologous strain).
+	# This produces an array of size k by (N choose k)
+	all_subsamples <- combn(strains, 9)
+	# Now randomly sample column indices to ensure we don't sample the
+	# same sub-panel twice.
+	# array, but this makes it easier to join with the dataframe correctly.
+	subsamples <-
+		purrr::map(
+			sample.int(ncol(all_subsamples), N),
+			\(i) c("H1N1-California-2009", all_subsamples[, i])
+		)
+	
+}
+
+dat_stan <-
+	# Do the crossing part as described
+	tidyr::expand_grid(dat_nested, subsamples) |>
+	# Filter each row and remove strain variable
+	dplyr::mutate(
+		lab = rep(1:10, times = 3),
+		dat = purrr::map2(
+			dat, subsamples,
+			\(d, l) d |>
+				dplyr::filter(s %in% l) |>
+				dplyr::select(-s)
+		),
+		# Convert to list for stan
+		dat = purrr::map(
+			dat,
+			\(x) x |>
+				na.omit() |>
+				as.list()
+		),
+		# Add the variable N that we need to pass
+		dat = purrr::map(
+			dat,
+			\(d) c(d, N = length(d$id))
+		)
+	)
+```
+
+Ok, to me the data looks like it is set up correctly now, so we can move
+on to fitting the model.
+
+# Model fitting
+
+I previously compiled the Stan code for the complete pooling model that
+ignores the season, so I'll use that model again. But I'll put the code
+here anyways just in case and to remind myself.
+
+```{r model compilation}
+m <-
+	cmdstanr::cmdstan_model(
+		stan_file = here::here("Stan", "complete-pooling-across-seasons.stan"),
+		compile = FALSE
+	)
+
+m$compile(
+	quiet = FALSE,
+	pedantic = TRUE,
+	cpp_options = list(stan_threads = TRUE)
+)
+```
+
+Now I'll map the model fitting sequentially over all of the $`r N * 3`$ models
+we need to fit. This code is mostly copied and pasted from my `cmdstanr`
+pre-compilation test, with just enough changed to make it work here.
+
+```{r model fitting, eval = FALSE}
+fit_all_models <- function(RSTAN_OUT) {
+	starttime <- Sys.time()
+	# Setup the compiled model in case I overwrite m somewhere
+	m <- cmdstanr::cmdstan_model(
+		stan_file = here::here("Stan", "complete-pooling-across-seasons.stan"),
+		exe_file  = here::here("Stan", "complete-pooling-across-seasons.exe"),
+		compile = TRUE,
+		cpp_options = list(stan_threads = TRUE)
+	)
+	
+	# Function for sample from the model at each iteration of the loop
+	sample_from_model <- function(d, id, n, model) {
+		paste0("Starting model ", id, " of ", n, "!\n") |>
+			crayon::white() |>
+			crayon::bgBlue() |>
+			cat()
+		
+		out <-
+			model$sample(
+				data = d,
+				seed = 370,
+				chains = 8,
+				parallel_chains = 8,
+				threads_per_chain = 2,
+				iter_warmup = 1250,
+				iter_sampling = 1250,
+				adapt_delta = 0.95
+			)
+		return(out)
+	}
+	
+	# Easy error handling for the model, if it runs great, if there is an
+	# error in the fit it will return "uh-oh!" without crashing the
+	# entire loop
+	possibly_sample_from_model <- purrr::possibly(sample_from_model, "uh-oh!")
+	
+	# Need this constant for message printing
+	n_mods <- nrow(dat_stan)
+	
+	purrr::iwalk(
+		dat_stan$dat,
+		\(d, idx) {
+			# Get the file name to save at
+			fn <- paste0(
+				here::here("Results", "_Out", "Panel-Subsampling", "Fit"), "/Model",
+				stringr::str_pad(idx, side = "left", width = "2", pad = "0"), ".Rds"
+			)
+			
+			# Invoke the model fitting routine
+			mod <- possibly_sample_from_model(d, idx, n_mods, m)
+			
+			# Fit models with cmdstan, but then read the model back as an Rstan object
+			# So I can use the rstan::extract function that McElreath uses to get the
+			# output in the same format as rethinking.
+			if (isTRUE(RSTAN_OUT)) {
+				mod <- rstan::read_stan_csv(mod$output_files())
+			}
+			
+			# Save the results to disk
+			readr::write_rds(mod, fn, compress = "gz")
+			
+			# Cleanup this iteration of the loop to save ram
+			rm(mod)
+			invisible(gc())
+		}
+	)
+	stoptime <- Sys.time()
+	
+	message("Fitting took ", difftime(stoptime, starttime) |> format())
+	
+	invisible(m)
+}
+
+# Invoke the routine
+if(interactive()) {
+	fit_all_models(TRUE)
+}
+```
+
+OK, now to process the models. Same story with pasting the code, it was
+really worth my time to spend a few hours figuring all this out.
+
+# Model processing
+
+```{r prediction processing}
+process_all_models <- function(file_location, home_dir) {
+	# Get the list of files to process
+	fn <- list.files(file_location, full.names = TRUE)
+	
+	# Set home directory for saving files, it will be like 2 microseconds faster 
+	# to do it outside of the loop part
+	h <- home_dir
+	
+	purrr::iwalk(
+		fn,
+		\(f, idx) {
+			# Read in the model
+			m <- readr::read_rds(f)
+			
+			# Get the summary
+			summary(m, probs = c(0.055, 0.945))$summary |>
+				as.data.frame() |>
+				tibble::rownames_to_column("parameter") |>
+				dplyr::filter(!parameter %in% c("lp__", "dev", "log_lik")) |>
+				readr::write_rds(get_fn(h, "Summary", idx))
+			
+			# Get the diagnostics
+			# TODO make an actual function that returns this stuff as
+			# actual values instead of text
+			get_rstan_diagnostics(m, get_fn(h, "Diag", idx, ext = ".txt"))
+			
+			# Get the posterior samples and remove the parts we don't care about
+			p <-
+				rstan::extract(
+					m,
+					pars = c("dev", "lp__", "log_lik"),
+					include = FALSE
+				)
+			
+			readr::write_rds(p, get_fn(h, "Post", idx))
+			
+			# Get the predictions
+			# TODO generalize this to accept a simulated data matrix maybe?
+			# Could just pmap over the rows!
+			preds <-
+				purrr::map(
+					seq(0, 1, 0.01),
+					\(x) {rnorm(10000, p$a + p$b * x, x)}
+				) |>
+				do.call(what = cbind) |>
+				`colnames<-`(seq(0, 1, 0.01)) |>
+				as.data.frame() |>
+				tibble::rowid_to_column("sampleID") |>
+				tidyr::pivot_longer(
+					cols = !sampleID,
+					names_to = "distance",
+					values_to = "y",
+					names_transform = list(distance = as.numeric)
+				)
+			
+			# TODO update this so that it works for the partial pooling models
+			# Get the mean and PI for each unit
+			# No need to marginalize since we are doing complete pooling
+			pred_summary <-
+				preds |>
+				dplyr::reframe(
+					est = mean(y),
+					tidy_PI(y),
+					.by = distance
+				) |>
+				tidyr::pivot_wider(
+					names_from = name,
+					values_from = value
+				)
+			
+			readr::write_rds(pred_summary, get_fn(h, "Preds", idx))
+			
+			# Cleanup this iteration
+			rm(m, p, preds, pred_summary)
+			invisible(gc())
+		},
+		.progress = "Processing models!"
+	)
+}
+
+# TODO fix this to only take one argument
+# TODO write a function that automatically creates the correct
+# subdirectory structure
+process_all_models(
+	file_location = here::here("Results/_Out/Panel-Subsampling/Fit"),
+	home_dir = here::here("Results", "_Out", "Panel-Subsampling")
+)
+```
+
+Now that the model results are processed we have to get the summary statistics
+that we need -- i.e. calculate the AUCs and mean outcomes.
+
+# Summary Statistics
+
+First we'll get the easy summary statistics: first we need to get the model
+predictions joined to the prepared data, then we'll get the slope and
+intercept estimated by the model (mean with 89% ETI), and the mean of the
+outcome -- what Amanda calls `meanTI` in her table.
+
+```{r}
+h <- here::here("Results", "_Out", "Panel-Subsampling")
+
+# It's easier to clean the data if do this bit separately
+dat_preds <-
+	dat_stan |>
+	dplyr::mutate(
+		# First get the model predictions
+		preds = purrr::map(
+			list.files(paste0(h, "/Preds"), full.names = TRUE),
+			\(x) readr::read_rds(x)
+		)
+	)
+
+dat_parms <-
+	dat_preds |>
+	dplyr::mutate(
+		# Now get the slope and intercept
+		parameters = 	purrr::map(
+			list.files(paste0(h, "/Summary"), full.names = TRUE),
+			\(f) {
+				p <- readr::read_rds(f)
+				parms <-
+					p |>
+					dplyr::filter(parameter %in% c("a", "b")) |>
+					dplyr::select(parameter, est = mean) |>
+					tibble::tibble()
+			}
+		),
+		# Compute the mean outcome for comparison to AUCS
+		# ymean = purrr::map(
+		# 	dat,
+		# 	\(d) ggplot2::mean_cl_normal(d$y, conf.int = .89) |>
+		# 		rlang::set_names(c("est", "lwr", "upr")) |>
+		# 		tibble::tibble()
+		# )
+		ymean = purrr::map_dbl(
+			dat,
+			\(d) mean(d$y)
+		),
+		p_sc = purrr::map_dbl(
+			dat,
+			\(d) mean(
+				( (d$p == 0) & (d$y >= 3) ) |
+					( (d$p >= 1) & (d$y >= 2) )
+			)
+		),
+		p_sp = purrr::map_dbl(
+			dat,
+			\(d) mean((d$y - d$p) >= 3)
+		)
+	)
+```
+
+## AUC calculation
+
+Next we have to compute the AUCs with different weighting schemes. So first
+we need to load in the weighting data.
+
+```{r}
+# This data frame contains the antigenic distance unit cutoffs for weighting
+cutoff_df <-
+	readr::read_rds(file = here::here("Results/tables/AU_cutoff.rds")) |>
+	dplyr::filter(distance_type == "Strain") |>
+	# Remove the subtype from the beginning of the short_name
+	dplyr::mutate(
+		short_name = gsub("^.{4}:", "", vac_short)
+	) |>
+	dplyr::select(short_name, cutoff) |>
+	dplyr::left_join(
+		# This file contains the conversion between the short name and the long name
+		readr::read_rds(here::here("data", "processed", "virus_info.rds")),
+		by = "short_name"
+	) |>
+	dplyr::select(vaccine_fullname = analysis_name, cutoff)
+```
+
+Now we can calculate the three AUCs.
+
+```{r}
+dat_auc <-
+	dat_preds |>
+	dplyr::left_join(cutoff_df, by = "vaccine_fullname") |>
+		# Calculate the AUC for each model -- uses trapezoidal approximation
+		# Consider switching to a better method? Not like it matters for a
+		# straight line though
+		# We use the three different weighting schemes as well.
+	# Finally, the SEs were computed by taking the AUC of the low and high
+	# marginal predictions band. Unclear where this is correct or we would
+	# need to bootstrap on the individual samples or something.
+	dplyr::mutate(
+		AUC_unweighted = purrr::map_dbl(
+			preds,
+			\(d) pracma::trapz(d$distance, d$est)
+		),
+		AUC_linear = purrr::map_dbl(
+			preds,
+			\(d) pracma::trapz(d$distance, d$est * (1 - d$distance))
+		),
+		AUC_step = purrr::map2_dbl(
+			preds, cutoff,
+			\(d, c) pracma::trapz(d$distance, d$est * (d$distance <= c))
+		),
+	)
+	# dplyr::mutate(
+	# 	AUC = purrr::pmap(
+	# 		list(AUC_unweighted, AUC_linear, AUC_step),
+	# 		\(x, y, z) dplyr::bind_rows(
+	# 			"unweighted" = x,
+	# 			"linear" = y,
+	# 			"2 AU" = z,
+	# 			.id = "weighting"
+	# 		)
+	# 	),
+	# 	.keep = "unused"
+	# ) |>
+	# dplyr::select(-cutoff) |>
+	# tidyr::unnest(AUC) |>
+	# dplyr::mutate(name = paste0("AUC (", weighting, ")"), .keep = "unused")
+
+dat_stats <-
+	dat_parms |>
+	tidyr::unnest(parameters) |>
+	tidyr::pivot_wider(
+		names_from = parameter,
+		values_from = est
+	) |>
+	dplyr::left_join(
+		dat_auc,
+		by = dplyr::join_by(vaccine_fullname, method, dat, subsamples, preds)
+	) |>
+	# tidyr::unnest(ymean, names_sep = "_") |>
+	# tidyr::pivot_longer(cols = !(vaccine_fullname:preds)) |>
+	# tidyr::separate(name, into = c("name", "stat")) |>
+	# tidyr::pivot_wider(names_from = stat, values_from = value) |>
+	# dplyr::bind_rows(dat_auc) |>
+	tidyr::pivot_longer(
+		cols = c(ymean, a, b, p_sc, p_sp, dplyr::starts_with("AUC"))
+	) |>
+	dplyr::left_join(
+		# Get the short names back
+		readr::read_rds(here::here("data", "processed", "virus_info.rds")),
+		by = c("vaccine_fullname" = "analysis_name")
+	) |>
+	dplyr::mutate(
+		subtype = substr(vaccine_fullname, 1, 4),
+		method = factor(
+			method,
+			levels = c("year", "p_epi", "cart_2d_post"),
+			labels = c("Year difference", "p-Epitope", "Antigenic cartography")
+		),
+		name = factor(
+			name,
+			levels = c("ymean", "p_sc", "p_sp",
+								 "AUC_unweighted", "AUC_linear", "AUC_step",
+								 "a", "b"),
+			labels = c("Mean TI",
+								 "Prop. seroconverted",
+								 "Prop. seroprotection",
+								 "AUC (unweighted)",
+								 "AUC (linear)",
+								 "AUC (2 AU)",
+								 "Intercept",
+								 "Slope")
+		)
+	) |>
+	dplyr::rename(stat = name)
+```
+
+OK, next we need to group by the method, and take the summary measures of the
+statistics across all of the various subsamples.
+
+```{r}
+quantile_df <- function(x, coverage = c(0.5, 0.75, 1)) {
+	a <- (1 - coverage)/2
+  tibble::tibble(
+    lwr = quantile(x, a, na.rm = TRUE),
+    upr = quantile(x, 1 - a, na.rm = TRUE),
+    quant = coverage
+  )
+}
+
+dat_summary <-
+	dat_stats |>
+	dplyr::group_by(method, stat) |>
+	dplyr::reframe(
+		mean = mean(value),
+		med = median(value),
+		quantile_df(value, c(0.75, 0.95, 1))
+	)
+```
+
+```{r}
+ggplot2::theme_set(
+	ggplot2::theme_bw() +
+		ggplot2::theme(
+			plot.background = ggplot2::element_rect(fill = "white", color = "white"),
+			axis.text = ggplot2::element_text(size = 16, color = "black"),
+			axis.title = ggplot2::element_text(size = 18),
+			plot.subtitle = ggplot2::element_text(
+				size = 16, hjust = 0, margin = ggplot2::margin(b = 2)
+			),
+			plot.title = ggplot2::element_text(
+				size = 24, hjust = 0, margin = ggplot2::margin(b = 4)
+			),
+			plot.caption = ggplot2::element_text(size = 14),
+			strip.text = ggplot2::element_text(
+				size = 16, hjust = 0.5, margin = ggplot2::margin(b = 2, t = 2)
+			),
+			panel.spacing = ggplot2::unit(2, "lines"),
+			legend.position = "bottom",
+			legend.text = ggplot2::element_text(size = 16, color = "black"),
+			legend.title = ggplot2::element_text(size = 18, color = "black")
+		)
+)
+```
+
+
+```{r}
+library(ggplot2)
+# Manual
+dat_summary |>
+	dplyr::arrange(-quant) |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = mean, y = stat, xmin = lwr, xmax = upr, color = factor(quant)) +
+	ggplot2::geom_linerange(linewidth = 3, alpha = 1) +
+	ggplot2::facet_wrap(ggplot2::vars(method), ncol = 3) +
+	ggplot2::labs(
+		x = NULL,
+		y = NULL,
+		color = "ETCI width",
+		title = "Vaccine: H1N1-California-2009"
+	) +
+	ggplot2::scale_color_grey()
+
+dat_stats |>
+		ggplot2::ggplot() +
+	ggplot2::aes(x = value, y = stat) +
+	ggdist::stat_halfeye() +
+		ggplot2::facet_wrap(ggplot2::vars(method))
+
+dat_stats |>
+	dplyr::filter(stat == "Prop. seroconverted") |>
+	ggplot(aes(x = value)) +
+	geom_density() +
+	facet_wrap(~method)
+
+# auto?
+dat_stats |>
+	ggplot2::ggplot() +
+	ggplot2::aes(x = value, y = stat) |>
+	ggdist::stat_pointinterval(
+		show_point = FALSE,
+		position = "identity",
+		interval_size_range = c(1, 5),
+		.width = c(0.73, 0.89, 1),
+		point_interval = "median_qi"
+	) +
+	# Blue circle is median, read square is mean
+			ggplot2::stat_summary(
+		ggplot2::aes(x = value, y = stat, color = "median"),
+		geom = "point",
+		fun = median,
+		shape = "|",
+		#color = "dodgerblue",
+		fill = "#ffffff50",
+		size = 5,
+		stroke = 3
+	) +
+	ggplot2::stat_summary(
+		ggplot2::aes(x = value, y = stat, color = "mean"),
+		geom = "point",
+		fun = mean,
+		shape = "|",
+		#color = "firebrick",
+		fill = "#ffffff30",
+		size = 5,
+		stroke = 3
+	) +
+		ggplot2::facet_wrap(ggplot2::vars(method), ncol = 1) +
+	ggplot2::scale_color_manual(
+		values = c("dodgerblue", "firebrick"),
+		name = NULL
+	) +
+	ggplot2::labs(
+		x = NULL, y = NULL,
+		title = "Vaccine: H1N1-California-2009",
+		subtitle = paste0(N, " subsamples of ", k, " strains each")
+	)
+
+ggplot2::ggsave(
+	here::here("Andreas-Poster-Plots/p4.png"),
+	width = 11, height = 8.5
+)
+```
+
+
+
+# Plots and tables
+
+<!-- END OF FILE -->

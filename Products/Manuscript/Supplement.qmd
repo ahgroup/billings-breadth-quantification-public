@@ -1,0 +1,449 @@
+---
+title: |
+  Supplementary Material for:
+  A novel approach for robust evaluation of broadly reactive
+  influenza vaccine candidates
+author: " "
+format:
+  docx: 
+    toc: true
+    number-sections: true
+    reference-doc: "../../Assets/word-template.docx"
+bibliography:
+  - "../../Assets/billings-breadth-quantification.bib"
+  - "../../Assets/package-refs.bib"
+csl: "../../Assets/vancouver.csl"
+execute:
+  echo: false
+  message: false
+  warning: false
+---
+
+```{r setup, include=FALSE}
+suppressPackageStartupMessages({
+	library(yaml, include.only = NULL)
+	library(knitr, include.only = NULL)
+	library(quarto, include.only = NULL)
+	library(flextable)
+})
+
+# Set the knitr option that stops it from mangling file paths from here()
+# I got weird errors with targets that couldn't fix unless I did this.
+# In the future need to figure out how to programatically generate the YAML
+# header cause it doesn't make sense that relative paths are required there
+# but mess up everything else?
+options(knitr.graphics.rel_path = FALSE)
+
+# Read the software bibliography to ensure the dependencies are correct
+# This is really a workaround but I can't figure out how to declare it as
+# a dependency and have it evaluate correctly in tar_quarto() extra_files arg
+bib <- targets::tar_read("software_bibliography")
+rm(bib)
+```
+
+# Reproducibility instructions
+
+TODO
+
+{{< pagebreak >}}
+
+# Extended methods
+
+The methods included in the main text are a summary of the most important methods we used to conduct our analysis. Here, we include a more detailed explanation of many aspects of the methods used.
+
+## Antigenic distance calculation
+
+We calculated the antigenic distance for all of the influenza strains that were used in the cohort data. We calculated the distances pairwise between each set of two strains, and we calculated all distances separately between H1N1 and H3N2 influenza strains. That is, we did not calculate the distance between any H1N1 and H3N2 strains. We used three different distance metrics to measure antigenic distance. All three have been previously described.
+
+The first metric we used was the temporal antigenic distance. Many existing papers in the literature either order strains in year order and then count the distances between them as equal, regardless of the number of years elapsed [@boyoglu-barnum2021; @hinojosa2020]; or assign distance based on the year of isolation [@auladell2022; @yang2020]. The temporal distance is based on the year of isolation for each strain, and
+measures how much chronological time has passed since the strains were
+first observed and sequenced. Letting $s_1$ and $s_2$ be two influenza strains
+from the same subtype, and $t(s_{(\cdot)})$ be the year of isolation for an
+arbitrary strain, the temporal distance is given by
+$$
+d_{\text{temporal}}(s_1, s_2) = \left| t(s_1) - t(s_2) \right|.
+$$
+That is, the temporal distance is equal to the absolute difference between the
+year of isolation for the strains. For our study, the absolute value is not necessary because we do not have any assay strains that were isolated after the vaccine strain to which they were compared. However, in such a study, the absolute temporal distance should be compared with the directional temporal distance as future years might have a greater impact on evolution than past years.
+
+The second metric we used was a sequence-based metric called the dominant p-epitope metric [@gupta2006]. First, the $p$-epitope distance is calculated for each of the five antigenic sites on the hemaaglutinin head domain. The five antigenic sites are composed of residues with known positions using a standard numbering scheme for HA proteins which varies by subtype [@burke2014a]. Notably, the numbering for the residues refers to the sequence
+after the sequence for the signal peptide has been removed. For H1 HA proteins, the signal peptide is typically 18 residues in length. For a given epitope site, the $p$-epitope distance is calculated as
+$$
+d_{\text{epitope}_i}(s_1, s_2) = \frac{d_H(s_1, s_2)}{\text{length of sequences}}
+$$
+where $d_H(\cdot, \cdot)$ is the standard Hamming distance [@hamming1950] which counts the number of differences between two strings. The dominant $p$-epitope distance is then the maximum of the $p$-epitope distance for each set:
+$$
+d_{p-\text{epitope}}(s_1, s_2) = \max \left\{ d_{\text{epitope}_i}(s_1, s_2) \right\}_{i \in I} \ ; \quad I = \{A, B, C, D, E\}.
+$$
+Here the index set $I$ contains the letters which are typically used as names for each of the antigenic sites. A table of the site residues can be found in the original reference [@gupta2006].
+
+We obtained the sequence for every strain used in the cohort study data from GenBank. The accession numbers for each of the sequences we used are shown in @tbl-accession. In order to calculate the $p$-epitope distance, we first preprocessed the sequences by removing the signal peptide sequence from the beginning of each sequence. After preprocessing, we computed the $p$-epitope distance for each of the epitopes, and then we took the maximum across all epitopes for each strain pair to obtain the dominant $p$-epitope distance.
+
+```{r}
+#| label: tbl-accession
+#| tbl-cap: "GenBank accession number for the protein sequences for each strain included in our study data."
+
+targets::tar_read("seq_accession_table") |>
+	qs2::qs_read()
+```
+
+The third method we used to calculate antigenic distance was antigenic cartography [@smith2004; @fonville2015]. The goal of antigenic cartography is to estimate distances between strains from immunological data by a dimension reduction algorithm. We used the HAI titers against the panel of strains from our cohort data for antigenic cartography. First we had to create a titer matrix, which has one row for each individual in the dataset and one row for each strain observed in the dataset.
+
+We used the methods from the Racmacs [@racmacs] R package for antigenic cartography, which accepted our titer matrix as the input. Racmacs uses a variant of classical multidimensional scaling (MDS) for the dimension reduction algorithm, which finds a two-dimensional representation of the data that minimizes a particular loss function. In simpler terms, Racmacs finds a way to represent our data in two dimensions that preserves the most amount of information possible. Classical MDS does not account for missing or censored data, which are both present in our titer matrices. However, Racmacs implements an optimization routine called dimensional annealing to numerically minimize the classical MDS loss function.
+
+First, the censored and missing data points are randomly imputed, taking into account only the range of the immunological values provided. We pass the imputed data to a standard implementation of classical MDS and calculate the resulting stress (another term for the loss function in this scenario). Then, the data are passed to a numerical optimization routine (L-BGFS) which relaxes the coordinates in the reduced dimensional space in order to reduce the stress. We performed 100 optimization rounds for our cartographic maps in order to account for the randomness in the algorithm. We repeated the entire map creation process 100 times to allow for different initial conditions which could lead the optimizer to local minima, and chose the best overall map after all optimizations.
+
+Once we obtained the optimized antigenic map, we found the positions of each
+strain in the resulting two-dimensional space and calculated the pairwise
+Euclidian distances, giving us the pairwise cartographic distances.
+
+## Likelihood adjustment for censoring
+
+In the following sections about estimating our various metrics, we will employ the same correction to the regression model likelihood to adjust for censoring. Letting $y$ represent an HAI titer measurement, and the outcome for a regression model, if we say that
+$$y_i \sim \mathcal{N} \left(\mu_i, \sigma^2\right)$$
+we can adjust for censoring in $y$ by writing the likelihood function as
+$$
+f\big( y_i \mid \mu_i, \sigma^2 \big) = \int_{L}^U \phi\left( y_i \mid \mu_i, \sigma^2 \right) \ \mathrm{d} y_i
+$$
+where $f$ is the probability density function of $Y_i$ and $\phi$ is the normal density function. Here, $L$ is the lower censoring bound and $U$ is the upper censoring bound.
+
+The censoring bounds are easy to determine as long as we know how our assay of interest was conducted. HAI is a serial dilution assay, and so produces interval censored values, and has both a lower and an upper limit of detection (LoD). For an observed HAI value $y_i$, we assume there is some latent "true" dilution $y_i^*$ which will be a positive real number that represents the minimal dilution where hemagglutination is not observed. The latent dilution can never be observed because of how we conduct the assay. First, we choose a starting dilution, which is constrained by the proportion of reagents we need to add to our assay. We call the starting dilution $y_{\min}$ and it is 10 in our dataset. That is, the HAI assays in our study were performed with an initial dilution of 1:10 serum to other assay ingredients.
+
+If we observe hemagglutination at this starting titer, we record the assay value as below the limit of detection -- by convention, this is often recorded as half the limit of detection, as it is in our study data. Although it is important to note that as long as we keep track of which assay measurements are below the limit of detection, these values are really meaningless and such not be treated as numbers (but they usually are).
+
+Regardless, we will dilute the assay solution 2-fold and look for agglutination again, continuing to dilute the amount of serum in solution. The maximal dilution we perform for the assay, $y_{\max}$ is the upper limit of detection. While 20480 was the theoretical upper LoD in our study, we did not observe any values at this level.
+
+Any result that is within the limits of detection is still interval censored, i.e., we only know that it lies within a particular interval. For example, if we observe agglutination at a dilution of 1:40, but not at 1:20, we know that the true minimal inhibition dilution is somewhere between 20 and 40. We know it is higher than 20, and less than 40, but not where it falls in that range.
+
+For an HAI titer assay conducted in this manner, we can write the censoring bounds $L$ and $U$ for a given titer $y$ (leaving out subscripts from this formula for simplicity) on the log scale as
+$$
+(L, U) = \begin{cases}
+(-\infty, y_{\min}), & y = y_{\min} \\
+[y, y+1), & y_{\min} < y < y_{\max} \\
+[y_{max}, \infty), & y = y_{\max}
+\end{cases}.
+$$
+
+We use this same censoring correction in all of the corrected models.
+
+## Current immunogenicity metric details
+
+Our methods for calculating the metrics are laid out without much technical detail in the separate methods document, so we refer readers looking for a tutorial to that document instead. In this section we will briefly list the relevant technical details for our estimation models.
+
+We will use the following notation to define our formulas for the current immunogenicity metrics.
+
+- $i = 1, \ldots, n$ indexes study subjects, where $n$ is the sample size.
+- The variable $s = 0, 1, \ldots, S$ indexes different strains, and $s = 0$ is the homologous strain.
+- We define seroprotection as a post-vaccination HAI titer greater than 40, and seroconversion as a post-vaccination fold-change of 4-fold or higher along with seroprotection.
+
+### Homologous GMT (magnitude)
+
+The simple formula for the homologous GMT without considering censoring is
+$$
+GMT_0 = \exp\left(\frac{1}{n}\sum_{i=1}^n \text{log titer}_{i, s=0} \right).
+$$
+
+The regression model we fit to estimate the homologous GMT in the same framework as our novel metrics is given as
+$$
+\begin{aligned}
+\text{log titer}_{i, s=0} &\sim \mathcal{N}\left(\alpha, \sigma^2\right). \\
+\end{aligned}
+$$
+
+In this model, the parameter $\alpha$ estimates the mean of the outcome values.
+
+### Seroconversion rate (breadth)
+
+The simple formula for the seroconversion rate without considering censoring or the overall estimation framework is
+$$
+\text{SCR} = \frac{1}{n}\frac{1}{S} \sum_{i = 1}^n \sum_{s=0}^S I(\text{patient } i \text{ seroconverted to strain } s)
+$$
+where $I()$ is the indicator function.
+
+The regression model we fit to estimate the seroconversion rate is
+$$
+\begin{aligned}
+\text{Seroconverted}_{i, s} &\sim \text{Bernoulli}(p) \\
+\text{logit}(p) &= \alpha
+\end{aligned}
+$$
+where $\alpha$ estimates the overall seroconversion rate.
+
+### Overall GMT (total strength)
+
+The simple formula for the overall GMT is
+
+$$
+GMT = \exp\left(\frac{1}{n}\frac{1}{S}\sum_{i = 1}^n \sum_{s=0}^S\text{log titer}_{i, s} \right).
+$$
+
+and the regression model is
+$$
+\begin{aligned}
+\text{log titer}_{i, s} &\sim \mathcal{N}\left(\alpha, \sigma^2\right). \\
+\end{aligned}
+$$
+
+This regression model is exactly the same as the model for $GMT_0$, but for the $GMT_0$ model we only include homologous strains in the fitting, and for the $GMT$, which is estimated by $\alpha$ as well, we include all strains in the model fitting to get an overall estimate.
+
+## Novel immunogenicity metric details
+
+In order to calculate our novel immunogenicity metrics, we first need to fit a summary antibody landscape model to the titer data. Letting $d_s$ be the antigenic distance from the current season's vaccine to assay strain $s$ (recall that we treat all seasons independently and fit a separate model to each season) we define a multilevel linear regression model to construct the summary antibody landscape. The multilevel model is defined as
+$$
+\begin{aligned}
+y_{i, s} &\sim \mathcal{N}\left( \mu_{i,s}, \sigma^2 \right) \\
+\mu_{i,s} &= (\beta_0 + b_{0, i}) + (\beta_1 + b_{1, i}) \cdot d_s \\
+\begin{pmatrix} b_{0, i} \\ b_{1, i} \end{pmatrix} &\sim \text{MVN}\left(\vec{0}, \Sigma_b\right)
+\end{aligned}
+$$
+
+where we have a random intercept and random antigenic distance slope for each individual $i$, and the random effects for each individual are allowed to be correlated with a correlation matrix shared by all individuals. We will discuss priors in the model implementation section, but for all other models we have chosen weakly informative independent priors. However, allowing the random effects to be correlated as we do here is often beneficial for model fitting.
+
+In order to calculate our metrics from this model we need to calculate what `brms` calls expectation predictions or epreds. This refers to the predicted values $\hat{\mu}$ for some values of the predictors. Specifically, we use the population average epreds which are estimated conditionally on the random effects but do not include random effects deviations in the predictions, i.e.,
+
+$$\hat{\mu} \mid d_{new} = (\hat{\beta}_0 + 0) + (\hat{\beta}_1 + 0) \cdot d_{new}.$$
+
+We calculated these epreds on an interpolated grid of normalized antigenic distance values, $\vec{d}_{new} = 0, 0.01, 0.02, \ldots, 0.99, 1.00$. The granularity of the predictions can be increased if desired, but we found this granularity to give a good balance between resolution and memory usage.
+
+Our novel metrics are then derived from the epreds.
+
+### Intercept (magnitude)
+
+The intercept is simply defined as
+
+$$E(\hat{\mu} \mid d_{new} = 0). $$
+
+That is, we average over the posterior samples of the epreds for an antigenic distance value of 0.
+
+### Proportion above threshold (breadth)
+
+The proportion above the threshold is defined as the distance value where the horizontal line $y = 3$ (on the log scale) intersects the summary antibody landscape. That is,
+
+$$
+E\left( \operatorname*{arg min}_{d^*} \bigg| (\hat{\mu} \mid d^*) - 3 \bigg|\right),
+$$
+
+which for the linear regression model has a simple closed form of
+$$
+E\left(\frac{3 - \hat{\beta}_0}{\hat{\beta}_1}\right)
+$$
+but might not have a simple closed form for more complicated models, so we find the interpolated value of $d_{new}$ in our grid which minimizes $\text{abs}\left(\hat{\mu} \mid d_{new} - 3\right)$.
+
+### Area under the curve (total strength)
+
+The formula for the area under the curve (between the normalized antigenic distance values of 0 and 1 is
+
+$$
+E\left(\int_0^1 \hat{\mu} \mid x \ \mathrm{d} x\right).
+$$
+
+For each posterior sample, we approximate this integral numerically using the trapezoid method implemented by `pracma::trapz()` with default iteration settings.
+
+## Model implementation general details
+
+Whenever we summarize posterior samples to obtain a point estimate and credible interval, we calculate the mean and 95% highest density continuous interval (HDCI), implemented as `tidybayes::mean_hdci()`.
+
+For all of our regression models, we specified general weakly informative priors. Because the models converged and moved away from the priors, the specific priors are not very important. That being said, we used $t(3, 0, 3)$ priors for regression coefficients and $t^+(3, 0, 1)$ priors for variance parameters, where $t(\nu, \lambda, \tau)$ is the location-scale Student's $t$ distribution with $\nu$ degrees of freedom, location parameter $\lambda$ and scale parameter $\tau$; and $t^+(\cdot)$ is the half-Student's $t$ distribution constrained to be strictly positive with the same arguments. We use 3 degrees of freedom for all of our Student's $t$ priors because the variance is infinite for smaller degrees of freedom. Using $\nu = 3$ allows for the prior distribution to have fat tails, so if the data support a large parameter value the model likelihood will allow that, but this tends to be much less pathological than trying to sample from priors with $\nu = 1$ or $2$. For our multilevel summary landscape models, we specified the priors on the covariance matrix using a Cholesky factor decomposition with an $\text{LKJ-corr-cholesky}(2)$ prior [@lkj-dist] on the Cholesky factor and independent $t^{+}(3, 0, 1)$ priors on the vector of variance parameters.
+
+## Intraclass correlation (ICC) analysis details
+
+To estimate the intraclass correlation coefficients, we employed a second Bayesian model. We fit a one-way random effects model where the outcome was the posterior samples of a given metric (from a given season) and the predictors were a global intercept parameter and a random intercept for the subsample. We can write the regression model for calculating the ICC as
+$$
+\begin{aligned}
+\text{Metric sample}_{i,k} &\sim \mathcal{N}\left(\mu_{i,k}, \sigma^2\right) \\
+\mu_i &= \alpha + b_{k} \\
+b_k &\sim \mathcal{N}(0, \sigma_k^2)
+\end{aligned}
+$$
+
+where $k$ indexes the subsamples from the same cohort. We also fit the models separately for each of the six different metrics, using the p-epitope and cartographic distances for the novel metrics, and for metrics calculated with and without the censoring correction.
+
+Once we fit the regression model, we calculated the posterior samples of the ICC as
+$$
+\text{ICC} = \frac{\sigma_k^2}{\sigma_k^2 + \sigma^2}
+$$
+and summarized this as the mean and 95% HDCI over the posterior samples, which is what we report as our ICC results.
+
+{{< pagebreak >}}
+
+# Supplementary results
+
+We conducted a number of additional analyses which are tangential to those presented in the main text. However, they provide more context to our results so we present them here.
+
+## Additional strain information
+
+We use abbreviated strain names throughout our manuscript. The abbreviated strain names along with the full strain name used on GenBank is shown in @tbl-names.
+
+```{r}
+#| label: tbl-names
+#| tbl-cap: "Full strain names and abbreviations for each strain used in our study."
+
+targets::tar_read("strain_names_table") |>
+	qs2::qs_read()
+```
+
+For the duration of our study, the A(H1N1) vaccine component was only updated once. The Fluzone standard dose vaccine included the CA/09 strain from 2013/14 through 2016/17, and was updated to contain the MI/15 strain in 2017/18.
+
+The panel of historical strains for A(H1N1) stayed fairly consistent for the duration of our study, and was the same at all study sites within a given season. The 2013/14 season used a panel of 16 strains, the 2014/15 and 2015/16 seasons used a panel of 15 seasons, and the 2016/17 and 2017/18 seasons used a panel of 16 strains. The additional strain used in 2013/14 was PR/34, which was only used during that season. In 2016/2017 after the MI/2015 virus was isolated and sequenced, that virus was added to the panel of viruses for all following study seasons.
+
+{{< pagebreak >}}
+
+## Demographics information
+
+```{r}
+#| label: tbl-demographics
+#| tbl-cap: "Participant demographics for each of the seasonal cohorts in our study sample."
+
+targets::tar_read("demographics_table") |>
+	qs2::qs_read() |>
+	# delete the dose rows, not worth changing the code
+	flextable::delete_rows(i = c(1, 2))
+```
+
+Participant demographics for each seasonal cohort are shown in @tbl-demographics, including sex assigned at birth, self-reported race/ethnicity, age in years, birth year, and the study site an individual enrolled at. The majority of participants in our study were white and female. Demographics were fairly consistent across the seasonal cohorts with the exception of age. The UGA study site which began recruiting patients in 2016/2017 recruited younger patients, which was not a primary focus of the other two study sites, so the 2016/17 and 2017/18 cohorts have more young people than the preceding cohorts.
+
+{{< pagebreak >}}
+
+## Summary antibody landscapes for all seasons
+
+Here, we include the summary antibody landscapes for all of the seasons in our study. The general trends were the same across all landscapes, so we chose to report the 2016/2017 landscape in the main text due to the large number of participants.
+
+- @fig-landscape-13 shows the summary landscape for the 2013/14 seasonal cohort.
+- @fig-landscape-14 shows the summary landscape for the 2014/15 seasonal cohort.
+- @fig-landscape-15 shows the summary landscape for the 2015/16 seasonal cohort.
+- @fig-landscape-16 shows the summary landscape for the 2016/17 seasonal cohort. This figure is also included in the main text but it is reproduced here for easier comparison.
+- @fig-landscape-17 shows the summary landscape for the 2017/18 seasonal cohort.
+
+```{r}
+#| label: fig-landscape-13
+#| fig-cap: "Raw data and summary antibody landscapes for the 2013 - 2014 influenza season. Each point shows the post-vaccination HAI titer to a specific strain with a specified normalized antigenic distance from the vaccine strain (CA/09 in 2013/14). The dashed line and envelope show the mean and 95% credible interval (CrI) of the posterior summary antibody landscape."
+
+targets::tar_read("summary_landscape_figure_files")[[1]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-landscape-14
+#| fig-cap: "Raw data and summary antibody landscapes for the 2014 - 2015 influenza season. Each point shows the post-vaccination HAI titer to a specific strain with a specified normalized antigenic distance from the vaccine strain (CA/09 in 2014/15). The dashed line and envelope show the mean and 95% credible interval (CrI) of the posterior summary antibody landscape."
+
+targets::tar_read("summary_landscape_figure_files")[[2]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-landscape-15
+#| fig-cap: "Raw data and summary antibody landscapes for the 2014 - 2015 influenza season. Each point shows the post-vaccination HAI titer to a specific strain with a specified normalized antigenic distance from the vaccine strain (CA/09 in 2014/15). The dashed line and envelope show the mean and 95% credible interval (CrI) of the posterior summary antibody landscape."
+
+targets::tar_read("summary_landscape_figure_files")[[3]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-landscape-16
+#| fig-cap: "Raw data and summary antibody landscapes for the 2016 - 2017 influenza season. Each point shows the post-vaccination HAI titer to a specific strain with a specified normalized antigenic distance from the vaccine strain (CA/09 in 2016/17). The dashed line and envelope show the mean and 95% credible interval (CrI) of the posterior summary antibody landscape."
+
+targets::tar_read("summary_landscape_figure_files")[[4]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-landscape-17
+#| fig-cap: "Raw data and summary antibody landscapes for the 2017 - 2018 influenza season. Each point shows the post-vaccination HAI titer to a specific strain with a specified normalized antigenic distance from the vaccine strain (MI/15 in 2017/18). The dashed line and envelope show the mean and 95% credible interval (CrI) of the posterior summary antibody landscape."
+
+targets::tar_read("summary_landscape_figure_files")[[5]] |>
+	knitr::include_graphics()
+```
+
+{{< pagebreak >}}
+
+## Summary landscape metrics for all seasons
+
+@tbl-metrics-all shows the summary metrics for all of the seasonal cohorts. The trends for the other seasons are similar to the 2016/17 results, but we include the other seasons here for completeness. In general the metrics are overall more optimistic in the 2016/2017 and 2017/18 cohorts, but this is because those cohorts had much more young people relative to the total sample size for that season. We elected to present these results in the main text because the signal is consistent with the other seasons, but easier to see. We chose the 2016/17 cohort for the main results because it used the same vaccine as the older cohorts and contains a mix of individuals from both, so it is easier to compare to the older cohorts directly.
+
+```{r}
+#| label: tbl-metrics-all
+#| tbl-cap: "Current and novel vaccine immunogenicity metrics for each season, shown both with and without the censoring correction. The 'Current' metric set uses the homologous GMT for magnitude, the seroconversion rate across the historical panel for breadth, and the GMT across all strains for the total strength. The 'Novel' metric sets are based on the corresponding summary landscape. The novel metrics are regression line intercept for magnitude, proportion of the line above a titer of 1:40 for breadth, and area under the curve for total strength. All metrics were derived from bayesian regression models and numbers shown are the posterior mean and 95% CrI."
+
+targets::tar_read("all_seasons_metrics_table") |>
+	qs2::qs_read()
+```
+
+{{< pagebreak >}}
+
+## Subsample metrics plot for all seasons
+
+We also repeated the subsampling analysis using data from the other cohorts. Again, because the signal is stronger in the 2016/17 and 2017/18 cohorts we presented those results in the main text. The results for the other seasons showed a similar pattern, and we include them here for completeness.
+
+- @fig-subsamples-13 shows the posterior distribution of the vaccine metrics for all of the subsamples from the 2013/14 cohort data.
+- @fig-subsamples-14 shows the posterior distribution of the vaccine metrics for all of the subsamples from the 2014/15 cohort data.
+- @fig-subsamples-15 shows the posterior distribution of the vaccine metrics for all of the subsamples from the 2015/16 cohort data.
+- @fig-subsamples-16 shows the posterior distribution of the vaccine metrics for all of the subsamples from the 2016/17 cohort data. This figure is included in the main text but reproduced here for easier comparisons.
+- @fig-subsamples-17 shows the posterior distribution of the vaccine metrics for all of the subsamples from the 2017/18 cohort data.
+
+All of these figures show the current metrics for magnitude, breadth, and total strength, and the novel metrics usingt both the cartographic distance and the p-Epitope distance for each subsample. The black circles show samples from the posterior distribution of each metric. The red dotted line shows the overall mean metric estimate across the subsample, and the red x for each subsample shows the mean metric estimate for that subsample. In general, metrics with lower ICCs (less variation explained by subsample grouping) will have group means that are more similar to the overall mean. We show only 1000 posterior samples for each subsample/metric to avoid unnecessary overplotting.
+
+
+```{r}
+#| label: fig-subsamples-13
+#| fig-cap: "Estimated immunogenicity metrics for each simulated lab drawn from the 2013/14 subcohort data."
+#| out-width: 6in
+
+targets::tar_read("icc_plots")[[1]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-subsamples-14
+#| fig-cap: "Estimated immunogenicity metrics for each simulated lab drawn from the 2014/15 subcohort data."
+#| out-width: 6in
+
+targets::tar_read("icc_plots")[[2]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-subsamples-15
+#| fig-cap: "Estimated immunogenicity metrics for each simulated lab drawn from the 2015/16 subcohort data."
+#| out-width: 6in
+
+targets::tar_read("icc_plots")[[3]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-subsamples-16
+#| fig-cap: "Estimated immunogenicity metrics for each simulated lab drawn from the 2016/17 subcohort data."
+#| out-width: 6in
+
+targets::tar_read("icc_plots")[[4]] |>
+	knitr::include_graphics()
+```
+
+```{r}
+#| label: fig-subsamples-17
+#| fig-cap: "Estimated immunogenicity metrics for each simulated lab drawn from the 2017/18 subcohort data."
+#| out-width: 6in
+
+targets::tar_read("icc_plots")[[5]] |>
+	knitr::include_graphics()
+```
+
+{{< pagebreak >}}
+
+## Intraclass correlation (ICC) analysis for all seasons
+
+To quantify the results in the subsampling figures, we also include the ICC estimates for each of the seasonal cohorts. Yet again, the results were similar to the 2016/17 cohort with some outliers, but we include them here for completeness (@tbl-iccs-all).
+
+```{r}
+#| label: tbl-iccs-all
+#| tbl-cap: "Intraclass correlation coefficients (ICCs) for consistency across the subsampled studies. Each number shown is the posterior mean and 95% CrI for the ICC, which we calculated as the between-groups variance for subgroups divided by the between-groups variance for subgroups plus the residual error variance. An ICC closer to zero indicates that little of the variance in metric estimates is due to variability across subsamples, while an ICC closer to one indicates that variability across subsamples makes up the majority of the variation."
+
+targets::tar_read("full_icc_table") |>
+	qs2::qs_read()
+```
+
+{{< pagebreak >}}
+
+# References
+
+<!-- END OF FILE -->

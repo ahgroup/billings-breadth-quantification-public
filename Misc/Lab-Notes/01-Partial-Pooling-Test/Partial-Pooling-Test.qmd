@@ -1,0 +1,866 @@
+---
+title: "Partial pooling test"
+author: "Zane"
+date: last-modified
+format: docx
+execute:
+  warning: false
+  error: false
+  cache: true
+---
+
+```{r}
+#| include: false
+# So renv will do its job correctly
+box::use(
+  markdown,
+  mime,
+  rmarkdown,
+  yaml,
+  rethinking
+)
+
+source(here::here("R", "functions", "Rethinking-Helpers.R"))
+```
+
+
+Based on conversations with Amanda and Andreas, we decided to switch from
+trying to make a CI out of the individual fits to fitting a multilevel model
+using a Bayesian partial pooling approach. This script is my first test
+of this idea.
+
+# Introduction
+
+One of the main concepts for this paper was to fit linear regressions on
+titer increase vs. antigenic distance using the UGAFluVac data. This linear
+model acts like a summary of the information contained in the antigenic
+distance data, and can be used to quantify both the strength and breadth
+of the response. Going forward we adopt this terminology:
+
+* **Strength** of the response: quantifies how much of an immune response is
+generated to the homologous strain.
+* **Breadth** of the response: quantifies how much of an immune response is
+generated to antigenically distinct strains.
+* **Overall magnitude of the response**: combines strength and breadth together
+into an idea of how much of an immune response was induced overall.
+
+The basic idea of our framework for quantifying these things is that the AUC
+of the linear regression line estimates the overall magnitude of the response,
+and depends on the slope and intercept of the line. The slope captures
+information about the breadth of the response while the intercept captures
+information about the strength of the response. (See the `trapezoids.md` doc
+for a few brief thoughts I had about this.)
+
+In the first round of tests, we used a simple linear regression model (a
+"complete pooling" model in bayesian terminology) as the estimator.
+(@fig-thesis).
+
+```{r}
+#| label: fig-thesis
+#| echo: false
+#| output: true
+#| fig-cap: "From Amanda's thesis: The titer increase to the H1N1 and H3N2 virus 
+#| panels for the 2017 season of all individuals who received SD vaccination.
+#| The columns are separated by vaccine strain. The linear regression of the
+#| titerincrease with 95% confidence intervals is shown for each distance
+#| method. The distances were normalized by season. The raw data
+#| points had jitter applied with +/- 0.4 in the y-axis. Raw data points that
+#| fell outside of the y-axis bounds are not shown."
+knitr::include_graphics(here::here(
+  "Misc", "Amanda-Email-Chain","Thesis-4p2.PNG"
+))
+```
+
+However, we then realized that there was a lot of variation in trajectories
+between individuals. @fig-indivLines shows the regression line for each
+individual. After seeing this, one of our main concerns was that there appears
+to be a significant amount of heterogeneity in the data. Therefore, it would
+be better to estimate the variability in the fitted regression line from
+this "no pooling" model rather than from the complete pooling model.
+
+```{r}
+#| label: fig-indivLines
+#| echo: false
+#| output: true
+#| fig-cap: "From Amanda's email: I've added the individual linear regression
+#| lines in the background. However, with the two colors/linetypes it's very
+#| difficult to distinguish the main two lines for the groupings. This is an
+#| image that would go into Figure 1. Also it's for MI/15 instead of CA/09 so
+#| there about 200 less individuals (400 less lines considering pre/post titer)
+#| present on these plots compared to what would be later for CA/09. Also, with
+#| the change in the HAI virus panel the domains of the linear regressions are
+#| different. Although it provides more transparency in that aspect it does add
+#| to the confusion."
+knitr::include_graphics(here::here(
+  "Misc", "Amanda-Email-Chain","1-Individual-Lines-Pre-Post-alt.png"
+))
+```
+
+From this figure, we can see that there are significant amount of people who
+had a much smaller panel that didn't include the most distant viruses.
+Therefore, points with moderate antigenic distances have much more leverage and
+systematically drive their slopes down. **We still need to investigate whether**
+**these points have similarly low values for patients with the full panel.**
+There are two explanations here from my perspective.
+
+1. These people with steeper slopes have systematic differences that make
+their responses less broad.
+1. Everyone has a dip in the middle, but for people with the entire range of
+historical viruses in their panel, these points have much lower leverage and
+the regression line smooths over this bump in the trajectory.
+
+Anyways, we then ran into trouble trying to get some kind of average
+estimate (marginalized over individuals) from the no pooling estimate, but this
+is quite hard. @fig-bounds shows Amanda's attempts at combining the average
+slope and intercept into boundaries. My proposal for this method was to
+take the empirical quantiles of the regression predictions over every x-value,
+but this got us into the weeds of the best way to compute this interval.
+
+```{r}
+#| label: fig-bounds
+#| output: true
+#| echo: false
+#| fig-cap: "From emails."
+#| fig-subcap:
+#|   - I'll include the bounding lines for the titer = slope_upperSD * distance + intercept_upperSD (purple line) and opposite for lower bound (green line) since they include the other combinations (slope_lwr + intercept_upr (pink line). 
+#|   - The linear regression and the averaged Linear regression do not match. If the ranges of the data were the same it wouldn't be a problem but the data that does not have as large of a range have a steeper slope and are pulling the averaged linear regression slope results to be steeper. This isn't matched in the linear regression with all of the data since it doesn't extrapolate for those points.
+#| layout-ncol: 2
+knitr::include_graphics(here::here(
+  "Misc", "Amanda-Email-Chain","2-Bounding-Lines.png"
+))
+knitr::include_graphics(here::here(
+  "Misc", "Amanda-Email-Chain","3-Individual-Lines-biggest-bounds.png"
+))
+```
+
+So Andreas and I both agreed that one potential solution to this CI issue would
+be **partial pooling**: using a multilevel model to allow the individual
+slopes to borrow from the overall mean if they are low precision or extremely
+different, but allowing for much more individual variation. We could use a
+frequentist mixed-effects model (e.g. through `lme4`) for this, but we also
+decided it would be easier to switch to a Bayesian hierarchical model at this
+time.
+
+# The model (math part)
+
+For this example, we'll only fit a model to the 2017 season and the
+H1N1-Michigan-2015 strain as a proof-of-concept. Then we can incorporate
+season and strain effects as well.
+
+## No pooling
+This model has no pooling, the slopes are estimated with each individual's data
+and they do not share data between individuals.
+
+$$
+\begin{align*}
+\text{HAI titer}_{i, t} &\sim \text{Normal}\left(\mu_{i, t}, \sigma_{t} \right) \\
+\mu_{i, t} &= \alpha_{i, t} + \beta_{i, t} \left( \text{Ag distance} \right)_{i, t} \\
+\alpha_{i, t} &\sim \text{Normal}\left(3, 2\right) \\
+\beta_{i, t} &\sim \text{Normal}\left(0, 1\right) \\
+\sigma_{t} &\sim \text{Exponential}\left(1\right)
+\end{align*}
+$$
+
+In this model, $i$ indexes the individuals, and $t$ is an index variable
+denoting whether the measurement is pre- or post-vaccination. Note that this
+naive model does not implement a correlation between the pre- and
+post-vaccination parameters for a given individual. Basically this fits
+completely separate models for the pre and post vaccination titers, but they
+are bundled together into one neat model formula. This model makes the
+assumptions that individuals have the same variance within each
+time group.
+
+## Adaptively pooled
+But we also want to try an adaptively pooled model, because this is really
+the best way to find a compromise between the no pooling and the complete
+pooling estimates.
+**Probably need to work out what notation we want to use in our group.**
+**Not sure the notation I used here is ideal.**
+
+$$
+\begin{align*}
+\text{HAI titer}_{i, t} &\sim \text{Normal}\left(\mu_{i, t}, \sigma_{t} \right) \\
+\mu_{i, t} &= \alpha_{i, t} + \beta_{i, t} \left( \text{Ag distance} \right)_{i, t} \\
+\alpha_{i, t} &\sim \text{Normal}\left(\bar{\alpha}_{t[i]}, \varphi_{t[i]} \right) \\
+\beta_{i, t} &\sim \text{Normal}\left(\bar{\beta}_{t[i]}, \psi_{t[i]} \right) \\
+\sigma_{i, t} &\sim \text{Exponential}\left(1\right) \\
+\bar{\alpha}_j &\sim \text{Normal}\left(3, 2\right) \\
+\bar{\beta}_j &\sim \text{Normal}\left(0, 1\right) \\
+\varphi_j &\sim \text{Exponential}\left(1\right) \\
+\psi_j &\sim \text{Exponential}\left(1\right)
+\end{align*}
+$$
+
+## Complete pooling
+
+$$
+\begin{align*}
+\text{HAI titer}_{i, t} &\sim \text{Normal}\left(\mu_{i, t}, \sigma_{t} \right) \\
+\mu_{i, t} &= \alpha_{t} + \beta_{t} \left( \text{Ag distance} \right)_{i, t} \\
+\alpha_{t} &\sim \text{Normal}\left(5,5 \right) \\
+\beta_{t} &\sim \text{Normal}\left(0,5 \right) \\
+\sigma_{i, t} &\sim \text{Exponential}\left(1\right)
+\end{align*}
+$$
+
+# Model fitting (computational part)
+
+First I'll fit the models with `quap` from the rethinking package because
+this is an easy way to make sure I write down the model I want. 
+
+We'll need to do a small amount of preparatory data cleaning.
+
+```{r data cleaning}
+clean_data <- readr::read_rds(
+  here::here("data", "processed", "distance_data.rds")
+)
+dat <-
+  clean_data |>
+  dplyr::filter(
+    vaccine_fullname == "H1N1-California-2009",
+    strain_type == "H1N1",
+    # Just use year distance for now
+    method == "year"
+  ) |>
+  dplyr::mutate(
+    dplyr::across(tidyselect:::where(is.factor), forcats::fct_drop)
+  )
+# Pivot the data so we can fit pre/post models at the same time
+pivoted <-
+  dat |>
+  dplyr::select(
+    uniq_id, age, dose, strains_fullname, prevactiter, postvactiter, distance
+  ) |>
+  tidyr::pivot_longer(
+  	cols = c(prevactiter, postvactiter),
+  	names_to = c("time"),
+  	values_to = c("titer")
+  ) |>
+	dplyr::mutate(
+		distance = distance / max(distance)
+	) |>
+	dplyr::ungroup() |>
+
+  # Turn the categorical variables into integer indexes, this is required
+  # for index coding in stan
+  dplyr::mutate(
+    id = uniq_id |>
+      factor() |>
+      forcats::fct_inorder() |>
+      as.integer(),
+    t = time |>
+      factor(levels = c("prevactiter", "postvactiter")) |>
+      as.integer()
+  )
+# Split to pre and post data to avoid issues with Stan model
+pivoted_pre <- dplyr::filter(pivoted, t == 1)
+pivoted_post <- dplyr::filter(pivoted, t == 2)
+# Data list for Stan fitting
+d_pre <-
+  list(
+    # Convert IDs to integer index
+    id = pivoted_pre$id,
+    y = pivoted_pre$titer,
+    x = pivoted_pre$distance
+  )
+d_post <-
+  list(
+    # Convert IDs to integer index
+    id = pivoted_post$id,
+    y = pivoted_post$titer,
+    x = pivoted_post$distance
+  )
+```
+
+## No pooling
+
+First we'll fit the model without adaptive priors.
+
+```{r}
+#| output: false
+set.seed(12312)
+N <- 500
+m1_pre <-
+  rethinking::ulam(
+    alist(
+      y ~ dnorm(mu, s),
+      mu <- a[id] + b[id] * x,
+      a[id] ~ dnorm(3, 2),
+      b[id] ~ dnorm(0, 1),
+      s ~ dexp(1)
+    ),
+    data = d_pre,
+    chains = 8,
+    cores = 8,
+    iter = N
+  )
+m1_post <-
+  rethinking::ulam(
+    alist(
+      y ~ dnorm(mu, s),
+      mu <- a[id] + b[id] * x,
+      a[id] ~ dnorm(3, 2),
+      b[id] ~ dnorm(0, 1),
+      s ~ dexp(1)
+    ),
+    data = d_post,
+    chains = 8,
+    cores = 8,
+    iter = N
+  )
+```
+
+Next we can use the posterior samples to estimate the counterfactual effect
+of "varying" the antigenic distance for each individual -- based on the
+information we have, this is what we would expect their response to be
+for a given antigenic distance, assuming the model is correct.
+
+```{r}
+#| output: false
+# Simulate the counterfactual effects or whatever
+sim_dat <-
+  tidyr::expand_grid(
+    id = unique(d_pre$id),
+    x = seq(0, 1, 0.01)
+  )
+# Force the garbage collector to run
+gc()
+pre <- list()
+pre$samples <- rethinking::link(m1_pre, data = sim_dat, n = N)
+pre$means <- colMeans(pre$samples)
+pre$PIs <- apply(pre$samples, 2, rethinking::PI)
+# Force the garbage collector to run
+gc()
+post <- list()
+post$samples <- rethinking::link(m1_post, data = sim_dat, n = N)
+post$means <- colMeans(post$samples)
+post$PIs <- apply(post$samples, 2, rethinking::PI)
+# Fcn to put this stuff into tibble
+clean_list <- function(ls) {
+  tibble::tibble(
+    est = ls$means,
+    lwr = ls$PIs[1, ],
+    upr = ls$PIs[2, ]
+  )
+}
+# Add the simulations to the dataset -- this code looks silly but I couldn't
+# think of a better way
+preds <-
+  dplyr::bind_cols(
+    dplyr::bind_rows(
+      sim_dat,
+      sim_dat
+    ),
+    dplyr::bind_rows(
+      "1" = clean_list(pre),
+      "2" = clean_list(post),
+      .id = "t"
+    )
+  )
+```
+
+This is a plot of the individual counterfactual simualtions.
+
+```{r}
+library(ggplot2)
+preds |>
+  dplyr::mutate(
+    t = factor(t, levels = c("1", "2"), labels = c("pre", "post"))
+  ) |>
+  ggplot() +
+  aes(
+    x = x, y = est,
+    group = paste(id, t),
+    color = t
+  ) +
+  geom_line(alpha = 0.05) +
+  labs(
+    x = "Simulated antigenic distance",
+    y = "Counterfactual titer",
+    color = NULL,
+    title = "2017 season: H1N1-Michigan-2015 vaccine",
+    subtitle = "No pooling; no correlated parameters"
+  ) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9")) +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  zlib::theme_ms()
+```
+
+Now we want to answer the question about the population, not about individuals.
+We can do that by constructing an estimate the marginalizes over the individual
+effects. The simplest way to do this (but representing the least amount of
+uncertainty) is by using the average of the estimated parameters, and
+constructing means and equal-tailed credible intervals from the samples of
+the means.
+
+```{r}
+#| output: false
+# Marginalization? Prediction for new AVERAGE individual
+# See rethinking pg 428
+pred_indiv <- function(x, a, b) {
+  out <- a + b * x
+  return(out)
+}
+# Marginalize pre
+pre_posterior <- rethinking::extract.samples(m1_pre)
+a_bar <- rowMeans(pre_posterior$a)
+b_bar <- rowMeans(pre_posterior$b)
+raw_pre <- sapply(seq(0, 1, 0.01), function(x) pred_indiv(x, a_bar, b_bar))
+pre_mu <- colMeans(raw_pre)
+pre_PI <- apply(raw_pre, 2, rethinking::PI)
+# Marginalize post
+post_posterior <- rethinking::extract.samples(m1_post)
+a_bar <- rowMeans(post_posterior$a)
+b_bar <- rowMeans(post_posterior$b)
+raw_post <- sapply(seq(0, 1, 0.01), function(x) pred_indiv(x, a_bar, b_bar))
+post_mu <- colMeans(raw_post)
+post_PI <- apply(raw_post, 2, rethinking::PI)
+# Make the data frame
+means_dat <-
+  tibble::tibble(
+    x = c(seq(0, 1, 0.01), seq(0, 1, 0.01)),
+    est = c(pre_mu, post_mu),
+    lwr = c(pre_PI[1, ], post_PI[1, ]),
+    upr = c(pre_PI[2, ], post_PI[2, ]),
+    time = factor(
+      rep(c("pre", "post"), each = length(pre_mu)),
+      levels = c("pre", "post")
+    )
+  )
+```
+
+```{r}
+p1 <-preds |>
+  dplyr::mutate(
+    t = factor(t, levels = c("1", "2"), labels = c("pre", "post"))
+  ) |>
+  ggplot() +
+  aes(
+    x = x, y = est,
+    group = paste(id, t),
+    color = t
+  ) +
+  geom_line(alpha = 0.05) +
+  geom_ribbon(
+    data = means_dat,
+    aes(x = x, ymin = lwr, ymax = upr, y = est, fill = time),
+    alpha = 0.5,
+    inherit.aes = FALSE,
+    show.legend = FALSE
+  ) +
+  geom_line(
+    data = means_dat,
+    aes(x = x, y = est, color = time),
+    linewidth = 0.95, alpha = 1,
+    inherit.aes = FALSE
+  ) +
+  labs(
+    x = "\nSimulated antigenic distance",
+    y = "Counterfactual titer\n",
+    color = NULL,
+    subtitle = "No pooling"
+  ) +
+  scale_color_manual(values = rev(c("#E69F00", "#56B4E9"))) +
+  scale_fill_manual(values = rev(c("#E69F00", "#56B4E9"))) +
+  scale_y_continuous(
+    limits = c(-2.5, 9),
+    breaks = seq(-2, 8, 2)
+  ) +
+  coord_cartesian(expand = FALSE) +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  zlib::theme_ms() +
+  theme(
+    plot.title = element_text(hjust = 0, margin = margin(0, 0, 5, 0))
+  )
+```
+
+## Adaptive
+
+Next we'll fit the models with adaptive priors.
+
+```{r}
+#| output: false
+set.seed(12312)
+N <- 1000
+m2_pre <-
+  rethinking::ulam(
+    alist(
+      y ~ dnorm(mu, s),
+      mu <- a[id] + b[id] * x,
+      a[id] ~ dnorm(abar, phi),
+      b[id] ~ dnorm(bbar, psi),
+      abar ~ dnorm(3, 2),
+      bbar ~ dnorm(0, 1),
+      phi ~ dexp(1),
+      psi ~ dexp(1),
+      s ~ dexp(1)
+    ),
+    data = d_pre,
+    chains = 4,
+    cores = 4,
+    iter = N
+  )
+m2_post <-
+  rethinking::ulam(
+    alist(
+      y ~ dnorm(mu, s),
+      mu <- a[id] + b[id] * x,
+      a[id] ~ dnorm(abar, phi),
+      b[id] ~ dnorm(bbar, psi),
+      abar ~ dnorm(3, 2),
+      bbar ~ dnorm(0, 1),
+      phi ~ dexp(1),
+      psi ~ dexp(1),
+      s ~ dexp(1)
+    ),
+    data = d_post,
+    chains = 4,
+    cores = 4,
+    iter = N
+  )
+```
+
+Get the simulations
+
+```{r}
+# Force the garbage collector to run
+gc()
+pre <- list()
+pre$samples <- rethinking::link(m2_pre, data = sim_dat, n = N)
+pre$means <- colMeans(pre$samples)
+pre$PIs <- apply(pre$samples, 2, rethinking::PI)
+# Force the garbage collector to run
+gc()
+post <- list()
+post$samples <- rethinking::link(m2_post, data = sim_dat, n = N)
+post$means <- colMeans(post$samples)
+post$PIs <- apply(post$samples, 2, rethinking::PI)
+# Add the simulations to the dataset -- this code looks silly but I couldn't
+# think of a better way
+preds_m2 <-
+  dplyr::bind_cols(
+    dplyr::bind_rows(
+      sim_dat,
+      sim_dat
+    ),
+    dplyr::bind_rows(
+      "1" = clean_list(pre),
+      "2" = clean_list(post),
+      .id = "t"
+    )
+  )
+```
+
+```{r}
+preds_m2 |>
+  dplyr::mutate(
+    t = factor(t, levels = c("1", "2"), labels = c("pre", "post"))
+  ) |>
+  ggplot() +
+  aes(
+    x = x, y = est,
+    group = paste(id, t),
+    color = t
+  ) +
+  geom_line(alpha = 0.05) +
+  labs(
+    x = "Simulated antigenic distance",
+    y = "Counterfactual titer",
+    color = NULL,
+    title = "2017 season: H1N1-Michigan-2015 vaccine",
+    subtitle = "Adaptive pooling; no correlated parameters"
+  ) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9")) +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  zlib::theme_ms() +
+  theme(
+    plot.title = element_text(hjust = 0, margin = margin(0, 0, 5, 0))
+  )
+```
+
+Marginal CIs for the partial pooling model
+
+```{r}
+#| output: false
+# Marginalize pre
+pre_posterior <- rethinking::extract.samples(m2_pre)
+a_bar <- rowMeans(pre_posterior$a)
+b_bar <- rowMeans(pre_posterior$b)
+raw_pre <- sapply(seq(0, 1, 0.01), function(x) pred_indiv(x, a_bar, b_bar))
+pre_mu <- colMeans(raw_pre)
+pre_PI <- apply(raw_pre, 2, rethinking::PI)
+# Marginalize post
+post_posterior <- rethinking::extract.samples(m2_post)
+a_bar <- rowMeans(post_posterior$a)
+b_bar <- rowMeans(post_posterior$b)
+raw_post <- sapply(seq(0, 1, 0.01), function(x) pred_indiv(x, a_bar, b_bar))
+post_mu <- colMeans(raw_post)
+post_PI <- apply(raw_post, 2, rethinking::PI)
+# Make the data frame
+means_dat_m2 <-
+  tibble::tibble(
+    x = c(seq(0, 1, 0.01), seq(0, 1, 0.01)),
+    est = c(pre_mu, post_mu),
+    lwr = c(pre_PI[1, ], post_PI[1, ]),
+    upr = c(pre_PI[2, ], post_PI[2, ]),
+    time = factor(
+      rep(c("pre", "post"), each = length(pre_mu)),
+      levels = c("pre", "post")
+    )
+  )
+```
+
+```{r}
+p2 <- preds_m2 |>
+  dplyr::mutate(
+    t = factor(t, levels = c("1", "2"), labels = c("pre", "post"))
+  ) |>
+  ggplot() +
+  aes(
+    x = x, y = est,
+    group = paste(id, t),
+    color = t
+  ) +
+  geom_line(alpha = 0.05) +
+  geom_ribbon(
+    data = means_dat_m2,
+    aes(x = x, ymin = lwr, ymax = upr, y = est, fill = time),
+    alpha = 0.5,
+    inherit.aes = FALSE,
+    show.legend = FALSE
+  ) +
+  geom_line(
+    data = means_dat_m2,
+    aes(x = x, y = est, color = time),
+    linewidth = 0.95, alpha = 1,
+    inherit.aes = FALSE
+  ) +
+  labs(
+    x = "\nSimulated antigenic distance",
+    y = "\nCounterfactual titer\n",
+    color = NULL,
+    subtitle = "Adaptive (partial) pooling"
+  ) +
+  scale_color_manual(values = rev(c("#E69F00", "#56B4E9"))) +
+  scale_fill_manual(values = rev(c("#E69F00", "#56B4E9"))) +
+  scale_y_continuous(
+    limits = c(-2.5, 9),
+    breaks = seq(-2, 8, 2)
+  ) +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  zlib::theme_ms() +
+  coord_cartesian(expand = FALSE) +
+  theme(
+    plot.title = element_text(hjust = 0, margin = margin(0, 0, 5, 0))
+  )
+```
+
+## Complete pooling
+
+Repeat everything with complete pooling model
+
+```{r}
+#| output: false
+set.seed(12312)
+N <- 500
+m3_pre <-
+  rethinking::ulam(
+    alist(
+      y ~ dnorm(mu, s),
+      mu <- a + b * x,
+      a ~ dnorm(3, 2),
+      b ~ dnorm(0, 1),
+      s ~ dexp(1)
+    ),
+    data = d_pre,
+    chains = 4,
+    cores = 4,
+    iter = N
+  )
+m3_post <-
+  rethinking::ulam(
+    alist(
+      y ~ dnorm(mu, s),
+      mu <- a + b * x,
+      a ~ dnorm(3, 2),
+      b ~ dnorm(0, 1),
+      s ~ dexp(1)
+    ),
+    data = d_post,
+    chains = 4,
+    cores = 4,
+    iter = N
+  )
+```
+
+Get the simulations
+
+```{r}
+#| output: false
+# Force the garbage collector to run
+gc()
+pre <- list()
+pre$samples <- rethinking::link(m3_pre, data = sim_dat, n = N)
+pre$means <- colMeans(pre$samples)
+pre$PIs <- apply(pre$samples, 2, rethinking::PI)
+# Force the garbage collector to run
+gc()
+post <- list()
+post$samples <- rethinking::link(m3_post, data = sim_dat, n = N)
+post$means <- colMeans(post$samples)
+post$PIs <- apply(post$samples, 2, rethinking::PI)
+# Add the simulations to the dataset -- this code looks silly but I couldn't
+# think of a better way
+preds_m3 <-
+  dplyr::bind_cols(
+    dplyr::bind_rows(
+      sim_dat,
+      sim_dat
+    ),
+    dplyr::bind_rows(
+      "1" = clean_list(pre),
+      "2" = clean_list(post),
+      .id = "t"
+    )
+  )
+```
+
+```{r}
+preds_m3 |>
+  dplyr::mutate(
+    t = factor(t, levels = c("1", "2"), labels = c("pre", "post"))
+  ) |>
+  ggplot() +
+  aes(
+    x = x, y = est,
+    group = paste(id, t),
+    color = t
+  ) +
+  geom_line(alpha = 0.05) +
+  labs(
+    x = "Simulated antigenic distance",
+    y = "Counterfactual titer",
+    color = NULL,
+    title = "2017 season: H1N1-Michigan-2015 vaccine",
+    subtitle = "Adaptive pooling; no correlated parameters"
+  ) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9")) +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  zlib::theme_ms() +
+  theme(
+    plot.title = element_text(hjust = 0, margin = margin(0, 0, 5, 0))
+  )
+```
+
+Marginal CIs for the partial pooling model
+
+```{r}
+#| output: false
+# Marginalize pre
+pre_posterior <- rethinking::extract.samples(m3_pre)
+pre_posterior <- lapply(pre_posterior, \(x) matrix(x, ncol = 1))
+a_bar <- rowMeans(pre_posterior$a)
+b_bar <- rowMeans(pre_posterior$b)
+raw_pre <- sapply(seq(0, 1, 0.01), function(x) pred_indiv(x, a_bar, b_bar))
+pre_mu <- colMeans(raw_pre)
+pre_PI <- apply(raw_pre, 2, rethinking::PI)
+# Marginalize post
+post_posterior <- rethinking::extract.samples(m3_post)
+post_posterior <- lapply(post_posterior, \(x) matrix(x, ncol = 1))
+a_bar <- rowMeans(post_posterior$a)
+b_bar <- rowMeans(post_posterior$b)
+raw_post <- sapply(seq(0, 1, 0.01), function(x) pred_indiv(x, a_bar, b_bar))
+post_mu <- colMeans(raw_post)
+post_PI <- apply(raw_post, 2, rethinking::PI)
+# Make the data frame
+means_dat_m3 <-
+  tibble::tibble(
+    x = c(seq(0, 1, 0.01), seq(0, 1, 0.01)),
+    est = c(pre_mu, post_mu),
+    lwr = c(pre_PI[1, ], post_PI[1, ]),
+    upr = c(pre_PI[2, ], post_PI[2, ]),
+    time = factor(
+      rep(c("pre", "post"), each = length(pre_mu)),
+      levels = c("pre", "post")
+    )
+  )
+```
+
+```{r}
+p3 <- preds_m3 |>
+  dplyr::mutate(
+    t = factor(t, levels = c("1", "2"), labels = c("pre", "post"))
+  ) |>
+  ggplot() +
+  aes(
+    x = x, y = est,
+    group = paste(id, t),
+    color = t
+  ) +
+  geom_line(alpha = 0.05) +
+  geom_ribbon(
+    data = means_dat_m3,
+    aes(x = x, ymin = lwr, ymax = upr, y = est, fill = time),
+    alpha = 0.5,
+    inherit.aes = FALSE,
+    show.legend = FALSE
+  ) +
+  geom_line(
+    data = means_dat_m3,
+    aes(x = x, y = est, color = time),
+    linewidth = 0.95, alpha = 1,
+    inherit.aes = FALSE
+  ) +
+  labs(
+    x = "\nSimulated antigenic distance",
+    y = "\nCounterfactual titer\n",
+    color = NULL,
+    subtitle = "Complete pooling"
+  ) +
+  scale_color_manual(values = rev(c("#E69F00", "#56B4E9"))) +
+  scale_fill_manual(values = rev(c("#E69F00", "#56B4E9"))) +
+  scale_y_continuous(
+    limits = c(-2.5, 9),
+    breaks = seq(-2, 8, 2)
+  ) +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  zlib::theme_ms() +
+  coord_cartesian(expand = FALSE) +
+  theme(
+    plot.title = element_text(hjust = 0, margin = margin(0, 0, 5, 0))
+  )
+```
+
+I think somewhere I broke the CIs for the code in this document, but they
+will be fixed in the next one. The function to calculate them works, but this
+code is old and doesn't use the rethinking helpers functions I wrote.
+
+{{< pagebreak >}}
+
+# Comparison
+
+```{r}
+#| fig-width: 6.5
+#| fig-height: 8
+#| fig-align: "center"
+#| echo: false
+library(patchwork)
+p1 + p2 + p3 +
+  patchwork::plot_layout(guides = "collect", ncol = 3) +
+  plot_annotation(title = element_text("H1N1-California-2009 vaccine")) &
+  theme(
+    legend.position = "bottom"
+  )
+
+ggplot2::ggsave(
+	here::here("Andreas-Poster-Plots", "model-test.png"),
+	width = 11, height = 8.5
+)
+```
+
+These are the "type 1" credible intervals from Andrew Heiss' blog post
+(allegedly the CIs for the global mean). The type 3 credible intervals
+would be much larger. These also use `link` instead of `sim` so they are
+credible intervals for the conditional mean, not for the individual outcome.
+
+<!-- END OF FILE -->

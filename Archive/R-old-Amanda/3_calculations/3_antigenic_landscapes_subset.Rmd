@@ -1,0 +1,181 @@
+---
+title: "3_Antibody Landscapes"
+author: "Amanda Skarlupka"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+#Purpose:
+
+The purpose of this code is to create the models and figures for the antibody landscapes with the subsetted datasets.
+
+#Prerequisties:
+
+Need to Run:
+
+* ../code/1_cleaning/1_cleaning_code.R
+* ../code/1_cleaning/2_pepitope_calculator.Rmd
+* ../code/1_cleaning/3_acmap_creation.R
+* ../code/1_cleaning/4_acmap_distances.Rmd
+
+# Preparing the analysis:
+
+## Load Packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warnings = F)
+library(ggrepel) #repel
+library(cowplot) #Plot grids
+library(latex2exp) #Math expressions
+library(tidyverse) #Working with data
+
+source(here::here("R/functions/3_antigenic_landscapes.R")) #Contains the functions for creating linear models, result dataframes, and plots
+#All warnings are suppressed because it's ggplot warnings about NAs for plot
+
+```
+
+## Cleaning Data
+
+The data is filtered to remove 2020 season, individuals who did not have a titer increase, HAI results that didn't have a matching distance measurement, and the Type A influenza strains. The data only included the three distance measures: cartography, year, and p-epitope. 
+
+Three different normalization schemes were used: season-based, strain-based, and vaccine-based. 
+```{r data}
+# Is this a subset of data?
+
+data <- readRDS(file = here::here("data/processed/subset_analysis/distance/distance_data.rds")) %>%
+  dplyr::arrange(subset) %>%
+  prepare_data(dataframe = .,
+               subset = TRUE)
+
+    saveRDS(object = data,
+            file = here::here("data/processed/subset_analysis/auc_data/subset.rds"))
+
+```
+
+# Antigenic Landscapes
+
+
+Create the different linear regression models. The linear regression models are by the normalization scheme, the outcome of interest, and the different dataset filtering (SD only and SD/HD comparison).
+
+```{r mdl-datasets}
+
+# Run model:
+mdl_list <- vector(mode = "list")
+for(i in c("Strain", "Season")) { #Not interested in Vaccine
+  for (j in c("titerincrease")) { #Not interested in prepost
+    for (n in c("SD", "SDHD")) {
+      x <- paste(i, j, n)
+      mdl_list[[x]] <- linear_model(dataframe = data,
+                                    normalization = i,
+                                    outcome = j,
+                                    dose = n,
+                                    subset = TRUE)
+        
+
+
+  saveRDS(mdl_list[[x]],
+              file = here::here(paste0("data/processed/subset_analysis/linear_regression_models/", i, " ", j, " ", n, ".rds")))
+}}}
+
+## Determine Sample Sizes:
+  
+sample_size_list <- vector(mode = "list")
+
+for (i in 1:length(mdl_list)) {
+  x <- names(mdl_list[i])
+  sample_size_list[[x]] <- sample_size_fun(dataframe = mdl_list[[i]],
+                                           subset = TRUE)
+}
+
+## Determine Slopes: 
+
+slope_list <- vector(mode = "list")
+
+for (i in 1:length(mdl_list)) {
+  x <- names(mdl_list[i])
+  slope_list[[x]] <- equation_labels(dataframe = mdl_list[[i]],
+                                     subset = TRUE)
+}
+
+## Strain Titer Increase: 
+
+for (j in c("SDHD", "SD")) {
+
+plt_list <- vector(mode = "list")
+
+for (i in c("H1N1", "H3N2")) {
+  
+  plt_list[[i]] <- strain_plots_subset(dataframe = data,
+                                subtype_to_plot = i,
+                                mdl_to_use = paste0("Strain titerincrease ", j),
+                                mdl = mdl_list,
+                                slopes = slope_list,
+                                sample_size = sample_size_list)
+  if (j == "SDHD") {
+    cowplot::plot_grid(plotlist = plt_list[[i]],
+                       ncol = 1,
+                       labels = "AUTO") %>%
+        cowplot::ggsave2(filename = here::here(paste0("results/figures/subset_analysis/", i, "_sdhd_inc_strain.png")), 
+                   width = 4,
+                   height = 5*length(plt_list[[i]]),
+                   scale = 1.5,
+                   limitsize = FALSE)
+  }
+
+
+if (j == "SD") {
+  
+cowplot::plot_grid(plotlist = plt_list,
+                   nrow = 2,
+                   ncol = 1,
+                   rel_heights = c(1,1.5),
+                   labels = "AUTO"
+                   ) %>%
+  cowplot::ggsave2(filename = here::here(paste0("results/figures/subset_analysis/", tolower(j), "_inc_strain.png")), 
+                   width = 4,
+                   height = 10,
+                   scale = 1.5)
+  } 
+  
+}
+}
+
+```
+
+```{r}
+
+
+## Season vaccine titerincrease
+
+for (j in c("SD")) {
+  
+plt_list <- vector(mode = "list")
+
+for (i in 2014:2019) {
+  x <- paste0("season_", i)
+  
+  plt_list[[x]] <- season_plots_subset(dataframe = data,
+                                season_to_plot = i,
+                                mdl_to_use = paste0("Season titerincrease ", j),
+                                mdl = mdl_list,
+                                slopes = slope_list,
+                                sample_size = sample_size_list)
+}
+
+if (j == "SD") {
+  
+  cowplot::plot_grid(plotlist = plt_list,
+                   ncol = 1,
+                   labels = "AUTO"
+                   ) %>%
+  cowplot::ggsave2(filename = here::here(paste0("results/figures/subset_analysis/", tolower(j), "_inc_season.png")), 
+                   width = 4,
+                   height = 5*length(plt_list),
+                   scale = 1.5)
+  
+}
+
+}
+
+
+```
+

@@ -1,0 +1,373 @@
+---
+title: "MLM variance decomposition"
+format: html
+---
+
+Suppose I have a data set with three variables: $y$, an outcome I want to understand, $x$, a variable which covaries with $x$ but we can assume to be measured perfectly, and $g$, a grouping variable that indentifies one of several clusters (e.g. subjects) a measurement is from. I fit the data with a multilevel (hierarchical) regression model of the form
+$$y_i = (\beta_0 + b_{0,g[i]}) + (\beta_1 + b_{1, g[i]})x_i + \varepsilon_i$$
+where $i = 1, \ldots, n$ indexes observations in my dataset and $g[i]$ is the value of the variable $g$ for observation $i$.
+
+In `lme4` notation this model would be `y ~ 1 + x + (1 + x | g)`, allowing every cluster to have its own slope and intercept, while also computing an overall slope and intercept.
+
+The question I want to answer with this model is **which is more important for explaining the outcome variable: the effect of $x$ or the between-cluster variability?**
+
+I think a practical way to answer this question might be to partition the variance (it is ok to assume the error distribution is Normal if that matters), but I don't really know how to do this. I know that if I fit a non-hierarchical model, i.e., `y ~ 1 + x`, the variance can be partitioned into what is explained by the regression and what isn't.
+
+I also know that when I fit the model `y ~ 1 + x + (1 + x | g)`, I estimate a variance component explained by the random effects grouped by `g`. From this model, is it possible to decompose the variance into the portion explained by the fixed effects, the portion explained by the random effects, and the residual variability? If so, how do I do that?
+
+Is there a better way to answer this question?
+
+For a concrete example, first we simulate a dataset. This first dataset will have very large between-subjects variances.
+
+```{r}
+set.seed(101)
+n_subjects <- 20
+
+# Assume balanced data and perfectly observed x values -- this is true for
+# our real antigenic distance data, mostly (per year and subtype).
+# First generate the values of the predictor variable (x)
+x_values_per_subject <- c(0, 0.1, 0.25, 0.5, 0.75, 0.9, 1)
+x <- rep(x_values_per_subject, times = n_subjects)
+
+# And then the values of the grouping variable (g) which represents a cluster
+# like subjects. Since the design is balanced it's easy to make a vector with
+# the correct labels.
+g <- rep(1:n_subjects, each = length(x_values_per_subject))
+
+# Now simulate parameters. First the intercept
+global_b0 <- 5
+individual_b0 <- rnorm(n_subjects, 0, 5)
+
+# And now the slope
+global_b1 <- -6
+individual_b1 <- rnorm(n_subjects, 0, 2)
+
+# Now we can calculate the conditional mean using the regression formula
+# mu_i = beta_0 + b_0[i] + (beta_1 + b_1[i]) * x
+mu <- global_b0 + individual_b0[g] + (global_b1 + individual_b1[g]) * x
+
+# Set the residual variance and draw samples of the error, then the observed
+# outcome is error + mean.
+residual_variance <- 1
+error_variate <- rnorm(length(mu), 0, residual_variance)
+y <- mu + error_variate
+
+# Put it into a data frame for convenience. Probably would've been easier to
+# do all those steps inside of a tibble.
+observed_data <- data.frame(x, g, y)
+```
+
+We should make a quick plot of the trajectories to ensure they look valid.
+
+```{r}
+colors <- colorRampPalette(c("#f7fbff", "#08306b"))(n_subjects)
+plot(
+	NULL, NULL,
+	xlim = range(x_values_per_subject),
+	ylim = range(observed_data$y),
+	xlab = "x", ylab = "y"
+)
+for (i in 1:n_subjects) {
+	this_g <- subset(observed_data, g == i)
+	lines(this_g$x, this_g$y, col = colors[[i]], type = "b")
+}
+```
+
+There is an overall trend downwards like we want, but with a large variance between individuals, some individauls even appear to have flat slopes.
+
+Now we fit the multilevel model of interest, plus through in the complete pooling (OLS) model just to make a simple comparison.
+
+```{r}
+library(lme4)
+simple_model <- lm(y ~ 1 + x, data = observed_data)
+multilevel_model <- lme4::lmer(
+	y ~ 1 + x + (1 + x | g),
+	data = observed_data, REML = FALSE
+)
+```
+
+Even though the LRT / AIC are not *really* OK to use here because we are testing whether a parameter (the random effects variance) is on the boundary of its parameter space, they are usually pretty good and if the differences are large it's OK to assume the random effects variance is large relative to the data.
+
+```{r}
+summary(simple_model)
+summary(multilevel_model)
+anova(multilevel_model, simple_model)
+```
+
+We should *technically* do a simulation based test, but we won't. Because of course for Bayesian models we can always compare the LOO-ELPD and that will give us correct insight about the difference in predictive power. Of course testing the random effect is not what we care about anyways, we know it should be there.
+
+Now we want to decompose the variance into the part explained by the fixed effects and the part explained by the random effects.
+
+```{r}
+# Get the variance covariance matrix
+vc <- VarCorr(multilevel_model)
+# Extract the SDs for the random effects and square to get the varainces
+random_var <- attr(vc$g, "stddev")^2
+# Extract the residual unexplained variance parameter / sigma and square
+residual_var <- attr(vc, "sc")^2
+
+# Now we need to get the variance of the fixed effects, this is the most
+# contentious part.
+fixed_var <- predict(multilevel_model, re.form = NA) |> var()
+
+total_var <- sum(random_var, residual_var, fixed_var)
+
+sum(random_var) / fixed_var
+```
+
+```{r}
+MuMIn::r.squaredGLMM(multilevel_model)
+```
+
+```{r}
+r2glmm::r2beta(multilevel_model, method = "kr", partial = T, data = observed_data)
+
+r2glmm::r2beta(multilevel_model, method = "sgv", partial = T, data = observed_data)
+```
+
+If we fit it in a Bayesian way it is easier to get estimates and CIs of the explained variance components.
+
+```{r}
+library(brms)
+bayes_fit <- brms::brm(
+	y ~ 1 + x + (1 + x | g),
+	data = observed_data,
+	prior = c(
+		brms::prior(normal(0, 5), class = "Intercept"),
+		brms::prior(normal(0, 2), class = "b"),
+		brms::prior(student_t(3, 0, 1), class = "sd"),
+		brms::prior(student_t(3, 0, 1), class = "sigma")
+	),
+	seed = 44541,
+	warmup = 1000,
+	iter = 3000,
+	chains = 12,
+	cores = 12
+)
+```
+
+
+```{r}
+# This seems to be the best method
+# But how do we interpret the statistic?
+performance::variance_decomposition(bayes_fit)
+
+preds_n_rand <- brms::posterior_predict(bayes_fit, re_formula = NA, summary = FALSE) |>
+	apply(1, var)
+
+preds_y_rand <- brms::posterior_predict(bayes_fit, re_formula = NULL, summary = FALSE) |>
+	apply(1, var)
+
+# tv <- var(observed_data$y - mean(observed_data$y))
+# post <- brms::as_draws_df(bayes_fit)
+# 
+# rv_int <- post$sd_g__Intercept ^ 2
+# rv_x <- post$sd_g__x ^ 2
+# 
+# residual_var_est <- post$sigma ^ 2
+# 
+# total_var <- preds_n_rand + rv_int + rv_x + residual_var_est
+# ggdist::mean_hdci(preds_n_rand / total_var)
+
+ggdist::mean_hdci(preds_y_rand / preds_n_rand)
+```
+
+Now we can simulate it again with a new dataset that has an intentionally low contribution of the IIV.
+
+```{r}
+set.seed(101)
+n_subjects <- 20
+
+# Assume balanced data and perfectly observed x values -- this is true for
+# our real antigenic distance data, mostly (per year and subtype).
+# First generate the values of the predictor variable (x)
+x_values_per_subject <- c(0, 0.1, 0.25, 0.5, 0.75, 0.9, 1)
+x <- rep(x_values_per_subject, times = n_subjects)
+
+# And then the values of the grouping variable (g) which represents a cluster
+# like subjects. Since the design is balanced it's easy to make a vector with
+# the correct labels.
+g <- rep(1:n_subjects, each = length(x_values_per_subject))
+
+# Now simulate parameters. First the intercept
+global_b0 <- 5
+individual_b0 <- rnorm(n_subjects, 0, 0.5)
+
+# And now the slope
+global_b1 <- -6
+individual_b1 <- rnorm(n_subjects, 0, 0.25)
+
+# Now we can calculate the conditional mean using the regression formula
+# mu_i = beta_0 + b_0[i] + (beta_1 + b_1[i]) * x
+mu <- global_b0 + individual_b0[g] + (global_b1 + individual_b1[g]) * x
+
+# Set the residual variance and draw samples of the error, then the observed
+# outcome is error + mean.
+residual_variance <- 1
+error_variate <- rnorm(length(mu), 0, residual_variance)
+y <- mu + error_variate
+
+# Put it into a data frame for convenience. Probably would've been easier to
+# do all those steps inside of a tibble.
+observed_data <- data.frame(x, g, y)
+```
+
+```{r}
+colors <- colorRampPalette(c("#f7fbff", "#08306b"))(n_subjects)
+plot(
+	NULL, NULL,
+	xlim = range(x_values_per_subject),
+	ylim = range(observed_data$y),
+	xlab = "x", ylab = "y"
+)
+for (i in 1:n_subjects) {
+	this_g <- subset(observed_data, g == i)
+	lines(this_g$x, this_g$y, col = colors[[i]], type = "b")
+}
+```
+
+Now we see that most of the variance comes from either the fixed effect value of x, or from the residual unexplained variance.
+
+```{r}
+bayes_fit <- brms::brm(
+	y ~ 1 + x + (1 + x | g),
+	data = observed_data,
+	prior = c(
+		brms::prior(normal(0, 5), class = "Intercept"),
+		brms::prior(normal(0, 2), class = "b"),
+		brms::prior(student_t(3, 0, 1), class = "sd"),
+		brms::prior(student_t(3, 0, 1), class = "sigma")
+	),
+	seed = 44541,
+	warmup = 1000,
+	iter = 3000,
+	chains = 12,
+	cores = 12
+)
+```
+
+```{r}
+# This seems to be the best method
+# But how do we interpret the statistic?
+performance::variance_decomposition(bayes_fit)
+
+preds_n_rand <- brms::posterior_predict(bayes_fit, re_formula = NA, summary = FALSE) |>
+	apply(1, var)
+
+preds_y_rand <- brms::posterior_predict(bayes_fit, re_formula = NULL, summary = FALSE) |>
+	apply(1, var)
+
+# tv <- var(observed_data$y - mean(observed_data$y))
+# post <- brms::as_draws_df(bayes_fit)
+# 
+# rv_int <- post$sd_g__Intercept ^ 2
+# rv_x <- post$sd_g__x ^ 2
+# 
+# residual_var_est <- post$sigma ^ 2
+# 
+# total_var <- preds_n_rand + rv_int + rv_x + residual_var_est
+# ggdist::mean_hdci(preds_n_rand / total_var)
+
+ggdist::mean_hdci(preds_y_rand / preds_n_rand)
+```
+
+And again even lower, basically negligible hopefully.
+
+```{r}
+set.seed(101)
+n_subjects <- 20
+
+# Assume balanced data and perfectly observed x values -- this is true for
+# our real antigenic distance data, mostly (per year and subtype).
+# First generate the values of the predictor variable (x)
+x_values_per_subject <- c(0, 0.1, 0.25, 0.5, 0.75, 0.9, 1)
+x <- rep(x_values_per_subject, times = n_subjects)
+
+# And then the values of the grouping variable (g) which represents a cluster
+# like subjects. Since the design is balanced it's easy to make a vector with
+# the correct labels.
+g <- rep(1:n_subjects, each = length(x_values_per_subject))
+
+# Now simulate parameters. First the intercept
+global_b0 <- 5
+individual_b0 <- rnorm(n_subjects, 0, 0.1)
+
+# And now the slope
+global_b1 <- -6
+individual_b1 <- rnorm(n_subjects, 0, 0.005)
+
+# Now we can calculate the conditional mean using the regression formula
+# mu_i = beta_0 + b_0[i] + (beta_1 + b_1[i]) * x
+mu <- global_b0 + individual_b0[g] + (global_b1 + individual_b1[g]) * x
+
+# Set the residual variance and draw samples of the error, then the observed
+# outcome is error + mean.
+residual_variance <- 0.5
+error_variate <- rnorm(length(mu), 0, residual_variance)
+y <- mu + error_variate
+
+# Put it into a data frame for convenience. Probably would've been easier to
+# do all those steps inside of a tibble.
+observed_data <- data.frame(x, g, y)
+```
+
+```{r}
+colors <- colorRampPalette(c("#f7fbff", "#08306b"))(n_subjects)
+plot(
+	NULL, NULL,
+	xlim = range(x_values_per_subject),
+	ylim = range(observed_data$y),
+	xlab = "x", ylab = "y"
+)
+for (i in 1:n_subjects) {
+	this_g <- subset(observed_data, g == i)
+	lines(this_g$x, this_g$y, col = colors[[i]], type = "b")
+}
+```
+
+Now we see that most of the variance comes from either the fixed effect value of x, or from the residual unexplained variance.
+
+```{r}
+bayes_fit <- brms::brm(
+	y ~ 1 + x + (1 + x | g),
+	data = observed_data,
+	prior = c(
+		brms::prior(normal(0, 5), class = "Intercept"),
+		brms::prior(normal(0, 2), class = "b"),
+		brms::prior(student_t(3, 0, 1), class = "sd"),
+		brms::prior(student_t(3, 0, 1), class = "sigma")
+	),
+	seed = 44541,
+	warmup = 1000,
+	iter = 3000,
+	chains = 12,
+	cores = 12
+)
+```
+
+```{r}
+# This seems to be the best method
+# But how do we interpret the statistic?
+performance::variance_decomposition(bayes_fit)
+
+preds_n_rand <- brms::posterior_predict(bayes_fit, re_formula = NA, summary = FALSE) |>
+	apply(1, var)
+
+preds_y_rand <- brms::posterior_predict(bayes_fit, re_formula = NULL, summary = FALSE) |>
+	apply(1, var)
+
+# tv <- var(observed_data$y - mean(observed_data$y))
+# post <- brms::as_draws_df(bayes_fit)
+# 
+# rv_int <- post$sd_g__Intercept ^ 2
+# rv_x <- post$sd_g__x ^ 2
+# 
+# residual_var_est <- post$sigma ^ 2
+# 
+# total_var <- preds_n_rand + rv_int + rv_x + residual_var_est
+# ggdist::mean_hdci(preds_n_rand / total_var)
+
+ggdist::mean_hdci(preds_y_rand / preds_n_rand)
+```
+
+After experimentation note that this statistic is in $[1, \infty)$ -- it will be exactly 1 when the random effects do nothing at all, and as the fixed effects dwindle in importance it will become large. Can interpret this statistic as "including the random effects in the posterior predictions explains X times more variance than the conditional fixed effects alone."

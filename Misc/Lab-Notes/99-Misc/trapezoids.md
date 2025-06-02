@@ -1,0 +1,5 @@
+maybe something to talk about with the terminology stuff Andreas mentioned earlier, maybe this is just crazy because it is late: in some sense the intercept seems to capture more information than the slope in this framework.
+
+because we always expect the homologous response to be highest, knowing the intercept sort of constrains where the slope is allowed to be -- if you think about the AUC as the area of a trapezoid with fixed height (1 due to normalization) the area is constrained between 0.5(intercept) and 1.0(intercept) and the slope only really penalizes it. whereas if you know the slope, you don't know anything about the area because the intercept is unconstrained (other than our practical knowledge of what titers should be).
+
+Mainly what I'm trying to say is I think it's worth maybe thinking more about the intercept vs AUC and how important it is to have "orthogonal" measurements of strength/breadth like Ben suggested.

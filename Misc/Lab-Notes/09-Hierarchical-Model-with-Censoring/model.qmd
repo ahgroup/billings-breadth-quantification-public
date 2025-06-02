@@ -1,0 +1,68 @@
+---
+title: "Hierarchical model with censoring"
+date: last-modified
+date-format: iso
+format: html
+---
+
+In this document, we'll lay out the hierarchical model with censoring correction
+that we'll fit to the antibody landscape data.
+
+The model we want to fit is conceptually simple. We want to fit a linear
+regression model with titer increase (or post-titer or pre-titer depending on
+the situation) as the outcome and antigenic distance as the predictor. However,
+we want each individual in the study to have their own slope and intercept,
+which will allow the estimation of a marginal population-level likelihood
+from the partially pooled individual estimates.
+
+Since this is a linear model, we could use `brms` for fitting, and the
+appropriate formula would be
+`y | cens(censored, y2) ~ (1 + x | id)`
+where `y` is the vector of outcome values and lower bounds for censoring,
+`c` is a variable specifying the type of censoring for the current outcome
+observation, and `y2` specifies the upper bounds for interval censored
+observations. Because we normally encode HAI values as the upper limit of the
+interval already, this is kind of annoying and we need to do some data
+wrangling to fit it correctly.
+
+However, since we need to fit the same model multiple times with Stan code,
+we don't want to use `brms` since it has to recompile on every model fit.
+Instead we'll use a raw Stan model. Thus, we need the mathematical
+model so we can write out the Stan model. Disregarding the observation model
+for the censored nature of the outcome, the model is as follows.
+
+$$
+\begin{aligned}
+\text{titer increase}_i &\sim \text{Normal}\left( \mu_i, \tau^2 \right) \\
+\mu_i &= \alpha_{\text{Subject[i]}} + \beta_{\text{Subject[i]}} \cdot \text{distance}_i \\
+\alpha_j &\sim \text{Normal} \left( \lambda_\alpha, \sigma_\alpha^2 \right)\\
+\beta_j &\sim \text{Normal} \left( \lambda_\beta, \sigma_\beta^2 \right) \\
+\lambda_\alpha &\sim \text{Normal}\left(0, 2\right)\\
+\lambda_\beta &\sim \text{Normal}\left(0, 2\right) \\
+\sigma_\alpha &\sim \text{Exponential}(1)\\
+\sigma_\beta &\sim \text{Exponential}(1)\\
+\tau &\sim \text{Exponential}(1)
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\text{titer increase}_i &\sim \text{Normal}\left( \mu_i, \tau^2 \right) \\
+\mu_i &= \alpha_{\text{Subject[i]}} + \beta_{\text{Subject[i]}} \cdot \text{distance}_i \\
+\left( \alpha_j, \beta_j \right) &\sim \text{MVN} \left( \vec{\lambda}, \sigma_{\beta} LL^{T} \right) \\
+\left(\lambda_\alpha, \lambda_\beta \right)&\sim \text{MVN}\left(\vec{0}, \sigma_{\lambda}KK^{T}\right)\\
+L, K &\sim \text{LKJ}(1) \\
+\sigma_\beta, \sigma_\mu, \tau &\sim \text{Exponential}(1)
+\end{aligned}
+$$
+In this model, $i$ indexes the observation number. This model is relatively
+simple because
+
+
+```{r}
+library(rethinking)
+test <- ulam(
+	
+)
+```
+

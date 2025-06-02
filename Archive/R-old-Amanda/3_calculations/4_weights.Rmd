@@ -1,0 +1,178 @@
+---
+title: "Weights of Measures of SD only"
+author: "Amanda Skarlupka"
+date: "4/7/2022"
+output: 
+  bookdown::html_document2: default
+---
+
+
+#Purpose:
+
+The purpose of this code is to quantify the area under the linear regressions and the apply weights. 
+
+#Prerequisties:
+
+Need to Run:
+
+* ../code/1_cleaning/1_cleaning_code.R
+* ../code/1_cleaning/2_pepitope_calculator.Rmd
+* ../code/1_cleaning/3_acmap_creation.R
+* ../code/1_cleaning/4_acmap_distances.Rmd
+* ../code/5_calculations/3_antigenic_landscapes.Rmd (AUC datafile)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = T, warnings = T)
+
+library(pracma)
+library(flextable)
+library(tidyverse)
+library(plotly)
+library(dplyr)
+
+source(here::here("R/functions/4_weights.R"))
+
+```
+
+
+
+```{r data}
+
+#Import the data:
+
+data <- readRDS(file = here::here("data/processed/auc_data_typeA.rds")) 
+
+```
+
+
+# Different weighting curves:
+
+Different weighting schemes can be applied to the initial area under the linear regression for determining breadth. These weightings change the contribution of strains at based upon their distance to the strain of interest, which in this case are the vaccine-strains. The weighting schemes are user defined based upon the user's goal. For the three schemes described below all three of them apply a greater weight to the closest related strains, and as the strains become more distant, the weight decreases.
+
+The three weighting schemes applied below are: No weighting, a linear decrease, and a step decrease at 2 antigenic cartographic units. 
+
+## Linear decrease
+
+The second weighting scheme allows for contribution for all strains except for the furthest one (Normalized distance = 1). However, instead of being equally weighted as the strains become more distant they are given less weight in a linearly decreasing manner (Figure \@ref(fig:linear)). The resulting weighting was as follows: $$y_\text{weighted}=-y_\text{fit}\times x_\text{Distance} + y_\text{fit} = y_\text{fit}\left(1 - x_\text{Distance}\right)$$
+
+```{r linear}
+plot(x = c(0, 1),
+     y = c(1, 0),
+     type = "l",
+     main = "Linear Function Weighting",
+     sub = "Weight decreases as distance increases",
+     xlab = "Normalized Distance",
+     ylab = "Weighting applied to fitted values")
+polygon(x = c(0, 1, 0),
+        y = c(1, 0, 0),
+        col = "grey")
+```
+
+
+## Step Function
+
+The third weighting function applied to the fits was a step function (Figure \@ref(fig:step)). If the normalized distance was less or equal to a chosen cutoff value the y value was weighted as $y_\text{weighted} = y_\text{fit}\times1=y_\text{fit}$ and if the distance was greater, $y_\text{weighted} = y_\text{fit}\times0= 0$. 
+
+```{r step}
+plot(x = c(0, 0.5, 0.5, 1),
+     y = c(1, 1, 0, 0),
+     type = "l",
+     main = "Step Function Weighting",
+     sub = "All values greater than 0.5 normalized distance do not contribute to AUC",
+     xlab = "Normalized Distance",
+     ylab = "Weighting applied to fitted values")
+polygon(x = c(0, 0.5, 0.5, 0),
+        y = c(1, 1, 0, 0),
+        col = "grey")
+
+```
+
+## Antigenic distance Step Function:
+
+This third weighting scheme is similar to the step function execpt instead of an arbitraty value, it is based on the antigenic distance unit. Instead of choosing an arbitrary normalized distance, such as 0.5 in the previous example, the cut off is based on the concept that an antigenic distance of 2 antigenic distance units (AU) is a significant distance. One other relevant antigenic distance is 3 AU. For human vaccines a distance of 3 AU is considered significant enough to prompt the update of the vaccine strain. (DOIs: 10.1016/j.vaccine.2015.06.090, 10.1016/j.vaccine.2014.02.014, 10.1016/j.vaccine.2008.07.078). 2 AU was defined using naive ferret sera, and may actually be smaller when using human sera. 
+
+However, when comparing the antigenic distances to the other distance measures (year, sequence-based) the distances are normalized to a range of 0-1. Therefore, for each season and vaccine strain the normalized distance that is equivalent to 2 antigenic distance units from the vaccine strain was determined (Table \@ref(tab:AU-table)).
+
+```{r AU-table}
+# Are the two different doses the same?
+distances <- vector(mode = "list")
+for (i in c("Season", "Vaccine", "Strain")) {
+	distances[[i]] <- dose_compare(dataframe = data,
+																 normalization = i)
+}
+
+cutoff_df <- distances %>%
+	purrr::reduce(full_join)
+
+# This dataframe is the same for the standard dose, and the high dose standard dose comparisons. 
+saveRDS(object = cutoff_df,
+				file = here::here("results/tables/AU_cutoff.rds"))
+cutoff_df |> knitr::kable()
+```
+
+```{r weighting-figure}
+weighting_example(here::here("results/figures/example_weighting.png"))
+knitr::include_graphics(here::here("Results/Figures/example_weighting.png"))
+```
+
+
+# Applying the Weight Schemes:
+
+Each of the three weights were applied to the standard dose (SD) linear regressions for all individuals who received the standard dose (Figure \@ref(fig:plot)). Three different normalization schemes were investigated (Season, Vaccine, Strain). The results of the weighting are shown by different linetypes. For increased legibility, the different doses and weightings can be toggled on and off with the plotly interface to make comparisons easier. The area under the weighted lines were then quantified. The difference between the AUCs of the HD and SD regressions are provided in Table \@ref(tab:aucs).
+
+
+```{r SD-only}
+
+
+for (i in c("Vaccine", "Season", "Strain")) {
+  for (j in c("SD", "SDHD")) {
+    auc_calc(dataframe = data,
+             normalization = i,
+             dose_of_interest = j) %>%
+      {
+                saveRDS(object = ., file = here::here(paste0("results/tables/auc_", tolower(j), "_", tolower(i), ".rds")))
+      }
+  }
+}
+
+
+
+season_sd_example <- auc_calc(dataframe = data,
+                           normalization = "Season",
+                           dose_of_interest = "SD",
+                           example = TRUE,
+                           season_of_interest = 2014)
+
+strain_sd_example <- auc_calc(dataframe = data,
+                           normalization = "Strain",
+                           dose_of_interest = "SD",
+                           example = TRUE,
+                           season_of_interest = NULL,
+                          strain_of_interest = "H1N1:CA/09")
+
+readr::write_rds(data, "weighting-figure-data.Rds")
+
+
+cowplot::ggsave2(plot = strain_sd_example,
+                 filename = here::here("results/figures/weighting_example.png"))
+
+
+vaccine_sdhd_example <- auc_calc(dataframe = data,
+                    normalization = "Vaccine",
+                    dose_of_interest = "SDHD",
+                    example = TRUE, 
+                    season = 2014)
+  cowplot::ggsave2(plot = season_sd_example,
+                   filename = here::here("results/figures/season_sd_weighting_example.png"))
+  cowplot::ggsave2(plot = vaccine_sdhd_example,
+                   filename = here::here("results/figures/vaccine_sdhd_weighting_example.png"))
+
+
+
+
+```
+
+
+
+
+

@@ -1,0 +1,10 @@
+# Directories that should be ignored by renv when finding dependencies
+Archive/
+Misc/
+Results/
+Results-Old/
+stan/
+assets/
+Data/
+Products/
+

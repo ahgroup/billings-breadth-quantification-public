@@ -1,0 +1,1364 @@
+subject_id,season,sex,gender,age,birth_year,study,ethnicity,race,dose
+pa_id_0007,2013 - 2014,Female,Cisgender Woman,55,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0008,2013 - 2014,Female,Cisgender Woman,58,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0012,2013 - 2014,Female,Cisgender Woman,60,1953,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0019,2013 - 2014,Female,Cisgender Woman,70,1943,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0029,2013 - 2014,Female,Cisgender Woman,70,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0031,2013 - 2014,Female,Cisgender Woman,60,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_0036,2013 - 2014,Female,Cisgender Woman,73,1940,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0103,2013 - 2014,Female,Cisgender Woman,68,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0108,2013 - 2014,Female,Cisgender Woman,58,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0112,2013 - 2014,Female,Cisgender Woman,57,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_0115,2013 - 2014,Male,Cisgender Man,53,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0121,2013 - 2014,Female,Cisgender Woman,54,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_0139,2013 - 2014,Female,Cisgender Woman,60,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_0149,2013 - 2014,Female,Cisgender Woman,67,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_0150,2013 - 2014,Male,Cisgender Man,55,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0151,2013 - 2014,Male,Cisgender Man,53,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0152,2013 - 2014,Male,Cisgender Man,68,1945,PA,Not Hispanic or Latino,White,HD
+pa_id_0156,2013 - 2014,Male,Cisgender Man,77,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_0201,2013 - 2014,Female,Cisgender Woman,70,1943,PA,Not Hispanic or Latino,White,SD
+pa_id_0202,2013 - 2014,Female,Cisgender Woman,70,1943,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0203,2013 - 2014,Female,Cisgender Woman,55,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0204,2013 - 2014,Female,Cisgender Woman,57,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0206,2013 - 2014,Female,Cisgender Woman,53,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0210,2013 - 2014,Female,Cisgender Woman,75,1938,PA,Not Hispanic or Latino,White,SD
+pa_id_0212,2013 - 2014,Female,Cisgender Woman,70,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0218,2013 - 2014,Female,Cisgender Woman,52,1961,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0221,2013 - 2014,Male,Cisgender Man,73,1940,PA,Hispanic or Latino,OTH-Hispanic/Latino,SD
+pa_id_0226,2013 - 2014,Male,Cisgender Man,74,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_0233,2013 - 2014,Female,Cisgender Woman,57,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0234,2013 - 2014,Female,Cisgender Woman,70,1943,PA,Not Hispanic or Latino,White,HD
+pa_id_0236,2013 - 2014,Male,Cisgender Man,57,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0238,2013 - 2014,Male,Cisgender Man,79,1934,PA,Not Hispanic or Latino,White,HD
+pa_id_0248,2013 - 2014,Male,Cisgender Man,77,1936,PA,Not Hispanic or Latino,White,SD
+pa_id_0249,2013 - 2014,Female,Cisgender Woman,67,1946,PA,Not Hispanic or Latino,White,SD
+pa_id_0259,2013 - 2014,Female,Cisgender Woman,54,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_0265,2013 - 2014,Female,Cisgender Woman,65,1948,PA,Not Hispanic or Latino,White,SD
+pa_id_0269,2013 - 2014,Female,Cisgender Woman,57,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0271,2013 - 2014,Male,Cisgender Man,58,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0301,2013 - 2014,Female,Cisgender Woman,56,1957,PA,Not Hispanic or Latino,Asian,SD
+pa_id_0302,2013 - 2014,Male,Cisgender Man,81,1932,PA,Not Hispanic or Latino,White,SD
+pa_id_0303,2013 - 2014,Male,Cisgender Man,53,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0304,2013 - 2014,Female,Cisgender Woman,56,1957,PA,Not Hispanic or Latino,Asian,SD
+pa_id_0306,2013 - 2014,Female,Cisgender Woman,53,1960,PA,Not Provided,Not Specified,SD
+pa_id_0312,2013 - 2014,Female,Cisgender Woman,55,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0316,2013 - 2014,Female,Cisgender Woman,68,1945,PA,Not Hispanic or Latino,White,SD
+pa_id_0320,2013 - 2014,Female,Cisgender Woman,59,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0326,2013 - 2014,Female,Cisgender Woman,58,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0329,2013 - 2014,Male,Cisgender Man,58,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0332,2013 - 2014,Male,Cisgender Man,55,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_1003,2013 - 2014,Female,Cisgender Woman,60,1953,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1012,2013 - 2014,Female,Cisgender Woman,67,1946,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1015,2013 - 2014,Female,Cisgender Woman,64,1949,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1016,2013 - 2014,Female,Cisgender Woman,56,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1017,2013 - 2014,Female,Cisgender Woman,63,1950,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1102,2013 - 2014,Female,Cisgender Woman,55,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1104,2013 - 2014,Female,Cisgender Woman,54,1959,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1109,2013 - 2014,Female,Cisgender Woman,66,1947,PA,Not Hispanic or Latino,White,SD
+pa_id_1113,2013 - 2014,Female,Cisgender Woman,74,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_1115,2013 - 2014,Female,Cisgender Woman,52,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_1117,2013 - 2014,Female,Cisgender Woman,67,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_1118,2013 - 2014,Female,Cisgender Woman,67,1946,PA,Not Hispanic or Latino,White,SD
+pa_id_1119,2013 - 2014,Female,Cisgender Woman,52,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_1124,2013 - 2014,Female,Cisgender Woman,51,1962,PA,Not Hispanic or Latino,White,SD
+pa_id_1130,2013 - 2014,Female,Cisgender Woman,69,1944,PA,Not Hispanic or Latino,White,SD
+pa_id_1131,2013 - 2014,Female,Cisgender Woman,69,1944,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1135,2013 - 2014,Female,Cisgender Woman,62,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_1136,2013 - 2014,Male,Cisgender Man,76,1937,PA,Not Hispanic or Latino,White,HD
+pa_id_1137,2013 - 2014,Female,Cisgender Woman,59,1954,PA,Hispanic or Latino,OTH-Hispanic/Latino,SD
+pa_id_1204,2013 - 2014,Female,Cisgender Woman,68,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1207,2013 - 2014,Male,Cisgender Man,61,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_1211,2013 - 2014,Female,Cisgender Woman,67,1946,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1212,2013 - 2014,Female,Cisgender Woman,57,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1215,2013 - 2014,Male,Cisgender Man,71,1942,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1217,2013 - 2014,Male,Cisgender Man,53,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1223,2013 - 2014,Female,Cisgender Woman,70,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1224,2013 - 2014,Male,Cisgender Man,53,1960,PA,Not Provided,Not Specified,SD
+pa_id_1227,2013 - 2014,Female,Cisgender Woman,77,1936,PA,Not Hispanic or Latino,White,SD
+pa_id_1231,2013 - 2014,Female,Cisgender Woman,59,1954,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1235,2013 - 2014,Female,Cisgender Woman,68,1945,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1238,2013 - 2014,Female,Cisgender Woman,77,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_3400,2013 - 2014,Female,Cisgender Woman,27,1986,PA,Not Hispanic or Latino,White,SD
+pa_id_3404,2013 - 2014,Female,Cisgender Woman,27,1986,PA,Not Hispanic or Latino,White,SD
+pa_id_3405,2013 - 2014,Male,Cisgender Man,26,1987,PA,Not Hispanic or Latino,White,SD
+pa_id_3406,2013 - 2014,Male,Cisgender Man,65,1948,PA,Not Hispanic or Latino,White,SD
+fl_id_1007,2013 - 2014,Female,Cisgender Woman,33,1980,FL,Not Hispanic or Latino,White,SD
+fl_id_1025,2013 - 2014,Female,Cisgender Woman,33,1980,FL,Not Hispanic or Latino,White,SD
+fl_id_0103,2013 - 2014,Female,Cisgender Woman,32,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_0104,2013 - 2014,Female,Cisgender Woman,65,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1012,2013 - 2014,Female,Cisgender Woman,63,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1008,2013 - 2014,Female,Cisgender Woman,25,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1001,2013 - 2014,Female,Cisgender Woman,32,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1055,2013 - 2014,Male,Cisgender Man,68,1945,FL,Not Hispanic or Latino,White,SD
+fl_id_0109,2013 - 2014,Female,Cisgender Woman,35,1978,FL,Not Hispanic or Latino,White,SD
+fl_id_1026,2013 - 2014,Female,Cisgender Woman,63,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1006,2013 - 2014,Female,Cisgender Woman,24,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_0112,2013 - 2014,Female,Cisgender Woman,23,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1050,2013 - 2014,Male,Cisgender Man,73,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_0114,2013 - 2014,Female,Cisgender Woman,23,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1032,2013 - 2014,Male,Cisgender Man,23,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_0116,2013 - 2014,Female,Cisgender Woman,35,1978,FL,Not Hispanic or Latino,White,SD
+fl_id_0117,2013 - 2014,Female,Cisgender Woman,34,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_0118,2013 - 2014,Male,Cisgender Man,33,1980,FL,Not Hispanic or Latino,White,SD
+fl_id_0119,2013 - 2014,Female,Cisgender Woman,28,1985,FL,Not Hispanic or Latino,White,SD
+fl_id_1048,2013 - 2014,Female,Cisgender Woman,61,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1074,2013 - 2014,Female,Cisgender Woman,33,1980,FL,Not Hispanic or Latino,White,SD
+fl_id_1112,2013 - 2014,Female,Cisgender Woman,73,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_0123,2013 - 2014,Male,Cisgender Man,31,1982,FL,Not Hispanic or Latino,White,SD
+fl_id_1124,2013 - 2014,Male,Cisgender Man,35,1978,FL,Not Hispanic or Latino,White,SD
+fl_id_1088,2013 - 2014,Male,Cisgender Man,61,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_0126,2013 - 2014,Male,Cisgender Man,63,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_0127,2013 - 2014,Female,Cisgender Woman,25,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_0128,2013 - 2014,Female,Cisgender Woman,77,1936,FL,Not Hispanic or Latino,White,SD
+fl_id_1013,2013 - 2014,Female,Cisgender Woman,67,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_0131,2013 - 2014,Female,Cisgender Woman,68,1945,FL,Not Hispanic or Latino,White,SD
+fl_id_1089,2013 - 2014,Female,Cisgender Woman,79,1934,FL,Not Hispanic or Latino,White,SD
+fl_id_1047,2013 - 2014,Female,Cisgender Woman,66,1947,FL,Not Hispanic or Latino,White,SD
+fl_id_1053,2013 - 2014,Male,Cisgender Man,80,1933,FL,Not Hispanic or Latino,White,SD
+fl_id_0135,2013 - 2014,Female,Cisgender Woman,69,1944,FL,Not Hispanic or Latino,White,SD
+fl_id_1061,2013 - 2014,Male,Cisgender Man,74,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1120,2013 - 2014,Female,Cisgender Woman,63,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1154,2013 - 2014,Female,Cisgender Woman,72,1941,FL,Not Hispanic or Latino,White,SD
+fl_id_1016,2013 - 2014,Female,Cisgender Woman,74,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_0140,2013 - 2014,Female,Cisgender Woman,65,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1137,2013 - 2014,Male,Cisgender Man,24,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_0142,2013 - 2014,Female,Cisgender Woman,30,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1005,2013 - 2014,Male,Cisgender Man,73,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_0144,2013 - 2014,Female,Cisgender Woman,61,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1009,2013 - 2014,Female,Cisgender Woman,63,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1036,2013 - 2014,Female,Cisgender Woman,67,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1066,2013 - 2014,Male,Cisgender Man,66,1947,FL,Not Hispanic or Latino,White,SD
+fl_id_1044,2013 - 2014,Female,Cisgender Woman,65,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1077,2013 - 2014,Female,Cisgender Woman,70,1943,FL,Not Hispanic or Latino,White,SD
+fl_id_1011,2013 - 2014,Female,Cisgender Woman,23,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1034,2013 - 2014,Female,Cisgender Woman,24,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1049,2013 - 2014,Female,Cisgender Woman,24,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1014,2013 - 2014,Female,Cisgender Woman,28,1985,FL,Not Hispanic or Latino,White,SD
+fl_id_1037,2013 - 2014,Female,Cisgender Woman,34,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1018,2013 - 2014,Female,Cisgender Woman,37,1976,FL,Not Hispanic or Latino,White,SD
+fl_id_0156,2013 - 2014,Male,Cisgender Man,32,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_0157,2013 - 2014,Female,Cisgender Woman,28,1985,FL,Not Hispanic or Latino,White,SD
+fl_id_0158,2013 - 2014,Female,Cisgender Woman,34,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_0159,2013 - 2014,Male,Cisgender Man,23,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1082,2013 - 2014,Female,Cisgender Woman,32,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_0161,2013 - 2014,Female,Cisgender Woman,23,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1023,2014 - 2015,Female,Cisgender Woman,20,1994,FL,Not Hispanic or Latino,White,SD
+fl_id_1101,2014 - 2015,Female,Cisgender Woman,21,1993,FL,Not Hispanic or Latino,White,SD
+fl_id_1062,2014 - 2015,Female,Cisgender Woman,23,1991,FL,Not Hispanic or Latino,White,SD
+fl_id_1117,2014 - 2015,Female,Cisgender Woman,23,1991,FL,Not Hispanic or Latino,White,SD
+fl_id_1011,2014 - 2015,Female,Cisgender Woman,24,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1032,2014 - 2015,Male,Cisgender Man,24,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1060,2014 - 2015,Female,Cisgender Woman,24,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1108,2014 - 2015,Female,Cisgender Woman,24,1990,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1006,2014 - 2015,Female,Cisgender Woman,25,1989,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1034,2014 - 2015,Female,Cisgender Woman,25,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1049,2014 - 2015,Female,Cisgender Woman,25,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1054,2014 - 2015,Female,Cisgender Woman,25,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1056,2014 - 2015,Female,Cisgender Woman,25,1989,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1065,2014 - 2015,Female,Cisgender Woman,25,1989,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1070,2014 - 2015,Female,Cisgender Woman,25,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1137,2014 - 2015,Male,Cisgender Man,25,1989,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1008,2014 - 2015,Female,Cisgender Woman,26,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1071,2014 - 2015,Female,Cisgender Woman,26,1988,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1158,2014 - 2015,Female,Cisgender Woman,26,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1019,2014 - 2015,Female,Cisgender Woman,27,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1139,2014 - 2015,Male,Cisgender Man,27,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1059,2014 - 2015,Female,Cisgender Woman,28,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1090,2014 - 2015,Female,Cisgender Woman,28,1986,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1099,2014 - 2015,Male,Cisgender Man,28,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1014,2014 - 2015,Female,Cisgender Woman,29,1985,FL,Not Hispanic or Latino,White,SD
+fl_id_1085,2014 - 2015,Female,Cisgender Woman,29,1985,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1103,2014 - 2015,Male,Cisgender Man,29,1985,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1003,2014 - 2015,Female,Cisgender Woman,30,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1098,2014 - 2015,Female,Cisgender Woman,30,1984,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1145,2014 - 2015,Female,Cisgender Woman,30,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1153,2014 - 2015,Male,Cisgender Man,30,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1155,2014 - 2015,Female,Cisgender Woman,30,1984,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1105,2014 - 2015,Male,Cisgender Man,31,1983,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1109,2014 - 2015,Female,Cisgender Woman,31,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1111,2014 - 2015,Female,Cisgender Woman,31,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1144,2014 - 2015,Female,Cisgender Woman,31,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1157,2014 - 2015,Female,Cisgender Woman,31,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1087,2014 - 2015,Male,Cisgender Man,32,1982,FL,Not Hispanic or Latino,White,SD
+fl_id_1001,2014 - 2015,Female,Cisgender Woman,33,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1080,2014 - 2015,Female,Cisgender Woman,33,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1082,2014 - 2015,Female,Cisgender Woman,33,1981,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1007,2014 - 2015,Female,Cisgender Woman,34,1980,FL,Not Hispanic or Latino,White,SD
+fl_id_1025,2014 - 2015,Female,Cisgender Woman,34,1980,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1074,2014 - 2015,Female,Cisgender Woman,34,1980,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1106,2014 - 2015,Male,Cisgender Man,34,1980,FL,Not Provided,Not Specified,SD
+fl_id_1037,2014 - 2015,Female,Cisgender Woman,35,1979,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1097,2014 - 2015,Female,Cisgender Woman,35,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1102,2014 - 2015,Female,Cisgender Woman,35,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1110,2014 - 2015,Female,Cisgender Woman,35,1979,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1121,2014 - 2015,Male,Cisgender Man,35,1979,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1138,2014 - 2015,Female,Cisgender Woman,35,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1124,2014 - 2015,Male,Cisgender Man,36,1978,FL,Not Hispanic or Latino,White,SD
+fl_id_1015,2014 - 2015,Female,Cisgender Woman,37,1977,FL,Not Hispanic or Latino,White,SD
+fl_id_1068,2014 - 2015,Female,Cisgender Woman,37,1977,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1072,2014 - 2015,Male,Cisgender Man,37,1977,FL,Not Hispanic or Latino,White,SD
+fl_id_1094,2014 - 2015,Female,Cisgender Woman,37,1977,FL,Not Hispanic or Latino,White,SD
+fl_id_1018,2014 - 2015,Female,Cisgender Woman,38,1976,FL,Not Hispanic or Latino,White,SD
+fl_id_1125,2014 - 2015,Female,Cisgender Woman,38,1976,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1142,2014 - 2015,Female,Cisgender Woman,38,1976,FL,Not Hispanic or Latino,White,SD
+fl_id_1040,2014 - 2015,Male,Cisgender Man,39,1975,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1127,2014 - 2015,Male,Cisgender Man,39,1975,FL,Not Hispanic or Latino,White,SD
+fl_id_1107,2014 - 2015,Female,Cisgender Woman,41,1973,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1033,2014 - 2015,Female,Cisgender Woman,42,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1075,2014 - 2015,Female,Cisgender Woman,42,1972,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1031,2014 - 2015,Male,Cisgender Man,44,1970,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1095,2014 - 2015,Male,Cisgender Man,44,1970,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1123,2014 - 2015,Female,Cisgender Woman,44,1970,FL,Not Hispanic or Latino,White,SD
+fl_id_1147,2014 - 2015,Female,Cisgender Woman,44,1970,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1043,2014 - 2015,Male,Cisgender Man,45,1969,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1064,2014 - 2015,Female,Cisgender Woman,45,1969,FL,Not Hispanic or Latino,White,SD
+fl_id_1010,2014 - 2015,Female,Cisgender Woman,46,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1028,2014 - 2015,Female,Cisgender Woman,46,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1081,2014 - 2015,Female,Cisgender Woman,46,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1113,2014 - 2015,Female,Cisgender Woman,46,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1021,2014 - 2015,Female,Cisgender Woman,47,1967,FL,Not Hispanic or Latino,White,SD
+fl_id_1024,2014 - 2015,Female,Cisgender Woman,47,1967,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1073,2014 - 2015,Male,Cisgender Man,47,1967,FL,Not Hispanic or Latino,White,SD
+fl_id_1002,2014 - 2015,Male,Cisgender Man,48,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1042,2014 - 2015,Female,Cisgender Woman,48,1966,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1114,2014 - 2015,Female,Cisgender Woman,48,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1118,2014 - 2015,Female,Cisgender Woman,48,1966,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1126,2014 - 2015,Female,Cisgender Woman,48,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1083,2014 - 2015,Female,Cisgender Woman,49,1965,FL,Not Hispanic or Latino,White,SD
+fl_id_1004,2014 - 2015,Male,Cisgender Man,50,1964,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1092,2014 - 2015,Female,Cisgender Woman,50,1964,FL,Not Hispanic or Latino,White,SD
+fl_id_1146,2014 - 2015,Female,Cisgender Woman,50,1964,FL,Not Hispanic or Latino,White,SD
+fl_id_1045,2014 - 2015,Female,Cisgender Woman,51,1963,FL,Not Hispanic or Latino,White,SD
+fl_id_1067,2014 - 2015,Male,Cisgender Man,51,1963,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1156,2014 - 2015,Female,Cisgender Woman,52,1962,FL,Not Hispanic or Latino,White,SD
+fl_id_1035,2014 - 2015,Female,Cisgender Woman,54,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1069,2014 - 2015,Female,Cisgender Woman,54,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1122,2014 - 2015,Female,Cisgender Woman,54,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1038,2014 - 2015,Female,Cisgender Woman,56,1958,FL,Not Hispanic or Latino,White,SD
+fl_id_1076,2014 - 2015,Female,Cisgender Woman,57,1957,FL,Not Hispanic or Latino,White,SD
+fl_id_1063,2014 - 2015,Female,Cisgender Woman,58,1956,FL,Not Hispanic or Latino,White,SD
+fl_id_1140,2014 - 2015,Male,Cisgender Man,58,1956,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1029,2014 - 2015,Female,Cisgender Woman,60,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1039,2014 - 2015,Female,Cisgender Woman,60,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1052,2014 - 2015,Female,Cisgender Woman,60,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1086,2014 - 2015,Male,Cisgender Man,60,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1093,2014 - 2015,Male,Cisgender Man,60,1954,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1041,2014 - 2015,Female,Cisgender Woman,61,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1058,2014 - 2015,Female,Cisgender Woman,61,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1100,2014 - 2015,Female,Cisgender Woman,61,1953,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1115,2014 - 2015,Female,Cisgender Woman,61,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1048,2014 - 2015,Female,Cisgender Woman,62,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1079,2014 - 2015,Male,Cisgender Man,62,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1088,2014 - 2015,Male,Cisgender Man,62,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1148,2014 - 2015,Male,Cisgender Man,62,1952,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1012,2014 - 2015,Female,Cisgender Woman,63,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1078,2014 - 2015,Female,Cisgender Woman,63,1951,FL,Not Hispanic or Latino,White,SD
+fl_id_1009,2014 - 2015,Female,Cisgender Woman,64,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1026,2014 - 2015,Female,Cisgender Woman,64,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1120,2014 - 2015,Female,Cisgender Woman,64,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1129,2014 - 2015,Male,Cisgender Man,64,1950,FL,Not Hispanic or Latino,Native Hawaiian or Other Pacific Islander,SD
+fl_id_1027,2014 - 2015,Female,Cisgender Woman,66,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1044,2014 - 2015,Female,Cisgender Woman,66,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1091,2014 - 2015,Female,Cisgender Woman,66,1948,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1116,2014 - 2015,Female,Cisgender Woman,66,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1135,2014 - 2015,Female,Cisgender Woman,66,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1066,2014 - 2015,Male,Cisgender Man,67,1947,FL,Not Hispanic or Latino,White,SD
+fl_id_1084,2014 - 2015,Female,Cisgender Woman,67,1947,FL,Not Hispanic or Latino,White,SD
+fl_id_1136,2014 - 2015,Female,Cisgender Woman,67,1947,FL,Not Hispanic or Latino,White,SD
+fl_id_1150,2014 - 2015,Female,Cisgender Woman,67,1947,FL,Not Hispanic or Latino,White,SD
+fl_id_1013,2014 - 2015,Female,Cisgender Woman,68,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1036,2014 - 2015,Female,Cisgender Woman,68,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1128,2014 - 2015,Male,Cisgender Man,68,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1130,2014 - 2015,Female,Cisgender Woman,68,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1133,2014 - 2015,Female,Cisgender Woman,68,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1141,2014 - 2015,Female,Cisgender Woman,68,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1151,2014 - 2015,Female,Cisgender Woman,68,1946,FL,Not Hispanic or Latino,White,SD
+fl_id_1055,2014 - 2015,Male,Cisgender Man,69,1945,FL,Not Hispanic or Latino,White,SD
+fl_id_1077,2014 - 2015,Female,Cisgender Woman,71,1943,FL,Not Hispanic or Latino,White,SD
+fl_id_1119,2014 - 2015,Male,Cisgender Man,72,1942,FL,Not Hispanic or Latino,White,SD
+fl_id_1134,2014 - 2015,Female,Cisgender Woman,73,1941,FL,Not Hispanic or Latino,White,SD
+fl_id_1154,2014 - 2015,Female,Cisgender Woman,73,1941,FL,Not Hispanic or Latino,White,SD
+fl_id_1005,2014 - 2015,Male,Cisgender Man,74,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1047,2014 - 2015,Female,Cisgender Woman,74,1947,FL,Not Hispanic or Latino,White,SD
+fl_id_1050,2014 - 2015,Male,Cisgender Man,74,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1112,2014 - 2015,Female,Cisgender Woman,74,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1152,2014 - 2015,Male,Cisgender Man,74,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1016,2014 - 2015,Female,Cisgender Woman,75,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1051,2014 - 2015,Female,Cisgender Woman,75,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1057,2014 - 2015,Male,Cisgender Man,75,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1061,2014 - 2015,Male,Cisgender Man,75,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1131,2014 - 2015,Female,Cisgender Woman,75,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1046,2014 - 2015,Female,Cisgender Woman,77,1937,FL,Not Hispanic or Latino,White,SD
+fl_id_1132,2014 - 2015,Female,Cisgender Woman,77,1937,FL,Not Hispanic or Latino,White,SD
+fl_id_1089,2014 - 2015,Female,Cisgender Woman,80,1934,FL,Not Hispanic or Latino,White,SD
+fl_id_1053,2014 - 2015,Male,Cisgender Man,81,1933,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1174,2015 - 2016,Female,Cisgender Woman,21,1994,FL,Not Hispanic or Latino,White,SD
+fl_id_1179,2015 - 2016,Female,Cisgender Woman,21,1994,FL,Not Hispanic or Latino,White,SD
+fl_id_1101,2015 - 2016,Female,Cisgender Woman,22,1993,FL,Not Hispanic or Latino,White,SD
+fl_id_1182,2015 - 2016,Female,Cisgender Woman,22,1993,FL,Not Hispanic or Latino,White,SD
+fl_id_1062,2015 - 2016,Female,Cisgender Woman,24,1991,FL,Not Hispanic or Latino,White,SD
+fl_id_1191,2015 - 2016,Female,Cisgender Woman,24,1991,FL,Not Hispanic or Latino,White,SD
+fl_id_1011,2015 - 2016,Female,Cisgender Woman,25,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1032,2015 - 2016,Male,Cisgender Man,25,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1060,2015 - 2016,Female,Cisgender Woman,25,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1108,2015 - 2016,Female,Cisgender Woman,25,1990,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1006,2015 - 2016,Female,Cisgender Woman,26,1989,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1034,2015 - 2016,Female,Cisgender Woman,26,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1056,2015 - 2016,Female,Cisgender Woman,26,1989,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1065,2015 - 2016,Female,Cisgender Woman,26,1989,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1070,2015 - 2016,Female,Cisgender Woman,26,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1137,2015 - 2016,Male,Cisgender Man,26,1989,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1171,2015 - 2016,Female,Cisgender Woman,26,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1176,2015 - 2016,Female,Cisgender Woman,26,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1008,2015 - 2016,Female,Cisgender Woman,27,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1071,2015 - 2016,Female,Cisgender Woman,27,1988,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1161,2015 - 2016,Female,Cisgender Woman,27,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1193,2015 - 2016,Male,Cisgender Man,27,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1019,2015 - 2016,Female,Cisgender Woman,28,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1139,2015 - 2016,Male,Cisgender Man,28,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1160,2015 - 2016,Male,Cisgender Man,28,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1166,2015 - 2016,Female,Cisgender Woman,28,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1167,2015 - 2016,Female,Cisgender Woman,28,1987,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1090,2015 - 2016,Female,Cisgender Woman,29,1986,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1099,2015 - 2016,Male,Cisgender Man,29,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1180,2015 - 2016,Female,Cisgender Woman,29,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1159,2015 - 2016,Male,Cisgender Man,30,1985,FL,Not Hispanic or Latino,White,SD
+fl_id_1003,2015 - 2016,Female,Cisgender Woman,31,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1098,2015 - 2016,Female,Cisgender Woman,31,1984,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1145,2015 - 2016,Female,Cisgender Woman,31,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1153,2015 - 2016,Male,Cisgender Man,31,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1155,2015 - 2016,Female,Cisgender Woman,31,1984,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1164,2015 - 2016,Female,Cisgender Woman,31,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1105,2015 - 2016,Male,Cisgender Man,32,1983,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1109,2015 - 2016,Female,Cisgender Woman,32,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1111,2015 - 2016,Female,Cisgender Woman,32,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1144,2015 - 2016,Female,Cisgender Woman,32,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1149,2015 - 2016,Female,Cisgender Woman,32,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1087,2015 - 2016,Male,Cisgender Man,33,1982,FL,Not Hispanic or Latino,White,SD
+fl_id_1168,2015 - 2016,Female,Cisgender Woman,33,1982,FL,Not Hispanic or Latino,White,SD
+fl_id_1183,2015 - 2016,Female,Cisgender Woman,33,1982,FL,Not Hispanic or Latino,White,SD
+fl_id_1001,2015 - 2016,Female,Cisgender Woman,34,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1080,2015 - 2016,Female,Cisgender Woman,34,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1175,2015 - 2016,Female,Cisgender Woman,34,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1007,2015 - 2016,Female,Cisgender Woman,35,1980,FL,Not Hispanic or Latino,White,SD
+fl_id_1025,2015 - 2016,Female,Cisgender Woman,35,1980,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1074,2015 - 2016,Female,Cisgender Woman,35,1980,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1106,2015 - 2016,Male,Cisgender Man,35,1980,FL,Not Provided,Not Specified,SD
+fl_id_1165,2015 - 2016,Female,Cisgender Woman,35,1980,FL,Not Hispanic or Latino,White,SD
+fl_id_1097,2015 - 2016,Female,Cisgender Woman,36,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1102,2015 - 2016,Female,Cisgender Woman,36,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1110,2015 - 2016,Female,Cisgender Woman,36,1979,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1138,2015 - 2016,Female,Cisgender Woman,36,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1194,2015 - 2016,Female,Cisgender Woman,37,1978,FL,Not Hispanic or Latino,White,SD
+fl_id_1094,2015 - 2016,Female,Cisgender Woman,38,1977,FL,Not Hispanic or Latino,White,SD
+fl_id_1018,2015 - 2016,Female,Cisgender Woman,39,1976,FL,Not Hispanic or Latino,White,SD
+fl_id_1142,2015 - 2016,Female,Cisgender Woman,39,1976,FL,Not Hispanic or Latino,White,SD
+fl_id_1127,2015 - 2016,Male,Cisgender Man,40,1975,FL,Not Hispanic or Latino,White,SD
+fl_id_1163,2015 - 2016,Female,Cisgender Woman,40,1975,FL,Not Hispanic or Latino,White,SD
+fl_id_1186,2015 - 2016,Female,Cisgender Woman,40,1975,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1187,2015 - 2016,Female,Cisgender Woman,40,1975,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1192,2015 - 2016,Female,Cisgender Woman,40,1975,FL,Not Hispanic or Latino,White,SD
+fl_id_1196,2015 - 2016,Female,Cisgender Woman,41,1974,FL,Not Hispanic or Latino,White,SD
+fl_id_1197,2015 - 2016,Female,Cisgender Woman,42,1973,FL,Not Hispanic or Latino,White,SD
+fl_id_1033,2015 - 2016,Female,Cisgender Woman,43,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1104,2015 - 2016,Male,Cisgender Man,43,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1162,2015 - 2016,Female,Cisgender Woman,43,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1181,2015 - 2016,Female,Cisgender Woman,43,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1189,2015 - 2016,Female,Cisgender Woman,43,1972,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1195,2015 - 2016,Female,Cisgender Woman,43,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1031,2015 - 2016,Male,Cisgender Man,45,1970,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1095,2015 - 2016,Male,Cisgender Man,45,1970,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1123,2015 - 2016,Female,Cisgender Woman,45,1970,FL,Not Hispanic or Latino,White,SD
+fl_id_1188,2015 - 2016,Female,Cisgender Woman,45,1970,FL,Not Hispanic or Latino,White,SD
+fl_id_1043,2015 - 2016,Male,Cisgender Man,46,1969,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1010,2015 - 2016,Female,Cisgender Woman,47,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1081,2015 - 2016,Female,Cisgender Woman,47,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1113,2015 - 2016,Female,Cisgender Woman,47,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1021,2015 - 2016,Female,Cisgender Woman,48,1967,FL,Not Hispanic or Latino,White,SD
+fl_id_1002,2015 - 2016,Male,Cisgender Man,49,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1114,2015 - 2016,Female,Cisgender Woman,49,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1118,2015 - 2016,Female,Cisgender Woman,49,1966,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1126,2015 - 2016,Female,Cisgender Woman,49,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1092,2015 - 2016,Female,Cisgender Woman,51,1964,FL,Not Hispanic or Latino,White,SD
+fl_id_1146,2015 - 2016,Female,Cisgender Woman,51,1964,FL,Not Hispanic or Latino,White,SD
+fl_id_1045,2015 - 2016,Female,Cisgender Woman,52,1963,FL,Not Hispanic or Latino,White,SD
+fl_id_1067,2015 - 2016,Male,Cisgender Man,52,1963,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1156,2015 - 2016,Female,Cisgender Woman,53,1962,FL,Not Hispanic or Latino,White,SD
+fl_id_1035,2015 - 2016,Female,Cisgender Woman,55,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1069,2015 - 2016,Female,Cisgender Woman,55,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1122,2015 - 2016,Female,Cisgender Woman,55,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1173,2015 - 2016,Male,Cisgender Man,55,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1038,2015 - 2016,Female,Cisgender Woman,57,1958,FL,Not Hispanic or Latino,White,SD
+fl_id_1076,2015 - 2016,Female,Cisgender Woman,58,1957,FL,Not Hispanic or Latino,White,SD
+fl_id_1063,2015 - 2016,Female,Cisgender Woman,59,1956,FL,Not Hispanic or Latino,White,SD
+fl_id_1184,2015 - 2016,Female,Cisgender Woman,60,1955,FL,Not Hispanic or Latino,White,SD
+fl_id_1029,2015 - 2016,Female,Cisgender Woman,61,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1039,2015 - 2016,Female,Cisgender Woman,61,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1052,2015 - 2016,Female,Cisgender Woman,61,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1086,2015 - 2016,Male,Cisgender Man,61,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1093,2015 - 2016,Male,Cisgender Man,61,1954,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1041,2015 - 2016,Female,Cisgender Woman,62,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1058,2015 - 2016,Female,Cisgender Woman,62,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1115,2015 - 2016,Female,Cisgender Woman,62,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1048,2015 - 2016,Female,Cisgender Woman,63,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1079,2015 - 2016,Male,Cisgender Man,63,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1143,2015 - 2016,Male,Cisgender Man,63,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1148,2015 - 2016,Male,Cisgender Man,63,1952,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1012,2015 - 2016,Female,Cisgender Woman,64,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1078,2015 - 2016,Female,Cisgender Woman,64,1951,FL,Not Hispanic or Latino,White,SD
+fl_id_1190,2015 - 2016,Female,Cisgender Woman,64,1951,FL,Not Hispanic or Latino,White,SD
+fl_id_1026,2015 - 2016,Female,Cisgender Woman,65,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1120,2015 - 2016,Female,Cisgender Woman,65,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1129,2015 - 2016,Male,Cisgender Man,65,1950,FL,Not Hispanic or Latino,Native Hawaiian or Other Pacific Islander,SD
+fl_id_1027,2015 - 2016,Female,Cisgender Woman,67,1948,FL,Not Hispanic or Latino,White,HD
+fl_id_1044,2015 - 2016,Female,Cisgender Woman,67,1948,FL,Not Hispanic or Latino,White,HD
+fl_id_1091,2015 - 2016,Female,Cisgender Woman,67,1948,FL,Hispanic or Latino,OTH-Hispanic/Latino,HD
+fl_id_1116,2015 - 2016,Female,Cisgender Woman,67,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1135,2015 - 2016,Female,Cisgender Woman,67,1948,FL,Not Hispanic or Latino,White,HD
+fl_id_1170,2015 - 2016,Female,Cisgender Woman,67,1948,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1066,2015 - 2016,Male,Cisgender Man,68,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1084,2015 - 2016,Female,Cisgender Woman,68,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1136,2015 - 2016,Female,Cisgender Woman,68,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1150,2015 - 2016,Female,Cisgender Woman,68,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1013,2015 - 2016,Female,Cisgender Woman,69,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1036,2015 - 2016,Female,Cisgender Woman,69,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1128,2015 - 2016,Male,Cisgender Man,69,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1130,2015 - 2016,Female,Cisgender Woman,69,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1151,2015 - 2016,Female,Cisgender Woman,69,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1055,2015 - 2016,Male,Cisgender Man,70,1945,FL,Not Hispanic or Latino,White,HD
+fl_id_1077,2015 - 2016,Female,Cisgender Woman,72,1943,FL,Not Hispanic or Latino,White,SD
+fl_id_1119,2015 - 2016,Male,Cisgender Man,73,1942,FL,Not Hispanic or Latino,White,HD
+fl_id_1154,2015 - 2016,Female,Cisgender Woman,74,1941,FL,Not Hispanic or Latino,White,SD
+fl_id_1005,2015 - 2016,Male,Cisgender Man,75,1940,FL,Not Hispanic or Latino,White,HD
+fl_id_1047,2015 - 2016,Female,Cisgender Woman,75,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1050,2015 - 2016,Male,Cisgender Man,75,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1112,2015 - 2016,Female,Cisgender Woman,75,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1152,2015 - 2016,Male,Cisgender Man,75,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1016,2015 - 2016,Female,Cisgender Woman,76,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1051,2015 - 2016,Female,Cisgender Woman,76,1939,FL,Not Hispanic or Latino,White,HD
+fl_id_1057,2015 - 2016,Male,Cisgender Man,76,1939,FL,Not Hispanic or Latino,White,HD
+fl_id_1061,2015 - 2016,Male,Cisgender Man,76,1939,FL,Not Hispanic or Latino,White,HD
+fl_id_1046,2015 - 2016,Female,Cisgender Woman,78,1937,FL,Not Hispanic or Latino,White,HD
+fl_id_1132,2015 - 2016,Female,Cisgender Woman,78,1937,FL,Not Hispanic or Latino,White,SD
+fl_id_1017,2015 - 2016,Female,Cisgender Woman,79,1936,FL,Not Hispanic or Latino,White,HD
+fl_id_1089,2015 - 2016,Female,Cisgender Woman,81,1934,FL,Not Hispanic or Latino,White,SD
+fl_id_1226,2016 - 2017,Female,Cisgender Woman,20,1996,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1228,2016 - 2017,Female,Cisgender Woman,21,1995,FL,Not Hispanic or Latino,White,SD
+fl_id_1174,2016 - 2017,Female,Cisgender Woman,22,1994,FL,Not Hispanic or Latino,White,SD
+fl_id_1179,2016 - 2017,Female,Cisgender Woman,22,1994,FL,Not Hispanic or Latino,White,SD
+fl_id_1211,2016 - 2017,Female,Cisgender Woman,22,1994,FL,Not Hispanic or Latino,White,SD
+fl_id_1212,2016 - 2017,Male,Cisgender Man,22,1994,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1213,2016 - 2017,Male,Cisgender Man,24,1992,FL,Not Hispanic or Latino,White,SD
+fl_id_1011,2016 - 2017,Female,Cisgender Woman,26,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1032,2016 - 2017,Male,Cisgender Man,26,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1060,2016 - 2017,Female,Cisgender Woman,26,1990,FL,Not Hispanic or Latino,White,SD
+fl_id_1108,2016 - 2017,Female,Cisgender Woman,26,1990,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1070,2016 - 2017,Female,Cisgender Woman,27,1989,FL,Not Hispanic or Latino,White,SD
+fl_id_1137,2016 - 2017,Male,Cisgender Man,27,1989,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1008,2016 - 2017,Female,Cisgender Woman,28,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1071,2016 - 2017,Female,Cisgender Woman,28,1988,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1230,2016 - 2017,Female,Cisgender Woman,28,1988,FL,Not Hispanic or Latino,White,SD
+fl_id_1019,2016 - 2017,Female,Cisgender Woman,29,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1139,2016 - 2017,Male,Cisgender Man,29,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1166,2016 - 2017,Female,Cisgender Woman,29,1987,FL,Not Hispanic or Latino,White,SD
+fl_id_1090,2016 - 2017,Female,Cisgender Woman,30,1986,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1099,2016 - 2017,Male,Cisgender Man,30,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1180,2016 - 2017,Female,Cisgender Woman,30,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1207,2016 - 2017,Female,Cisgender Woman,30,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1210,2016 - 2017,Male,Cisgender Man,30,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1214,2016 - 2017,Male,Cisgender Man,30,1986,FL,Not Hispanic or Latino,White,SD
+fl_id_1221,2016 - 2017,Female,Cisgender Woman,30,1986,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1232,2016 - 2017,Female,Cisgender Woman,31,1985,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1003,2016 - 2017,Female,Cisgender Woman,32,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1098,2016 - 2017,Female,Cisgender Woman,32,1984,FL,Not Hispanic or Latino,Asian,SD
+fl_id_1155,2016 - 2017,Female,Cisgender Woman,32,1984,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1198,2016 - 2017,Female,Cisgender Woman,32,1984,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1222,2016 - 2017,Female,Cisgender Woman,32,1984,FL,Not Hispanic or Latino,White,SD
+fl_id_1105,2016 - 2017,Male,Cisgender Man,33,1983,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1111,2016 - 2017,Female,Cisgender Woman,33,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1144,2016 - 2017,Female,Cisgender Woman,33,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1149,2016 - 2017,Female,Cisgender Woman,33,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1201,2016 - 2017,Female,Cisgender Woman,33,1983,FL,Not Hispanic or Latino,White,SD
+fl_id_1168,2016 - 2017,Female,Cisgender Woman,34,1982,FL,Not Hispanic or Latino,White,SD
+fl_id_1183,2016 - 2017,Female,Cisgender Woman,34,1982,FL,Not Hispanic or Latino,White,SD
+fl_id_1080,2016 - 2017,Female,Cisgender Woman,35,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1175,2016 - 2017,Female,Cisgender Woman,35,1981,FL,Not Hispanic or Latino,White,SD
+fl_id_1025,2016 - 2017,Female,Cisgender Woman,36,1980,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1074,2016 - 2017,Female,Cisgender Woman,36,1980,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1106,2016 - 2017,Male,Cisgender Man,36,1980,FL,Not Provided,Not Specified,SD
+fl_id_1110,2016 - 2017,Female,Cisgender Woman,37,1979,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1121,2016 - 2017,Male,Cisgender Man,37,1979,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1138,2016 - 2017,Female,Cisgender Woman,37,1979,FL,Not Hispanic or Latino,White,SD
+fl_id_1194,2016 - 2017,Female,Cisgender Woman,38,1978,FL,Not Hispanic or Latino,White,SD
+fl_id_1203,2016 - 2017,Female,Cisgender Woman,38,1978,FL,Not Hispanic or Latino,White,SD
+fl_id_1018,2016 - 2017,Female,Cisgender Woman,40,1976,FL,Not Hispanic or Latino,White,SD
+fl_id_1142,2016 - 2017,Female,Cisgender Woman,40,1976,FL,Not Hispanic or Latino,White,SD
+fl_id_1127,2016 - 2017,Male,Cisgender Man,41,1975,FL,Not Hispanic or Latino,White,SD
+fl_id_1186,2016 - 2017,Female,Cisgender Woman,41,1975,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1187,2016 - 2017,Female,Cisgender Woman,41,1975,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1197,2016 - 2017,Female,Cisgender Woman,43,1973,FL,Not Hispanic or Latino,White,SD
+fl_id_1204,2016 - 2017,Male,Cisgender Man,43,1973,FL,Not Hispanic or Latino,White,SD
+fl_id_1033,2016 - 2017,Female,Cisgender Woman,44,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1104,2016 - 2017,Male,Cisgender Man,44,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1181,2016 - 2017,Female,Cisgender Woman,44,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1195,2016 - 2017,Female,Cisgender Woman,44,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1206,2016 - 2017,Female,Cisgender Woman,44,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1216,2016 - 2017,Female,Cisgender Woman,44,1972,FL,Not Hispanic or Latino,White,SD
+fl_id_1031,2016 - 2017,Male,Cisgender Man,46,1970,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1095,2016 - 2017,Male,Cisgender Man,46,1970,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1123,2016 - 2017,Female,Cisgender Woman,46,1970,FL,Not Hispanic or Latino,White,SD
+fl_id_1188,2016 - 2017,Female,Cisgender Woman,46,1970,FL,Not Hispanic or Latino,White,SD
+fl_id_1043,2016 - 2017,Male,Cisgender Man,47,1969,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1223,2016 - 2017,Female,Cisgender Woman,47,1969,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1010,2016 - 2017,Female,Cisgender Woman,48,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1081,2016 - 2017,Female,Cisgender Woman,48,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1113,2016 - 2017,Female,Cisgender Woman,48,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1200,2016 - 2017,Male,Cisgender Man,48,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1205,2016 - 2017,Female,Cisgender Woman,48,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1217,2016 - 2017,Male,Cisgender Man,48,1968,FL,Not Hispanic or Latino,White,SD
+fl_id_1021,2016 - 2017,Female,Cisgender Woman,49,1967,FL,Not Hispanic or Latino,White,SD
+fl_id_1002,2016 - 2017,Male,Cisgender Man,50,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1042,2016 - 2017,Female,Cisgender Woman,50,1966,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1114,2016 - 2017,Female,Cisgender Woman,50,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1118,2016 - 2017,Female,Cisgender Woman,50,1966,FL,Hispanic or Latino,OTH-Hispanic/Latino,SD
+fl_id_1126,2016 - 2017,Female,Cisgender Woman,50,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1202,2016 - 2017,Female,Cisgender Woman,50,1966,FL,Not Hispanic or Latino,White,SD
+fl_id_1092,2016 - 2017,Female,Cisgender Woman,52,1964,FL,Not Hispanic or Latino,White,SD
+fl_id_1146,2016 - 2017,Female,Cisgender Woman,52,1964,FL,Not Hispanic or Latino,White,SD
+fl_id_1045,2016 - 2017,Female,Cisgender Woman,53,1963,FL,Not Hispanic or Latino,White,SD
+fl_id_1067,2016 - 2017,Male,Cisgender Man,53,1963,FL,Not Hispanic or Latino,Black or African American,SD
+fl_id_1156,2016 - 2017,Female,Cisgender Woman,54,1962,FL,Not Hispanic or Latino,White,SD
+fl_id_1035,2016 - 2017,Female,Cisgender Woman,56,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1069,2016 - 2017,Female,Cisgender Woman,56,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1122,2016 - 2017,Female,Cisgender Woman,56,1960,FL,Not Hispanic or Latino,White,SD
+fl_id_1038,2016 - 2017,Female,Cisgender Woman,58,1958,FL,Not Hispanic or Latino,White,SD
+fl_id_1224,2016 - 2017,Male,Cisgender Man,59,1957,FL,Not Hispanic or Latino,White,SD
+fl_id_1063,2016 - 2017,Female,Cisgender Woman,60,1956,FL,Not Hispanic or Latino,White,SD
+fl_id_1231,2016 - 2017,Female,Cisgender Woman,60,1956,FL,Not Hispanic or Latino,White,SD
+fl_id_1184,2016 - 2017,Female,Cisgender Woman,61,1955,FL,Not Hispanic or Latino,White,SD
+fl_id_1233,2016 - 2017,Female,Cisgender Woman,61,1955,FL,Not Hispanic or Latino,White,SD
+fl_id_1029,2016 - 2017,Female,Cisgender Woman,62,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1039,2016 - 2017,Female,Cisgender Woman,62,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1052,2016 - 2017,Female,Cisgender Woman,62,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1086,2016 - 2017,Male,Cisgender Man,62,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1236,2016 - 2017,Female,Cisgender Woman,62,1954,FL,Not Hispanic or Latino,White,SD
+fl_id_1058,2016 - 2017,Female,Cisgender Woman,63,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1115,2016 - 2017,Female,Cisgender Woman,63,1953,FL,Not Hispanic or Latino,White,SD
+fl_id_1048,2016 - 2017,Female,Cisgender Woman,64,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1079,2016 - 2017,Male,Cisgender Man,64,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1088,2016 - 2017,Male,Cisgender Man,64,1952,FL,Not Hispanic or Latino,White,SD
+fl_id_1012,2016 - 2017,Female,Cisgender Woman,65,1950,FL,Not Hispanic or Latino,White,SD
+fl_id_1078,2016 - 2017,Female,Cisgender Woman,65,1951,FL,Not Hispanic or Latino,White,SD
+fl_id_1190,2016 - 2017,Female,Cisgender Woman,65,1951,FL,Not Hispanic or Latino,White,SD
+fl_id_1129,2016 - 2017,Male,Cisgender Man,66,1950,FL,Not Hispanic or Latino,Native Hawaiian or Other Pacific Islander,SD
+fl_id_1027,2016 - 2017,Female,Cisgender Woman,68,1948,FL,Not Hispanic or Latino,White,HD
+fl_id_1091,2016 - 2017,Female,Cisgender Woman,68,1948,FL,Hispanic or Latino,OTH-Hispanic/Latino,HD
+fl_id_1135,2016 - 2017,Female,Cisgender Woman,68,1948,FL,Not Hispanic or Latino,White,HD
+fl_id_1208,2016 - 2017,Female,Cisgender Woman,68,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1219,2016 - 2017,Female,Cisgender Woman,68,1948,FL,Not Hispanic or Latino,White,SD
+fl_id_1066,2016 - 2017,Male,Cisgender Man,69,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1084,2016 - 2017,Female,Cisgender Woman,69,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1136,2016 - 2017,Female,Cisgender Woman,69,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1150,2016 - 2017,Female,Cisgender Woman,69,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1013,2016 - 2017,Female,Cisgender Woman,70,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1036,2016 - 2017,Female,Cisgender Woman,70,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1128,2016 - 2017,Male,Cisgender Man,70,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1130,2016 - 2017,Female,Cisgender Woman,70,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1151,2016 - 2017,Female,Cisgender Woman,70,1946,FL,Not Hispanic or Latino,White,HD
+fl_id_1055,2016 - 2017,Male,Cisgender Man,71,1945,FL,Not Hispanic or Latino,White,HD
+fl_id_1077,2016 - 2017,Female,Cisgender Woman,73,1943,FL,Not Hispanic or Latino,White,SD
+fl_id_1218,2016 - 2017,Female,Cisgender Woman,73,1943,FL,Not Hispanic or Latino,White,SD
+fl_id_1119,2016 - 2017,Male,Cisgender Man,74,1942,FL,Not Hispanic or Latino,White,HD
+fl_id_1237,2016 - 2017,Female,Cisgender Woman,74,1942,FL,Not Hispanic or Latino,White,SD
+fl_id_1005,2016 - 2017,Male,Cisgender Man,76,1940,FL,Not Hispanic or Latino,White,HD
+fl_id_1047,2016 - 2017,Female,Cisgender Woman,76,1947,FL,Not Hispanic or Latino,White,HD
+fl_id_1050,2016 - 2017,Male,Cisgender Man,76,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1112,2016 - 2017,Female,Cisgender Woman,76,1940,FL,Not Hispanic or Latino,White,SD
+fl_id_1016,2016 - 2017,Female,Cisgender Woman,77,1939,FL,Not Hispanic or Latino,White,SD
+fl_id_1051,2016 - 2017,Female,Cisgender Woman,77,1939,FL,Not Hispanic or Latino,White,HD
+fl_id_1061,2016 - 2017,Male,Cisgender Man,77,1939,FL,Not Hispanic or Latino,White,HD
+fl_id_1132,2016 - 2017,Female,Cisgender Woman,79,1937,FL,Not Hispanic or Latino,White,SD
+fl_id_1017,2016 - 2017,Female,Cisgender Woman,80,1936,FL,Not Hispanic or Latino,White,HD
+fl_id_1089,2016 - 2017,Female,Cisgender Woman,82,1934,FL,Not Hispanic or Latino,White,SD
+pa_id_1132,2014 - 2015,Male,Cisgender Man,52,1962,PA,Not Hispanic or Latino,White,SD
+pa_id_1112,2014 - 2015,Female,Cisgender Woman,53,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_1119,2014 - 2015,Female,Cisgender Woman,53,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_1220,2014 - 2015,Male,Cisgender Man,53,1961,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0151,2014 - 2015,Male,Cisgender Man,54,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0218,2014 - 2015,Female,Cisgender Woman,54,1961,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0303,2014 - 2015,Male,Cisgender Man,54,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0306,2014 - 2015,Female,Cisgender Woman,54,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1115,2014 - 2015,Female,Cisgender Woman,54,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_1224,2014 - 2015,Male,Cisgender Man,54,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0115,2014 - 2015,Male,Cisgender Man,55,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0206,2014 - 2015,Female,Cisgender Woman,55,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1217,2014 - 2015,Male,Cisgender Man,55,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0121,2014 - 2015,Female,Cisgender Woman,56,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_0253,2014 - 2015,Male,Cisgender Man,56,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0259,2014 - 2015,Female,Cisgender Woman,56,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_0312,2014 - 2015,Female,Cisgender Woman,56,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0014,2014 - 2015,Female,Cisgender Woman,57,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0037,2014 - 2015,Female,Cisgender Woman,57,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0150,2014 - 2015,Male,Cisgender Man,57,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0203,2014 - 2015,Female,Cisgender Woman,57,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0211,2014 - 2015,Female,Cisgender Woman,57,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0301,2014 - 2015,Female,Cisgender Woman,57,1957,PA,Not Hispanic or Latino,Asian,SD
+pa_id_0332,2014 - 2015,Male,Cisgender Man,57,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_1016,2014 - 2015,Female,Cisgender Woman,57,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1102,2014 - 2015,Female,Cisgender Woman,57,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1214,2014 - 2015,Male,Cisgender Man,57,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0007,2014 - 2015,Female,Cisgender Woman,58,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0112,2014 - 2015,Female,Cisgender Woman,58,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_0233,2014 - 2015,Female,Cisgender Woman,58,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0236,2014 - 2015,Male,Cisgender Man,58,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0258,2014 - 2015,Female,Cisgender Woman,58,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_0318,2014 - 2015,Female,Cisgender Woman,58,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_1123,2014 - 2015,Male,Cisgender Man,58,1956,PA,Hispanic or Latino,OTH-Hispanic/Latino,SD
+pa_id_1212,2014 - 2015,Female,Cisgender Woman,58,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0104,2014 - 2015,Female,Cisgender Woman,59,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0118,2014 - 2015,Female,Cisgender Woman,59,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0155,2014 - 2015,Male,Cisgender Man,59,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0271,2014 - 2015,Male,Cisgender Man,59,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0326,2014 - 2015,Female,Cisgender Woman,59,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0329,2014 - 2015,Male,Cisgender Man,59,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_1105,2014 - 2015,Female,Cisgender Woman,59,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1210,2014 - 2015,Female,Cisgender Woman,59,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0107,2014 - 2015,Female,Cisgender Woman,60,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0108,2014 - 2015,Female,Cisgender Woman,60,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0110,2014 - 2015,Female,Cisgender Woman,60,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0158,2014 - 2015,Female,Cisgender Woman,60,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0320,2014 - 2015,Female,Cisgender Woman,60,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_1218,2014 - 2015,Female,Cisgender Woman,61,1954,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0031,2014 - 2015,Female,Cisgender Woman,61,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_0102,2014 - 2015,Female,Cisgender Woman,61,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_1003,2014 - 2015,Female,Cisgender Woman,61,1953,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1202,2014 - 2015,Female,Cisgender Woman,61,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_1231,2014 - 2015,Female,Cisgender Woman,61,1954,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0157,2014 - 2015,Male,Cisgender Man,62,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_0307,2014 - 2015,Male,Cisgender Man,62,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_1014,2014 - 2015,Female,Cisgender Woman,62,1952,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1116,2014 - 2015,Female,Cisgender Woman,62,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_0146,2014 - 2015,Female,Cisgender Woman,63,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_1201,2014 - 2015,Female,Cisgender Woman,63,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_1236,2014 - 2015,Female,Cisgender Woman,63,1951,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1240,2014 - 2015,Female,Cisgender Woman,63,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_0106,2014 - 2015,Female,Cisgender Woman,64,1950,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0123,2014 - 2015,Female,Cisgender Woman,64,1950,PA,Not Provided,Not Specified,SD
+pa_id_0148,2014 - 2015,Male,Cisgender Man,64,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_0327,2014 - 2015,Female,Cisgender Woman,64,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_1106,2014 - 2015,Male,Cisgender Man,64,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_1122,2014 - 2015,Male,Cisgender Man,64,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_1208,2014 - 2015,Female,Cisgender Woman,64,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_0003,2014 - 2015,Male,Cisgender Man,65,1949,PA,Not Hispanic or Latino,White,SD
+pa_id_0255,2014 - 2015,Male,Cisgender Man,65,1949,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1017,2014 - 2015,Female,Cisgender Woman,65,1950,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1018,2014 - 2015,Female,Cisgender Woman,65,1949,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1121,2014 - 2015,Female,Cisgender Woman,65,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_0004,2014 - 2015,Male,Cisgender Man,66,1948,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0261,2014 - 2015,Female,Cisgender Woman,66,1948,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0265,2014 - 2015,Female,Cisgender Woman,66,1948,PA,Not Hispanic or Latino,White,SD
+pa_id_0272,2014 - 2015,Female,Cisgender Woman,66,1948,PA,Not Hispanic or Latino,White,HD
+pa_id_1125,2014 - 2015,Female,Cisgender Woman,66,1949,PA,Not Hispanic or Latino,White,SD
+pa_id_1239,2014 - 2015,Male,Cisgender Man,66,1948,PA,Not Hispanic or Latino,White,HD
+pa_id_3406,2014 - 2015,Male,Cisgender Man,66,1948,PA,Not Hispanic or Latino,White,SD
+pa_id_1005,2014 - 2015,Female,Cisgender Woman,67,1947,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1010,2014 - 2015,Female,Cisgender Woman,67,1947,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0149,2014 - 2015,Female,Cisgender Woman,68,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_0249,2014 - 2015,Female,Cisgender Woman,68,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_0275,2014 - 2015,Female,Cisgender Woman,68,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1012,2014 - 2015,Female,Cisgender Woman,68,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1109,2014 - 2015,Female,Cisgender Woman,68,1947,PA,Not Hispanic or Latino,White,HD
+pa_id_1117,2014 - 2015,Female,Cisgender Woman,68,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_1118,2014 - 2015,Female,Cisgender Woman,68,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_0103,2014 - 2015,Female,Cisgender Woman,69,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0152,2014 - 2015,Male,Cisgender Man,69,1945,PA,Not Hispanic or Latino,White,SD
+pa_id_0316,2014 - 2015,Female,Cisgender Woman,69,1945,PA,Not Hispanic or Latino,White,SD
+pa_id_1204,2014 - 2015,Female,Cisgender Woman,69,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1211,2014 - 2015,Female,Cisgender Woman,69,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1219,2014 - 2015,Female,Cisgender Woman,69,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0015,2014 - 2015,Female,Cisgender Woman,70,1946,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1130,2014 - 2015,Female,Cisgender Woman,70,1944,PA,Not Hispanic or Latino,White,HD
+pa_id_1131,2014 - 2015,Female,Cisgender Woman,70,1944,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0029,2014 - 2015,Female,Cisgender Woman,71,1943,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0201,2014 - 2015,Female,Cisgender Woman,71,1943,PA,Not Hispanic or Latino,White,HD
+pa_id_0202,2014 - 2015,Female,Cisgender Woman,71,1943,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0212,2014 - 2015,Female,Cisgender Woman,71,1943,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1009,2014 - 2015,Male,Cisgender Man,71,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0019,2014 - 2015,Female,Cisgender Woman,72,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0142,2014 - 2015,Female,Cisgender Woman,72,1942,PA,Not Hispanic or Latino,White,HD
+pa_id_1223,2014 - 2015,Female,Cisgender Woman,72,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1215,2014 - 2015,Male,Cisgender Man,73,1942,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0260,2014 - 2015,Male,Cisgender Man,74,1940,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0001,2014 - 2015,Female,Cisgender Woman,75,1939,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0036,2014 - 2015,Female,Cisgender Woman,75,1940,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0117,2014 - 2015,Female,Cisgender Woman,75,1939,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0132,2014 - 2015,Male,Cisgender Man,75,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_0221,2014 - 2015,Male,Cisgender Man,75,1940,PA,Hispanic or Latino,OTH-Hispanic/Latino,HD
+pa_id_0226,2014 - 2015,Male,Cisgender Man,75,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_1103,2014 - 2015,Female,Cisgender Woman,75,1939,PA,Not Hispanic or Latino,White,SD
+pa_id_1113,2014 - 2015,Female,Cisgender Woman,75,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_1008,2014 - 2015,Female,Cisgender Woman,76,1938,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0116,2014 - 2015,Female,Cisgender Woman,77,1937,PA,Not Hispanic or Latino,White,HD
+pa_id_0210,2014 - 2015,Female,Cisgender Woman,77,1938,PA,Not Hispanic or Latino,White,HD
+pa_id_0156,2014 - 2015,Male,Cisgender Man,78,1936,PA,Not Hispanic or Latino,White,SD
+pa_id_0248,2014 - 2015,Male,Cisgender Man,78,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_1227,2014 - 2015,Female,Cisgender Woman,78,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_1238,2014 - 2015,Female,Cisgender Woman,78,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_0238,2014 - 2015,Male,Cisgender Man,80,1934,PA,Not Hispanic or Latino,White,HD
+pa_id_0302,2014 - 2015,Male,Cisgender Man,83,1932,PA,Not Hispanic or Latino,White,SD
+pa_id_1132,2015 - 2016,Male,Cisgender Man,53,1962,PA,Not Hispanic or Latino,White,SD
+pa_id_1112,2015 - 2016,Female,Cisgender Woman,54,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_0151,2015 - 2016,Male,Cisgender Man,55,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0218,2015 - 2016,Female,Cisgender Woman,55,1961,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0303,2015 - 2016,Male,Cisgender Man,55,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0306,2015 - 2016,Female,Cisgender Woman,55,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1115,2015 - 2016,Female,Cisgender Woman,55,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_1224,2015 - 2016,Male,Cisgender Man,55,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0115,2015 - 2016,Male,Cisgender Man,56,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0206,2015 - 2016,Female,Cisgender Woman,56,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1217,2015 - 2016,Male,Cisgender Man,56,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0253,2015 - 2016,Male,Cisgender Man,57,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0259,2015 - 2016,Female,Cisgender Woman,57,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_0312,2015 - 2016,Female,Cisgender Woman,57,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0014,2015 - 2016,Female,Cisgender Woman,58,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0037,2015 - 2016,Female,Cisgender Woman,58,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0150,2015 - 2016,Male,Cisgender Man,58,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0203,2015 - 2016,Female,Cisgender Woman,58,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0301,2015 - 2016,Female,Cisgender Woman,58,1957,PA,Not Hispanic or Latino,Asian,SD
+pa_id_1102,2015 - 2016,Female,Cisgender Woman,58,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1214,2015 - 2016,Male,Cisgender Man,58,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0007,2015 - 2016,Female,Cisgender Woman,59,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0112,2015 - 2016,Female,Cisgender Woman,59,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_0236,2015 - 2016,Male,Cisgender Man,59,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0258,2015 - 2016,Female,Cisgender Woman,59,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_0318,2015 - 2016,Female,Cisgender Woman,59,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_1123,2015 - 2016,Male,Cisgender Man,59,1956,PA,Hispanic or Latino,OTH-Hispanic/Latino,SD
+pa_id_1212,2015 - 2016,Female,Cisgender Woman,59,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0104,2015 - 2016,Female,Cisgender Woman,60,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0118,2015 - 2016,Female,Cisgender Woman,60,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0271,2015 - 2016,Male,Cisgender Man,60,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0326,2015 - 2016,Female,Cisgender Woman,60,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0329,2015 - 2016,Male,Cisgender Man,60,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_1105,2015 - 2016,Female,Cisgender Woman,60,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0107,2015 - 2016,Female,Cisgender Woman,61,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0108,2015 - 2016,Female,Cisgender Woman,61,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0110,2015 - 2016,Female,Cisgender Woman,61,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0158,2015 - 2016,Female,Cisgender Woman,61,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0320,2015 - 2016,Female,Cisgender Woman,61,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0031,2015 - 2016,Female,Cisgender Woman,62,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_0102,2015 - 2016,Female,Cisgender Woman,62,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_1003,2015 - 2016,Female,Cisgender Woman,62,1953,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1202,2015 - 2016,Female,Cisgender Woman,62,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_1231,2015 - 2016,Female,Cisgender Woman,62,1954,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0157,2015 - 2016,Male,Cisgender Man,63,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_1006,2015 - 2016,Female,Cisgender Woman,63,1952,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1014,2015 - 2016,Female,Cisgender Woman,63,1952,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1116,2015 - 2016,Female,Cisgender Woman,63,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_1207,2015 - 2016,Male,Cisgender Man,63,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_0146,2015 - 2016,Female,Cisgender Woman,64,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_1135,2015 - 2016,Female,Cisgender Woman,64,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_1201,2015 - 2016,Female,Cisgender Woman,64,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_1236,2015 - 2016,Female,Cisgender Woman,64,1951,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1240,2015 - 2016,Female,Cisgender Woman,64,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_0027,2015 - 2016,Female,Cisgender Woman,65,1950,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0106,2015 - 2016,Female,Cisgender Woman,65,1950,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0123,2015 - 2016,Female,Cisgender Woman,65,1950,PA,Not Provided,Not Specified,SD
+pa_id_0148,2015 - 2016,Male,Cisgender Man,65,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_0327,2015 - 2016,Female,Cisgender Woman,65,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_1106,2015 - 2016,Male,Cisgender Man,65,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_1122,2015 - 2016,Male,Cisgender Man,65,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_1208,2015 - 2016,Female,Cisgender Woman,65,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_0003,2015 - 2016,Male,Cisgender Man,66,1949,PA,Not Hispanic or Latino,White,SD
+pa_id_0147,2015 - 2016,Male,Cisgender Man,66,1949,PA,Not Hispanic or Latino,White,SD
+pa_id_0230,2015 - 2016,Female,Cisgender Woman,66,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_0255,2015 - 2016,Male,Cisgender Man,66,1949,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0272,2015 - 2016,Female,Cisgender Woman,66,1948,PA,Not Hispanic or Latino,White,HD
+pa_id_1017,2015 - 2016,Female,Cisgender Woman,66,1950,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1018,2015 - 2016,Female,Cisgender Woman,66,1949,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1121,2015 - 2016,Female,Cisgender Woman,66,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_0004,2015 - 2016,Male,Cisgender Man,67,1948,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0261,2015 - 2016,Female,Cisgender Woman,67,1948,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0265,2015 - 2016,Female,Cisgender Woman,67,1948,PA,Not Hispanic or Latino,White,SD
+pa_id_1125,2015 - 2016,Female,Cisgender Woman,67,1949,PA,Not Hispanic or Latino,White,SD
+pa_id_1239,2015 - 2016,Male,Cisgender Man,67,1948,PA,Not Hispanic or Latino,White,HD
+pa_id_3406,2015 - 2016,Male,Cisgender Man,67,1948,PA,Not Hispanic or Latino,White,SD
+pa_id_1005,2015 - 2016,Female,Cisgender Woman,68,1947,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1010,2015 - 2016,Female,Cisgender Woman,68,1947,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0149,2015 - 2016,Female,Cisgender Woman,69,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_0249,2015 - 2016,Female,Cisgender Woman,69,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_1012,2015 - 2016,Female,Cisgender Woman,69,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1109,2015 - 2016,Female,Cisgender Woman,69,1947,PA,Not Hispanic or Latino,White,HD
+pa_id_1117,2015 - 2016,Female,Cisgender Woman,69,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_1118,2015 - 2016,Female,Cisgender Woman,69,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_0103,2015 - 2016,Female,Cisgender Woman,70,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0152,2015 - 2016,Male,Cisgender Man,70,1945,PA,Not Hispanic or Latino,White,SD
+pa_id_0316,2015 - 2016,Female,Cisgender Woman,70,1945,PA,Not Hispanic or Latino,White,SD
+pa_id_1204,2015 - 2016,Female,Cisgender Woman,70,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1211,2015 - 2016,Female,Cisgender Woman,70,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1219,2015 - 2016,Female,Cisgender Woman,70,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1235,2015 - 2016,Female,Cisgender Woman,70,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0015,2015 - 2016,Female,Cisgender Woman,71,1946,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1130,2015 - 2016,Female,Cisgender Woman,71,1944,PA,Not Hispanic or Latino,White,HD
+pa_id_1131,2015 - 2016,Female,Cisgender Woman,71,1944,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0212,2015 - 2016,Female,Cisgender Woman,72,1943,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1009,2015 - 2016,Male,Cisgender Man,72,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0019,2015 - 2016,Female,Cisgender Woman,73,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0142,2015 - 2016,Female,Cisgender Woman,73,1942,PA,Not Hispanic or Latino,White,HD
+pa_id_1223,2015 - 2016,Female,Cisgender Woman,73,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1215,2015 - 2016,Male,Cisgender Man,74,1942,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1228,2015 - 2016,Female,Cisgender Woman,74,1941,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0001,2015 - 2016,Female,Cisgender Woman,76,1939,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0036,2015 - 2016,Female,Cisgender Woman,76,1940,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0117,2015 - 2016,Female,Cisgender Woman,76,1939,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0132,2015 - 2016,Male,Cisgender Man,76,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_0226,2015 - 2016,Male,Cisgender Man,76,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_1103,2015 - 2016,Female,Cisgender Woman,76,1939,PA,Not Hispanic or Latino,White,SD
+pa_id_1113,2015 - 2016,Female,Cisgender Woman,76,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_1008,2015 - 2016,Female,Cisgender Woman,77,1938,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0116,2015 - 2016,Female,Cisgender Woman,78,1937,PA,Not Hispanic or Latino,White,HD
+pa_id_0210,2015 - 2016,Female,Cisgender Woman,78,1938,PA,Not Hispanic or Latino,White,HD
+pa_id_0156,2015 - 2016,Male,Cisgender Man,79,1936,PA,Not Hispanic or Latino,White,SD
+pa_id_0248,2015 - 2016,Male,Cisgender Man,79,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_1227,2015 - 2016,Female,Cisgender Woman,79,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_1238,2015 - 2016,Female,Cisgender Woman,79,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_0238,2015 - 2016,Male,Cisgender Man,81,1934,PA,Not Hispanic or Latino,White,HD
+pa_id_0302,2015 - 2016,Male,Cisgender Man,84,1932,PA,Not Hispanic or Latino,White,SD
+pa_id_1132,2016 - 2017,Male,Cisgender Man,54,1962,PA,Not Hispanic or Latino,White,SD
+pa_id_1112,2016 - 2017,Female,Cisgender Woman,55,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_3414,2016 - 2017,Male,Cisgender Man,55,1961,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0151,2016 - 2017,Male,Cisgender Man,56,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0303,2016 - 2017,Male,Cisgender Man,56,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0306,2016 - 2017,Female,Cisgender Woman,56,1960,PA,Not Hispanic or Latino,"OTH-AIAN, Black, White",SD
+pa_id_1115,2016 - 2017,Female,Cisgender Woman,56,1961,PA,Not Hispanic or Latino,White,SD
+pa_id_1224,2016 - 2017,Male,Cisgender Man,56,1960,PA,Not Hispanic or Latino,"OTH-AIAN, Black",SD
+pa_id_3408,2016 - 2017,Female,Cisgender Woman,56,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_3423,2016 - 2017,Male,Cisgender Man,56,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0115,2016 - 2017,Male,Cisgender Man,57,1960,PA,Not Hispanic or Latino,White,SD
+pa_id_0206,2016 - 2017,Female,Cisgender Woman,57,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1217,2016 - 2017,Male,Cisgender Man,57,1960,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_3409,2016 - 2017,Male,Cisgender Man,57,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_3422,2016 - 2017,Male,Cisgender Man,57,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_0253,2016 - 2017,Male,Cisgender Man,58,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0259,2016 - 2017,Female,Cisgender Woman,58,1959,PA,Not Hispanic or Latino,White,SD
+pa_id_0312,2016 - 2017,Female,Cisgender Woman,58,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_3411,2016 - 2017,Female,Cisgender Woman,58,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_3420,2016 - 2017,Female,Cisgender Woman,58,1958,PA,Not Hispanic or Latino,American Indian or Alaska Native,SD
+pa_id_0014,2016 - 2017,Female,Cisgender Woman,59,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0037,2016 - 2017,Female,Cisgender Woman,59,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0150,2016 - 2017,Male,Cisgender Man,59,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0203,2016 - 2017,Female,Cisgender Woman,59,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0301,2016 - 2017,Female,Cisgender Woman,59,1957,PA,Not Hispanic or Latino,Asian,SD
+pa_id_1102,2016 - 2017,Female,Cisgender Woman,59,1958,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1214,2016 - 2017,Male,Cisgender Man,59,1957,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0007,2016 - 2017,Female,Cisgender Woman,60,1958,PA,Not Hispanic or Latino,White,SD
+pa_id_0236,2016 - 2017,Male,Cisgender Man,60,1956,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0258,2016 - 2017,Female,Cisgender Woman,60,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_0318,2016 - 2017,Female,Cisgender Woman,60,1956,PA,Not Hispanic or Latino,White,SD
+pa_id_1123,2016 - 2017,Male,Cisgender Man,60,1956,PA,Hispanic or Latino,OTH-Hispanic/Latino,SD
+pa_id_1212,2016 - 2017,Female,Cisgender Woman,60,1956,PA,Not Hispanic or Latino,"OTH-AIAN, Black",SD
+pa_id_0104,2016 - 2017,Female,Cisgender Woman,61,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0118,2016 - 2017,Female,Cisgender Woman,61,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0155,2016 - 2017,Male,Cisgender Man,61,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0271,2016 - 2017,Male,Cisgender Man,61,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0326,2016 - 2017,Female,Cisgender Woman,61,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0329,2016 - 2017,Male,Cisgender Man,61,1955,PA,Not Hispanic or Latino,White,SD
+pa_id_0107,2016 - 2017,Female,Cisgender Woman,62,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0108,2016 - 2017,Female,Cisgender Woman,62,1955,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0110,2016 - 2017,Female,Cisgender Woman,62,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0158,2016 - 2017,Female,Cisgender Woman,62,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_0320,2016 - 2017,Female,Cisgender Woman,62,1954,PA,Not Hispanic or Latino,White,SD
+pa_id_1218,2016 - 2017,Female,Cisgender Woman,62,1954,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0031,2016 - 2017,Female,Cisgender Woman,63,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_1003,2016 - 2017,Female,Cisgender Woman,63,1953,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1202,2016 - 2017,Female,Cisgender Woman,63,1953,PA,Not Hispanic or Latino,White,SD
+pa_id_3416,2016 - 2017,Male,Cisgender Man,63,1953,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0157,2016 - 2017,Male,Cisgender Man,64,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_0307,2016 - 2017,Male,Cisgender Man,64,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_1006,2016 - 2017,Female,Cisgender Woman,64,1952,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1014,2016 - 2017,Female,Cisgender Woman,64,1952,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1116,2016 - 2017,Female,Cisgender Woman,64,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_1207,2016 - 2017,Male,Cisgender Man,64,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_3417,2016 - 2017,Male,Cisgender Man,64,1952,PA,Not Hispanic or Latino,White,SD
+pa_id_0146,2016 - 2017,Female,Cisgender Woman,65,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_1135,2016 - 2017,Female,Cisgender Woman,65,1951,PA,Not Hispanic or Latino,White,HD
+pa_id_1201,2016 - 2017,Female,Cisgender Woman,65,1955,PA,Not Hispanic or Latino,White,HD
+pa_id_1236,2016 - 2017,Female,Cisgender Woman,65,1951,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1240,2016 - 2017,Female,Cisgender Woman,65,1951,PA,Not Hispanic or Latino,White,SD
+pa_id_3413,2016 - 2017,Female,Cisgender Woman,65,1951,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0027,2016 - 2017,Female,Cisgender Woman,66,1950,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0106,2016 - 2017,Female,Cisgender Woman,66,1950,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0123,2016 - 2017,Female,Cisgender Woman,66,1950,PA,Not Hispanic or Latino,White,HD
+pa_id_0148,2016 - 2017,Male,Cisgender Man,66,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_0327,2016 - 2017,Female,Cisgender Woman,66,1950,PA,Not Hispanic or Latino,White,SD
+pa_id_1106,2016 - 2017,Male,Cisgender Man,66,1950,PA,Not Hispanic or Latino,White,HD
+pa_id_1122,2016 - 2017,Male,Cisgender Man,66,1950,PA,Not Hispanic or Latino,White,HD
+pa_id_1208,2016 - 2017,Female,Cisgender Woman,66,1950,PA,Not Hispanic or Latino,White,HD
+pa_id_3412,2016 - 2017,Female,Cisgender Woman,66,1950,PA,Not Hispanic or Latino,White,HD
+pa_id_0003,2016 - 2017,Male,Cisgender Man,67,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_0147,2016 - 2017,Male,Cisgender Man,67,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_0230,2016 - 2017,Female,Cisgender Woman,67,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_0255,2016 - 2017,Male,Cisgender Man,67,1949,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0272,2016 - 2017,Female,Cisgender Woman,67,1948,PA,Not Hispanic or Latino,White,HD
+pa_id_1017,2016 - 2017,Female,Cisgender Woman,67,1950,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1018,2016 - 2017,Female,Cisgender Woman,67,1949,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1121,2016 - 2017,Female,Cisgender Woman,67,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_0004,2016 - 2017,Male,Cisgender Man,68,1948,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0261,2016 - 2017,Female,Cisgender Woman,68,1948,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1125,2016 - 2017,Female,Cisgender Woman,68,1949,PA,Not Hispanic or Latino,White,HD
+pa_id_1239,2016 - 2017,Male,Cisgender Man,68,1948,PA,Not Hispanic or Latino,White,HD
+pa_id_1005,2016 - 2017,Female,Cisgender Woman,69,1947,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_3419,2016 - 2017,Male,Cisgender Man,69,1947,PA,Not Hispanic or Latino,White,HD
+pa_id_0149,2016 - 2017,Female,Cisgender Woman,70,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_0249,2016 - 2017,Female,Cisgender Woman,70,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_1012,2016 - 2017,Female,Cisgender Woman,70,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1109,2016 - 2017,Female,Cisgender Woman,70,1947,PA,Not Hispanic or Latino,White,HD
+pa_id_1117,2016 - 2017,Female,Cisgender Woman,70,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_1118,2016 - 2017,Female,Cisgender Woman,70,1946,PA,Not Hispanic or Latino,White,HD
+pa_id_3407,2016 - 2017,Male,Cisgender Man,70,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0103,2016 - 2017,Female,Cisgender Woman,71,1945,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_0316,2016 - 2017,Female,Cisgender Woman,71,1945,PA,Not Hispanic or Latino,White,HD
+pa_id_1204,2016 - 2017,Female,Cisgender Woman,71,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1219,2016 - 2017,Female,Cisgender Woman,71,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1235,2016 - 2017,Female,Cisgender Woman,71,1945,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0015,2016 - 2017,Female,Cisgender Woman,72,1946,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1130,2016 - 2017,Female,Cisgender Woman,72,1944,PA,Not Hispanic or Latino,White,HD
+pa_id_1131,2016 - 2017,Female,Cisgender Woman,72,1944,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0019,2016 - 2017,Female,Cisgender Woman,74,1943,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0142,2016 - 2017,Female,Cisgender Woman,74,1942,PA,Not Hispanic or Latino,White,HD
+pa_id_1223,2016 - 2017,Female,Cisgender Woman,74,1943,PA,Not Hispanic or Latino,Black or African American,SD
+pa_id_1215,2016 - 2017,Male,Cisgender Man,75,1942,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_1228,2016 - 2017,Female,Cisgender Woman,75,1941,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_3415,2016 - 2017,Female,Cisgender Woman,75,1941,PA,Not Hispanic or Latino,White,HD
+pa_id_3421,2016 - 2017,Female,Cisgender Woman,75,1941,PA,Not Provided,Not Specified,HD
+pa_id_0036,2016 - 2017,Female,Cisgender Woman,77,1940,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0117,2016 - 2017,Female,Cisgender Woman,77,1939,PA,Not Hispanic or Latino,Black or African American,HD
+pa_id_0132,2016 - 2017,Male,Cisgender Man,77,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_0226,2016 - 2017,Male,Cisgender Man,77,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_1103,2016 - 2017,Female,Cisgender Woman,77,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_1113,2016 - 2017,Female,Cisgender Woman,77,1939,PA,Not Hispanic or Latino,White,HD
+pa_id_0156,2016 - 2017,Male,Cisgender Man,80,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_1227,2016 - 2017,Female,Cisgender Woman,80,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_1238,2016 - 2017,Female,Cisgender Woman,80,1936,PA,Not Hispanic or Latino,White,HD
+pa_id_0238,2016 - 2017,Male,Cisgender Man,82,1934,PA,Not Hispanic or Latino,White,HD
+pa_id_3418,2016 - 2017,Male,Cisgender Man,82,1934,PA,Not Hispanic or Latino,White,HD
+pa_id_0302,2016 - 2017,Male,Cisgender Man,85,1932,PA,Not Hispanic or Latino,White,HD
+uga_id_0001,2016 - 2017,Female,Cisgender Woman,29,1987,UGA,Not Hispanic or Latino,White,SD
+uga_id_0002,2016 - 2017,Female,Cisgender Woman,29,1987,UGA,Not Hispanic or Latino,White,SD
+uga_id_0003,2016 - 2017,Female,Cisgender Woman,28,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0004,2016 - 2017,Male,Cisgender Man,27,1989,UGA,Not Hispanic or Latino,White,SD
+uga_id_0005,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0006,2016 - 2017,Female,Cisgender Woman,36,1981,UGA,Not Hispanic or Latino,White,SD
+uga_id_0007,2016 - 2017,Male,Cisgender Man,22,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0008,2016 - 2017,Female,Cisgender Woman,46,1970,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0009,2016 - 2017,Male,Cisgender Man,61,1955,UGA,Not Hispanic or Latino,White,SD
+uga_id_0010,2016 - 2017,Male,Cisgender Man,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0011,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0012,2016 - 2017,Male,Cisgender Man,24,1992,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0013,2016 - 2017,Male,Cisgender Man,36,1980,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0014,2016 - 2017,Female,Cisgender Woman,62,1955,UGA,Not Hispanic or Latino,White,SD
+uga_id_0015,2016 - 2017,Female,Cisgender Woman,23,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0016,2016 - 2017,Female,Cisgender Woman,38,1978,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0017,2016 - 2017,Male,Cisgender Man,51,1965,UGA,Not Hispanic or Latino,White,SD
+uga_id_0018,2016 - 2017,Female,Cisgender Woman,31,1985,UGA,Not Hispanic or Latino,White,SD
+uga_id_0019,2016 - 2017,Female,Cisgender Woman,32,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0020,2016 - 2017,Male,Cisgender Man,33,1983,UGA,Not Hispanic or Latino,White,SD
+uga_id_0021,2016 - 2017,Female,Cisgender Woman,38,1978,UGA,Not Hispanic or Latino,White,SD
+uga_id_0022,2016 - 2017,Male,Cisgender Man,39,1977,UGA,Not Hispanic or Latino,White,SD
+uga_id_0023,2016 - 2017,Male,Cisgender Man,27,1989,UGA,Not Hispanic or Latino,White,SD
+uga_id_0024,2016 - 2017,Male,Cisgender Man,26,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0025,2016 - 2017,Male,Cisgender Man,22,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0026,2016 - 2017,Female,Cisgender Woman,20,1996,UGA,Not Hispanic or Latino,White,SD
+uga_id_0028,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,OTH-White/Asian,SD
+uga_id_0029,2016 - 2017,Female,Cisgender Woman,24,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0030,2016 - 2017,Male,Cisgender Man,30,1987,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0031,2016 - 2017,Female,Cisgender Woman,23,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0032,2016 - 2017,Female,Cisgender Woman,27,1989,UGA,Not Hispanic or Latino,White,SD
+uga_id_0033,2016 - 2017,Male,Cisgender Man,22,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0034,2016 - 2017,Female,Cisgender Woman,26,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0035,2016 - 2017,Female,Cisgender Woman,28,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0036,2016 - 2017,Female,Cisgender Woman,26,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0037,2016 - 2017,Female,Cisgender Woman,57,1959,UGA,Not Hispanic or Latino,White,SD
+uga_id_0038,2016 - 2017,Male,Cisgender Man,43,1973,UGA,Not Hispanic or Latino,White,SD
+uga_id_0039,2016 - 2017,Female,Cisgender Woman,22,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0040,2016 - 2017,Female,Cisgender Woman,28,1988,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0041,2016 - 2017,Female,Cisgender Woman,26,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0042,2016 - 2017,Female,Cisgender Woman,23,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0044,2016 - 2017,Male,Cisgender Man,24,1992,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0045,2016 - 2017,Female,Cisgender Woman,26,1990,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0046,2016 - 2017,Male,Cisgender Man,29,1987,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0047,2016 - 2017,Female,Cisgender Woman,62,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0048,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0049,2016 - 2017,Female,Cisgender Woman,20,1996,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0050,2016 - 2017,Male,Cisgender Man,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0051,2016 - 2017,Male,Cisgender Man,45,1971,UGA,Not Hispanic or Latino,White,SD
+uga_id_0052,2016 - 2017,Female,Cisgender Woman,23,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0053,2016 - 2017,Female,Cisgender Woman,23,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0054,2016 - 2017,Female,Cisgender Woman,18,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0055,2016 - 2017,Male,Cisgender Man,50,1966,UGA,Not Hispanic or Latino,White,SD
+uga_id_0056,2016 - 2017,Female,Cisgender Woman,49,1967,UGA,Not Hispanic or Latino,White,SD
+uga_id_0057,2016 - 2017,Female,Cisgender Woman,24,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0058,2016 - 2017,Female,Cisgender Woman,56,1960,UGA,Not Hispanic or Latino,White,SD
+uga_id_0059,2016 - 2017,Female,Cisgender Woman,37,1979,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0060,2016 - 2017,Female,Cisgender Woman,36,1980,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0061,2016 - 2017,Male,Cisgender Man,41,1975,UGA,Not Hispanic or Latino,White,SD
+uga_id_0062,2016 - 2017,Female,Cisgender Woman,48,1968,UGA,Not Hispanic or Latino,White,SD
+uga_id_0063,2016 - 2017,Male,Cisgender Man,22,1994,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0064,2016 - 2017,Female,Cisgender Woman,55,1961,UGA,Not Hispanic or Latino,White,SD
+uga_id_0065,2016 - 2017,Female,Cisgender Woman,23,1993,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0066,2016 - 2017,Male,Cisgender Man,42,1974,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0067,2016 - 2017,Female,Cisgender Woman,33,1983,UGA,Not Hispanic or Latino,White,SD
+uga_id_0068,2016 - 2017,Female,Cisgender Woman,22,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0069,2016 - 2017,Male,Cisgender Man,25,1991,UGA,Hispanic or Latino,White,SD
+uga_id_0070,2016 - 2017,Male,Cisgender Man,53,1963,UGA,Not Hispanic or Latino,White,SD
+uga_id_0071,2016 - 2017,Female,Cisgender Woman,20,1996,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0072,2016 - 2017,Female,Cisgender Woman,24,1992,UGA,Hispanic or Latino,White,SD
+uga_id_0073,2016 - 2017,Female,Cisgender Woman,28,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0074,2016 - 2017,Male,Cisgender Man,27,1989,UGA,Not Hispanic or Latino,White,SD
+uga_id_0075,2016 - 2017,Female,Cisgender Woman,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0076,2016 - 2017,Female,Cisgender Woman,19,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0077,2016 - 2017,Female,Cisgender Woman,64,1952,UGA,Not Hispanic or Latino,White,SD
+uga_id_0078,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0079,2016 - 2017,Male,Cisgender Man,60,1956,UGA,Not Hispanic or Latino,White,SD
+uga_id_0080,2016 - 2017,Female,Cisgender Woman,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0081,2016 - 2017,Female,Cisgender Woman,47,1970,UGA,Not Hispanic or Latino,White,SD
+uga_id_0082,2016 - 2017,Female,Cisgender Woman,20,1996,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0083,2016 - 2017,Female,Cisgender Woman,66,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0084,2016 - 2017,Female,Cisgender Woman,18,1998,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0085,2016 - 2017,Female,Cisgender Woman,18,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0086,2016 - 2017,Male,Cisgender Man,58,1959,UGA,Not Hispanic or Latino,White,SD
+uga_id_0087,2016 - 2017,Male,Cisgender Man,20,1996,UGA,Not Hispanic or Latino,White,SD
+uga_id_0088,2016 - 2017,Female,Cisgender Woman,24,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0089,2016 - 2017,Male,Cisgender Man,66,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0090,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0091,2016 - 2017,Male,Cisgender Man,72,1944,UGA,Not Hispanic or Latino,White,SD
+uga_id_0092,2016 - 2017,Male,Cisgender Man,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0093,2016 - 2017,Male,Cisgender Man,25,1991,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0094,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0095,2016 - 2017,Male,Cisgender Man,28,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0096,2016 - 2017,Male,Cisgender Man,67,1949,UGA,Not Hispanic or Latino,White,SD
+uga_id_0097,2016 - 2017,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0098,2016 - 2017,Male,Cisgender Man,55,1961,UGA,Not Hispanic or Latino,White,SD
+uga_id_0099,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0100,2016 - 2017,Female,Cisgender Woman,47,1970,UGA,Not Hispanic or Latino,White,SD
+uga_id_0101,2016 - 2017,Male,Cisgender Man,30,1986,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0102,2016 - 2017,Male,Cisgender Man,47,1969,UGA,Not Hispanic or Latino,White,SD
+uga_id_0103,2016 - 2017,Female,Cisgender Woman,20,1997,UGA,Not Hispanic or Latino,OTH-White/African American,SD
+uga_id_0104,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0105,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0106,2016 - 2017,Female,Cisgender Woman,20,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0107,2016 - 2017,Female,Cisgender Woman,19,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0108,2016 - 2017,Male,Cisgender Man,54,1963,UGA,Not Hispanic or Latino,White,SD
+uga_id_0109,2016 - 2017,Female,Cisgender Woman,33,1983,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0110,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0111,2016 - 2017,Female,Cisgender Woman,18,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0112,2016 - 2017,Female,Cisgender Woman,18,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0113,2016 - 2017,Female,Cisgender Woman,50,1966,UGA,Not Hispanic or Latino,OTH-White/ American Indian,SD
+uga_id_0114,2016 - 2017,Male,Cisgender Man,21,1995,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0115,2016 - 2017,Male,Cisgender Man,29,1987,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0116,2016 - 2017,Male,Cisgender Man,34,1982,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0117,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0118,2016 - 2017,Female,Cisgender Woman,22,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0119,2016 - 2017,Male,Cisgender Man,19,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0120,2016 - 2017,Male,Cisgender Man,19,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0122,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0123,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0124,2016 - 2017,Male,Cisgender Man,74,1942,UGA,Not Hispanic or Latino,White,SD
+uga_id_0125,2016 - 2017,Female,Cisgender Woman,68,1949,UGA,Not Hispanic or Latino,White,HD
+uga_id_0126,2016 - 2017,Male,Cisgender Man,64,1952,UGA,Not Hispanic or Latino,White,SD
+uga_id_0127,2016 - 2017,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0128,2016 - 2017,Female,Cisgender Woman,35,1981,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0129,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0130,2016 - 2017,Male,Cisgender Man,62,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0131,2016 - 2017,Female,Cisgender Woman,62,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0132,2016 - 2017,Female,Cisgender Woman,18,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0133,2016 - 2017,Female,Cisgender Woman,36,1980,UGA,Not Hispanic or Latino,White,SD
+uga_id_0134,2016 - 2017,Female,Cisgender Woman,70,1947,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0135,2016 - 2017,Male,Cisgender Man,68,1948,UGA,Not Hispanic or Latino,White,SD
+uga_id_0136,2016 - 2017,Female,Cisgender Woman,26,1990,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0137,2016 - 2017,Male,Cisgender Man,28,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0138,2016 - 2017,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0139,2016 - 2017,Female,Cisgender Woman,62,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0140,2016 - 2017,Male,Cisgender Man,63,1953,UGA,Hispanic or Latino,White,SD
+uga_id_0141,2016 - 2017,Female,Cisgender Woman,70,1946,UGA,Not Hispanic or Latino,White,HD
+uga_id_0142,2016 - 2017,Male,Cisgender Man,27,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0143,2016 - 2017,Female,Cisgender Woman,26,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0144,2016 - 2017,Female,Cisgender Woman,26,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0145,2016 - 2017,Male,Cisgender Man,67,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0146,2016 - 2017,Male,Cisgender Man,68,1948,UGA,Not Hispanic or Latino,White,SD
+uga_id_0147,2016 - 2017,Male,Cisgender Man,67,1950,UGA,Not Hispanic or Latino,White,HD
+uga_id_0148,2016 - 2017,Male,Cisgender Man,68,1948,UGA,Not Hispanic or Latino,White,SD
+uga_id_0149,2016 - 2017,Male,Cisgender Man,65,1951,UGA,Not Hispanic or Latino,White,SD
+uga_id_0150,2016 - 2017,Male,Cisgender Man,64,1952,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0151,2016 - 2017,Female,Cisgender Woman,66,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0005,2017 - 2018,Female,Cisgender Woman,25,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0007,2017 - 2018,Male,Cisgender Man,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0008,2017 - 2018,Female,Cisgender Woman,47,1970,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0010,2017 - 2018,Male,Cisgender Man,26,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0011,2017 - 2018,Female,Cisgender Woman,26,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0013,2017 - 2018,Male,Cisgender Man,36,1980,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0014,2017 - 2018,Female,Cisgender Woman,62,1955,UGA,Not Hispanic or Latino,White,SD
+uga_id_0015,2017 - 2018,Female,Cisgender Woman,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0016,2017 - 2018,Female,Cisgender Woman,39,1978,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0017,2017 - 2018,Male,Cisgender Man,52,1965,UGA,Not Hispanic or Latino,White,SD
+uga_id_0018,2017 - 2018,Female,Cisgender Woman,31,1985,UGA,Not Hispanic or Latino,White,SD
+uga_id_0019,2017 - 2018,Female,Cisgender Woman,33,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0020,2017 - 2018,Male,Cisgender Man,34,1983,UGA,Not Hispanic or Latino,White,SD
+uga_id_0022,2017 - 2018,Male,Cisgender Man,40,1977,UGA,Not Hispanic or Latino,White,SD
+uga_id_0029,2017 - 2018,Female,Cisgender Woman,24,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0030,2017 - 2018,Male,Cisgender Man,30,1987,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0031,2017 - 2018,Female,Cisgender Woman,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0032,2017 - 2018,Female,Cisgender Woman,28,1989,UGA,Not Hispanic or Latino,White,SD
+uga_id_0033,2017 - 2018,Male,Cisgender Man,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0034,2017 - 2018,Female,Cisgender Woman,27,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0036,2017 - 2018,Female,Cisgender Woman,27,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0037,2017 - 2018,Female,Cisgender Woman,58,1959,UGA,Not Hispanic or Latino,White,SD
+uga_id_0038,2017 - 2018,Male,Cisgender Man,44,1973,UGA,Not Hispanic or Latino,White,SD
+uga_id_0039,2017 - 2018,Female,Cisgender Woman,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0042,2017 - 2018,Female,Cisgender Woman,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0045,2017 - 2018,Female,Cisgender Woman,27,1990,UGA,Hispanic or Latino,Black or African American,SD
+uga_id_0046,2017 - 2018,Male,Cisgender Man,30,1987,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0047,2017 - 2018,Female,Cisgender Woman,63,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0048,2017 - 2018,Female,Cisgender Woman,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0049,2017 - 2018,Female,Cisgender Woman,21,1996,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0050,2017 - 2018,Male,Cisgender Man,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0051,2017 - 2018,Male,Cisgender Man,46,1971,UGA,Not Hispanic or Latino,White,SD
+uga_id_0052,2017 - 2018,Female,Cisgender Woman,23,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0053,2017 - 2018,Female,Cisgender Woman,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0054,2017 - 2018,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0055,2017 - 2018,Male,Cisgender Man,51,1966,UGA,Not Hispanic or Latino,White,SD
+uga_id_0056,2017 - 2018,Female,Cisgender Woman,50,1967,UGA,Not Hispanic or Latino,White,SD
+uga_id_0057,2017 - 2018,Female,Cisgender Woman,25,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0058,2017 - 2018,Female,Cisgender Woman,57,1960,UGA,Not Hispanic or Latino,White,SD
+uga_id_0060,2017 - 2018,Female,Cisgender Woman,37,1980,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0062,2017 - 2018,Female,Cisgender Woman,49,1968,UGA,Not Hispanic or Latino,White,SD
+uga_id_0064,2017 - 2018,Female,Cisgender Woman,56,1961,UGA,Not Hispanic or Latino,White,SD
+uga_id_0065,2017 - 2018,Female,Cisgender Woman,24,1993,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0066,2017 - 2018,Male,Cisgender Man,43,1974,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0068,2017 - 2018,Female,Cisgender Woman,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0069,2017 - 2018,Male,Cisgender Man,26,1991,UGA,Hispanic or Latino,White,SD
+uga_id_0070,2017 - 2018,Male,Cisgender Man,54,1963,UGA,Not Hispanic or Latino,White,SD
+uga_id_0072,2017 - 2018,Female,Cisgender Woman,25,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0074,2017 - 2018,Male,Cisgender Man,28,1989,UGA,Not Hispanic or Latino,White,SD
+uga_id_0075,2017 - 2018,Female,Cisgender Woman,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0076,2017 - 2018,Female,Cisgender Woman,19,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0077,2017 - 2018,Female,Cisgender Woman,65,1952,UGA,Not Hispanic or Latino,White,SD
+uga_id_0078,2017 - 2018,Female,Cisgender Woman,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0081,2017 - 2018,Female,Cisgender Woman,47,1970,UGA,Not Hispanic or Latino,White,SD
+uga_id_0083,2017 - 2018,Female,Cisgender Woman,67,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0084,2017 - 2018,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0085,2017 - 2018,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0086,2017 - 2018,Male,Cisgender Man,58,1959,UGA,Not Hispanic or Latino,White,SD
+uga_id_0087,2017 - 2018,Male,Cisgender Man,21,1996,UGA,Not Hispanic or Latino,White,SD
+uga_id_0089,2017 - 2018,Male,Cisgender Man,67,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0090,2017 - 2018,Female,Cisgender Woman,26,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0091,2017 - 2018,Male,Cisgender Man,73,1944,UGA,Not Hispanic or Latino,White,SD
+uga_id_0095,2017 - 2018,Male,Cisgender Man,29,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0097,2017 - 2018,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0099,2017 - 2018,Female,Cisgender Woman,21,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0100,2017 - 2018,Female,Cisgender Woman,47,1970,UGA,Not Hispanic or Latino,White,SD
+uga_id_0101,2017 - 2018,Male,Cisgender Man,31,1986,UGA,Not Hispanic or Latino,White,SD
+uga_id_0104,2017 - 2018,Female,Cisgender Woman,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0105,2017 - 2018,Female,Cisgender Woman,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0106,2017 - 2018,Female,Cisgender Woman,20,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0107,2017 - 2018,Female,Cisgender Woman,20,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0110,2017 - 2018,Female,Cisgender Woman,26,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0111,2017 - 2018,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0112,2017 - 2018,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0118,2017 - 2018,Female,Cisgender Woman,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0119,2017 - 2018,Male,Cisgender Man,20,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0120,2017 - 2018,Male,Cisgender Man,20,1997,UGA,Not Hispanic or Latino,White,SD
+uga_id_0123,2017 - 2018,Female,Cisgender Woman,21,1995,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0124,2017 - 2018,Male,Cisgender Man,74,1942,UGA,Not Hispanic or Latino,White,SD
+uga_id_0125,2017 - 2018,Female,Cisgender Woman,68,1949,UGA,Not Hispanic or Latino,White,HD
+uga_id_0126,2017 - 2018,Male,Cisgender Man,65,1952,UGA,Not Hispanic or Latino,White,SD
+uga_id_0128,2017 - 2018,Female,Cisgender Woman,36,1981,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0130,2017 - 2018,Male,Cisgender Man,63,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0132,2017 - 2018,Female,Cisgender Woman,19,1998,UGA,Not Hispanic or Latino,White,SD
+uga_id_0133,2017 - 2018,Female,Cisgender Woman,37,1980,UGA,Not Hispanic or Latino,White,SD
+uga_id_0134,2017 - 2018,Female,Cisgender Woman,70,1947,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0135,2017 - 2018,Male,Cisgender Man,69,1948,UGA,Not Hispanic or Latino,White,HD
+uga_id_0136,2017 - 2018,Female,Cisgender Woman,27,1990,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0137,2017 - 2018,Male,Cisgender Man,29,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0138,2017 - 2018,Female,Cisgender Woman,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0139,2017 - 2018,Female,Cisgender Woman,63,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0140,2017 - 2018,Male,Cisgender Man,64,1953,UGA,Hispanic or Latino,White,SD
+uga_id_0142,2017 - 2018,Male,Cisgender Man,28,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0143,2017 - 2018,Female,Cisgender Woman,27,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0144,2017 - 2018,Female,Cisgender Woman,27,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0145,2017 - 2018,Male,Cisgender Man,68,1950,UGA,Not Hispanic or Latino,White,HD
+uga_id_0146,2017 - 2018,Male,Cisgender Man,69,1948,UGA,Not Hispanic or Latino,White,HD
+uga_id_0147,2017 - 2018,Male,Cisgender Man,67,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0148,2017 - 2018,Male,Cisgender Man,69,1948,UGA,Not Hispanic or Latino,White,SD
+uga_id_0149,2017 - 2018,Male,Cisgender Man,66,1951,UGA,Not Hispanic or Latino,White,SD
+uga_id_0150,2017 - 2018,Male,Cisgender Man,65,1952,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0151,2017 - 2018,Female,Cisgender Woman,67,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0152,2017 - 2018,Female,Cisgender Woman,29,1988,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0154,2017 - 2018,Male,Cisgender Man,33,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0155,2017 - 2018,Male,Cisgender Man,36,1981,UGA,Not Hispanic or Latino,White,SD
+uga_id_0156,2017 - 2018,Male,Cisgender Man,37,1980,UGA,Not Hispanic or Latino,White,SD
+uga_id_0157,2017 - 2018,Male,Cisgender Man,60,1956,UGA,Not Hispanic or Latino,White,SD
+uga_id_0158,2017 - 2018,Male,Cisgender Man,33,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0160,2017 - 2018,Female,Cisgender Woman,68,1948,UGA,Not Hispanic or Latino,White,SD
+uga_id_0161,2017 - 2018,Male,Cisgender Man,25,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0162,2017 - 2018,Female,Cisgender Woman,73,1943,UGA,Not Hispanic or Latino,White,SD
+uga_id_0163,2017 - 2018,Male,Cisgender Man,51,1966,UGA,Not Hispanic or Latino,White,SD
+uga_id_0165,2017 - 2018,Female,Cisgender Woman,39,1978,UGA,Not Hispanic or Latino,White,SD
+uga_id_0166,2017 - 2018,Male,Cisgender Man,54,1963,UGA,Not Hispanic or Latino,White,SD
+uga_id_0168,2017 - 2018,Male,Cisgender Man,83,1934,UGA,Not Hispanic or Latino,White,SD
+uga_id_0169,2017 - 2018,Male,Cisgender Man,74,1943,UGA,Not Hispanic or Latino,White,HD
+uga_id_0170,2017 - 2018,Female,Cisgender Woman,67,1950,UGA,Not Hispanic or Latino,White,HD
+uga_id_0171,2017 - 2018,Female,Cisgender Woman,79,1938,UGA,Not Hispanic or Latino,White,HD
+uga_id_0172,2017 - 2018,Male,Cisgender Man,66,1951,UGA,Not Hispanic or Latino,White,HD
+uga_id_0173,2017 - 2018,Female,Cisgender Woman,64,1953,UGA,Not Hispanic or Latino,White,SD
+uga_id_0174,2017 - 2018,Female,Cisgender Woman,40,1977,UGA,Not Hispanic or Latino,White,SD
+uga_id_0175,2017 - 2018,Male,Cisgender Man,53,1964,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0176,2017 - 2018,Male,Cisgender Man,71,1946,UGA,Not Hispanic or Latino,White,HD
+uga_id_0177,2017 - 2018,Male,Cisgender Man,69,1948,UGA,Not Hispanic or Latino,White,HD
+uga_id_0178,2017 - 2018,Female,Cisgender Woman,67,1950,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0179,2017 - 2018,Female,Cisgender Woman,63,1954,UGA,Not Hispanic or Latino,White,SD
+uga_id_0180,2017 - 2018,Female,Cisgender Woman,67,1950,UGA,Not Hispanic or Latino,White,HD
+uga_id_0181,2017 - 2018,Female,Cisgender Woman,45,1972,UGA,Not Hispanic or Latino,White,SD
+uga_id_0182,2017 - 2018,Male,Cisgender Man,67,1950,UGA,Not Hispanic or Latino,White,HD
+uga_id_0184,2017 - 2018,Male,Cisgender Man,66,1951,UGA,Not Hispanic or Latino,White,SD
+uga_id_0185,2017 - 2018,Female,Cisgender Woman,67,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0186,2017 - 2018,Male,Cisgender Man,67,1950,UGA,Not Hispanic or Latino,White,SD
+uga_id_0188,2017 - 2018,Female,Cisgender Woman,68,1949,UGA,Not Hispanic or Latino,White,SD
+uga_id_0190,2017 - 2018,Male,Cisgender Man,58,1959,UGA,Not Hispanic or Latino,White,SD
+uga_id_0191,2017 - 2018,Female,Cisgender Woman,22,1994,UGA,Not Hispanic or Latino,Native Hawaiian or Other Pacific Islander,SD
+uga_id_0192,2017 - 2018,Female,Cisgender Woman,74,1943,UGA,Not Hispanic or Latino,White,HD
+uga_id_0193,2017 - 2018,Male,Cisgender Man,83,1934,UGA,Not Hispanic or Latino,White,HD
+uga_id_0194,2017 - 2018,Male,Cisgender Man,29,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0195,2017 - 2018,Male,Cisgender Man,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0196,2017 - 2018,Male,Cisgender Man,65,1952,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0197,2017 - 2018,Male,Cisgender Man,40,1977,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0199,2017 - 2018,Female,Cisgender Woman,27,1990,UGA,Not Hispanic or Latino,White,SD
+uga_id_0200,2017 - 2018,Male,Cisgender Man,71,1945,UGA,Not Hispanic or Latino,White,HD
+uga_id_0201,2017 - 2018,Female,Cisgender Woman,73,1944,UGA,Not Hispanic or Latino,White,SD
+uga_id_0203,2017 - 2018,Male,Cisgender Man,62,1955,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0204,2017 - 2018,Male,Cisgender Man,28,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0205,2017 - 2018,Female,Cisgender Woman,62,1955,UGA,Not Hispanic or Latino,White,SD
+uga_id_0206,2017 - 2018,Female,Cisgender Woman,21,1996,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0207,2017 - 2018,Male,Cisgender Man,33,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0208,2017 - 2018,Male,Cisgender Man,58,1959,UGA,Not Hispanic or Latino,White,SD
+uga_id_0209,2017 - 2018,Female,Cisgender Woman,76,1941,UGA,Not Hispanic or Latino,White,HD
+uga_id_0210,2017 - 2018,Female,Cisgender Woman,31,1986,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0211,2017 - 2018,Male,Cisgender Man,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0212,2017 - 2018,Male,Cisgender Man,46,1971,UGA,Not Hispanic or Latino,White,SD
+uga_id_0213,2017 - 2018,Male,Cisgender Man,32,1985,UGA,Not Hispanic or Latino,White,SD
+uga_id_0214,2017 - 2018,Female,Cisgender Woman,59,1958,UGA,Not Hispanic or Latino,White,SD
+uga_id_0215,2017 - 2018,Female,Cisgender Woman,36,1981,UGA,Not Hispanic or Latino,White,SD
+uga_id_0216,2017 - 2018,Male,Cisgender Man,37,1980,UGA,Not Hispanic or Latino,White,SD
+uga_id_0217,2017 - 2018,Female,Cisgender Woman,51,1966,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0218,2017 - 2018,Male,Cisgender Man,26,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0219,2017 - 2018,Male,Cisgender Man,38,1979,UGA,Not Hispanic or Latino,White,SD
+uga_id_0220,2017 - 2018,Female,Cisgender Woman,42,1975,UGA,Not Hispanic or Latino,White,SD
+uga_id_0221,2017 - 2018,Female,Cisgender Woman,26,1991,UGA,Not Hispanic or Latino,White,SD
+uga_id_0222,2017 - 2018,Male,Cisgender Man,29,1988,UGA,Not Hispanic or Latino,White,SD
+uga_id_0223,2017 - 2018,Male,Cisgender Man,46,1971,UGA,Not Hispanic or Latino,White,SD
+uga_id_0224,2017 - 2018,Female,Cisgender Woman,59,1958,UGA,Not Hispanic or Latino,White,SD
+uga_id_0225,2017 - 2018,Male,Cisgender Man,33,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0226,2017 - 2018,Male,Cisgender Man,23,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0228,2017 - 2018,Male,Cisgender Man,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0229,2017 - 2018,Male,Cisgender Man,22,1995,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_0230,2017 - 2018,Female,Cisgender Woman,62,1955,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0231,2017 - 2018,Female,Cisgender Woman,22,1995,UGA,Not Hispanic or Latino,White,SD
+uga_id_0232,2017 - 2018,Female,Cisgender Woman,25,1992,UGA,Not Hispanic or Latino,White,SD
+uga_id_0233,2017 - 2018,Male,Cisgender Man,32,1985,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0234,2017 - 2018,Female,Cisgender Woman,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0235,2017 - 2018,Male,Cisgender Man,28,1989,UGA,Not Hispanic or Latino,White,SD
+uga_id_0236,2017 - 2018,Male,Cisgender Man,45,1972,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0237,2017 - 2018,Male,Cisgender Man,23,1994,UGA,Not Hispanic or Latino,White,SD
+uga_id_0238,2017 - 2018,Female,Cisgender Woman,18,1999,UGA,Not Hispanic or Latino,White,SD
+uga_id_0239,2017 - 2018,Female,Cisgender Woman,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0241,2017 - 2018,Male,Cisgender Man,38,1979,UGA,Not Hispanic or Latino,OTH-American Indian/White/Black,SD
+uga_id_0243,2017 - 2018,Female,Cisgender Woman,24,1993,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0244,2017 - 2018,Female,Cisgender Woman,31,1986,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0245,2017 - 2018,Female,Cisgender Woman,18,1999,UGA,Not Hispanic or Latino,White,SD
+uga_id_0246,2017 - 2018,Female,Cisgender Woman,47,1971,UGA,Not Hispanic or Latino,White,SD
+uga_id_0247,2017 - 2018,Male,Cisgender Man,33,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0248,2017 - 2018,Female,Cisgender Woman,61,1956,UGA,Not Hispanic or Latino,White,SD
+uga_id_0249,2017 - 2018,Female,Cisgender Woman,40,1977,UGA,Not Hispanic or Latino,White,SD
+uga_id_0250,2017 - 2018,Female,Cisgender Woman,33,1984,UGA,Not Hispanic or Latino,White,SD
+uga_id_0251,2017 - 2018,Female,Cisgender Woman,44,1974,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0252,2017 - 2018,Male,Cisgender Man,25,1992,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_0253,2017 - 2018,Male,Cisgender Man,24,1993,UGA,Not Hispanic or Latino,White,SD
+uga_id_0254,2017 - 2018,Male,Cisgender Man,45,1972,UGA,Not Hispanic or Latino,White,SD
+uga_id_0255,2017 - 2018,Male,Cisgender Man,48,1969,UGA,Not Hispanic or Latino,White,SD
+uga_id_0256,2017 - 2018,Male,Cisgender Man,41,1976,UGA,Not Hispanic or Latino,White,SD
+uga_id_0257,2017 - 2018,Male,Cisgender Man,56,1962,UGA,Not Hispanic or Latino,White,SD
+uga_id_0260,2017 - 2018,Female,Cisgender Woman,40,1977,UGA,Not Hispanic or Latino,White,SD
+uga_id_0261,2017 - 2018,Male,Cisgender Man,54,1964,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_0262,2017 - 2018,Female,Cisgender Woman,31,1986,UGA,Not Hispanic or Latino,White,SD
+uga_id_c001,2017 - 2018,Male,Cisgender Man,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c004,2017 - 2018,Female,Cisgender Woman,14,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c005,2017 - 2018,Male,Cisgender Man,16,2000,UGA,Not Hispanic or Latino,White,SD
+uga_id_c006,2017 - 2018,Female,Cisgender Woman,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c007,2017 - 2018,Female,Cisgender Woman,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c008,2017 - 2018,Male,Cisgender Man,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c009,2017 - 2018,Female,Cisgender Woman,12,2005,UGA,Not Hispanic or Latino,White,SD
+uga_id_c010,2017 - 2018,Male,Cisgender Man,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c011,2017 - 2018,Male,Cisgender Man,17,2000,UGA,Not Hispanic or Latino,White,SD
+uga_id_c012,2017 - 2018,Female,Cisgender Woman,17,1999,UGA,Not Hispanic or Latino,White,SD
+uga_id_c013,2017 - 2018,Female,Cisgender Woman,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c014,2017 - 2018,Male,Cisgender Man,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c015,2017 - 2018,Male,Cisgender Man,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c016,2017 - 2018,Female,Cisgender Woman,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c017,2017 - 2018,Male,Cisgender Man,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c018,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_c020,2017 - 2018,Female,Cisgender Woman,12,2005,UGA,Not Hispanic or Latino,White,SD
+uga_id_c021,2017 - 2018,Male,Cisgender Man,15,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_0265,2017 - 2018,Female,Cisgender Woman,17,2000,UGA,Not Hispanic or Latino,White,SD
+uga_id_c023,2017 - 2018,Female,Cisgender Woman,13,2004,UGA,Not Hispanic or Latino,White,SD
+uga_id_c024,2017 - 2018,Female,Cisgender Woman,16,2001,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_c026,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,Asian,SD
+uga_id_c027,2017 - 2018,Male,Cisgender Man,12,2005,UGA,Not Hispanic or Latino,American Indian or Alaska Native,SD
+uga_id_c028,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c029,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c030,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c031,2017 - 2018,Female,Cisgender Woman,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c032,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c033,2017 - 2018,Female,Cisgender Woman,17,2000,UGA,Not Hispanic or Latino,White,SD
+uga_id_c034,2017 - 2018,Female,Cisgender Woman,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c035,2017 - 2018,Male,Cisgender Man,13,2004,UGA,Not Hispanic or Latino,White,SD
+uga_id_c036,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c037,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_c038,2017 - 2018,Female,Cisgender Woman,13,2004,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_c039,2017 - 2018,Female,Cisgender Woman,13,2004,UGA,Not Hispanic or Latino,OTH-Black/White,SD
+uga_id_c040,2017 - 2018,Female,Cisgender Woman,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c041,2017 - 2018,Female,Cisgender Woman,13,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c042,2017 - 2018,Female,Cisgender Woman,13,2004,UGA,Not Hispanic or Latino,White,SD
+uga_id_c043,2017 - 2018,Female,Cisgender Woman,13,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c044,2017 - 2018,Female,Cisgender Woman,13,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c045,2017 - 2018,Male,Cisgender Man,13,2004,UGA,Not Hispanic or Latino,White,SD
+uga_id_c046,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c048,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c049,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c050,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c051,2017 - 2018,Male,Cisgender Man,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c052,2017 - 2018,Female,Cisgender Woman,13,2004,UGA,Not Hispanic or Latino,White,SD
+uga_id_c053,2017 - 2018,Male,Cisgender Man,13,2004,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_c054,2017 - 2018,Female,Cisgender Woman,13,2004,UGA,Not Hispanic or Latino,White,SD
+uga_id_c055,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c056,2017 - 2018,Female,Cisgender Woman,13,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c057,2017 - 2018,Male,Cisgender Man,17,2000,UGA,Not Hispanic or Latino,White,SD
+uga_id_c058,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c059,2017 - 2018,Male,Cisgender Man,17,2000,UGA,Not Hispanic or Latino,White,SD
+uga_id_c060,2017 - 2018,Female,Cisgender Woman,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c061,2017 - 2018,Male,Cisgender Man,12,2005,UGA,Not Hispanic or Latino,White,SD
+uga_id_c062,2017 - 2018,Female,Cisgender Woman,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c064,2017 - 2018,Male,Cisgender Man,17,2000,UGA,Not Hispanic or Latino,White,SD
+uga_id_c065,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c066,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c067,2017 - 2018,Male,Cisgender Man,16,2001,UGA,Not Hispanic or Latino,White,SD
+uga_id_c068,2017 - 2018,Male,Cisgender Man,16,2001,UGA,Not Hispanic or Latino,OTH-Black/White,SD
+uga_id_c069,2017 - 2018,Female,Cisgender Woman,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c070,2017 - 2018,Male,Cisgender Man,14,2003,UGA,Not Hispanic or Latino,White,SD
+uga_id_c071,2017 - 2018,Male,Cisgender Man,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c072,2017 - 2018,Female,Cisgender Woman,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c073,2017 - 2018,Female,Cisgender Woman,13,2004,UGA,Not Hispanic or Latino,White,SD
+uga_id_c074,2017 - 2018,Male,Cisgender Man,12,2005,UGA,Not Hispanic or Latino,White,SD
+uga_id_c076,2017 - 2018,Female,Cisgender Woman,15,2002,UGA,Not Hispanic or Latino,White,SD
+uga_id_c077,2017 - 2018,Female,Cisgender Woman,17,2000,UGA,Hispanic or Latino,OTH-Hispanic or Latino,SD
+uga_id_c078,2017 - 2018,Male,Cisgender Man,17,2000,UGA,Not Hispanic or Latino,Black or African American,SD
+uga_id_c080,2017 - 2018,Female,Cisgender Woman,12,2006,UGA,Not Hispanic or Latino,OTH-Black/White,SD

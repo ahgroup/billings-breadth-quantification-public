@@ -1,0 +1,12 @@
+# Make quarto and Rmd recognizable
+*.Rmd linguist-language=RMarkdown
+*.qmd linguist-language=RMarkdown
+
+# Don't count HTML, TeX, or JS in languages
+*.tex linguist-detectable=false
+*.htm* linguist-detectable=false
+*.js linguist-detectable=false
+*.bib linguist-detectable=false
+
+# Exclude renv directory
+renv/* linguist-vendored
